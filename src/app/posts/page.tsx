@@ -265,7 +265,7 @@ export default function PostsPage() {
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
       <div className="max-w-[1920px] mx-auto">
-        <div className="flex">
+        <div className="flex md:items-start">
           <div
             className={cn(
               'p-0 md:p-6 transition-all duration-300 ease-in-out',
@@ -311,7 +311,7 @@ export default function PostsPage() {
               <div
                 className={cn(
                   'fixed inset-y-0 right-0 w-full sm:w-[500px] md:w-3/5 xl:w-1/2 z-50',
-                  'md:sticky md:top-[var(--header-height)] h-full md:h-[calc(100vh-var(--header-height))]'
+                  'md:sticky md:top-[var(--header-height)] h-screen md:h-[calc(100vh-var(--header-height))]'
                 )}
               >
                 <div className={`h-full shadow-2xl ${theme === 'dark' ? 'border-l border-white/10' : 'border-l' }`}>
