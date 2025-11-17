@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-black text-white antialiased;
+  font-family: "Inter var", "Inter", "Space Grotesk", sans-serif;
+  background-image: radial-gradient(circle at 20% 20%, rgba(68, 255, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 0%, rgba(255, 0, 128, 0.16), transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(94, 0, 255, 0.12), transparent 45%),
+    linear-gradient(180deg, rgba(6, 8, 28, 0.92) 0%, rgba(5, 6, 20, 1) 60%, rgba(2, 3, 12, 1) 100%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(0, 255, 255, 0.35);
+  color: #fff;
+}
+
+* {
+  scroll-behavior: smooth;
+}

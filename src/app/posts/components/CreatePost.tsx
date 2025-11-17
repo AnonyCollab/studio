@@ -1,0 +1,435 @@
+'use client';
+
+import * as React from "react";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { X, Upload, Briefcase, MessageSquare, Star, Sparkles, Image as ImageIcon, Trash2, Info } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { storage } from "@/firebase/config";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { Progress } from "@/components/ui/progress";
+import Image from "next/image";
+import { z } from 'zod';
+
+const CreatePostSchema = z.object({
+  postType: z.string(),
+  title: z.string().min(1, "Title is required."),
+  problemDetails: z.string().min(1, "Problem details are required."),
+  problemSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
+  whatIveTried: z.string(),
+  whatIveTriedSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
+  expectedOutcome: z.string(),
+  expectedOutcomeSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
+  sector: z.string().min(1, "Sector is required."),
+  tags: z.string().min(1, "At least one tag is required."),
+  imageUrl: z.string().optional(),
+});
+type CreatePostInput = z.infer<typeof CreatePostSchema>;
+
+interface CreatePostProps {
+  onClose: () => void;
+  theme?: "light" | "dark";
+}
+
+export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
+  const [postType, setPostType] = useState("qa");
+  const [activeTab, setActiveTab] = useState("problem");
+  const [isSuggestingTags, setIsSuggestingTags] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const form = useForm<CreatePostInput>({
+    resolver: zodResolver(CreatePostSchema),
+    defaultValues: {
+      postType: "qa",
+      title: "",
+      problemDetails: "",
+      problemSummary: "",
+      whatIveTried: "",
+      whatIveTriedSummary: "",
+      expectedOutcome: "",
+      expectedOutcomeSummary: "",
+      sector: "",
+      tags: "",
+      imageUrl: "",
+    },
+  });
+
+  const { watch, setValue, getValues } = form;
+  const title = watch("title");
+  const problemDetails = watch("problemDetails");
+  const imageUrl = watch("imageUrl");
+
+  const handleSuggestTags = async () => {
+    setIsSuggestingTags(true);
+    toast({
+      variant: "destructive",
+      title: "Not Implemented",
+      description: "AI tag suggestions are currently unavailable.",
+    });
+    setIsSuggestingTags(false);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImagePreview(URL.createObjectURL(file));
+
+    const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error("Upload failed:", error);
+        toast({
+          variant: "destructive",
+          title: "Upload Failed",
+          description: "There was an error uploading your image. Please try again.",
+        });
+        setUploadProgress(null);
+        setImagePreview(null);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setValue("imageUrl", downloadURL);
+          setUploadProgress(null);
+           toast({
+            title: "Upload Complete",
+            description: "Your image has been successfully uploaded.",
+          });
+        });
+      }
+    );
+  };
+  
+  const removeImage = () => {
+      setValue("imageUrl", "");
+      setImagePreview(null);
+      if(fileInputRef.current) {
+          fileInputRef.current.value = "";
+      }
+  };
+
+
+  const onSubmit = async (data: CreatePostInput) => {
+    toast({
+      variant: "destructive",
+      title: "Not Implemented",
+      description: "Creating posts is currently unavailable.",
+    });
+  };
+
+  const isDark = theme === "dark";
+
+  return (
+    <div className={`h-full flex flex-col ${isDark ? "bg-[#0a0e1a]" : "bg-white"}`}>
+      {/* Header */}
+      <div className={`flex items-center justify-between p-6 border-b ${isDark ? "border-white/10" : "border-gray-200"}`}>
+        <h2 className={isDark ? "text-xl text-white" : "text-xl text-gray-900"}>Create New Post</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onClose}
+          className={isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}
+        >
+          <X className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Scrollable Form Content */}
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-6">
+            
+            {/* Post Type Selection */}
+             <FormField
+              control={form.control}
+              name="postType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
+                    What kind of post is this? <span className="text-red-500">*</span>
+                  </FormLabel>
+                   <FormControl>
+                    <div className="grid grid-cols-3 gap-3 pt-2">
+                      {(["general", "qa", "feedback"] as const).map((type) => (
+                         <button
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setPostType(type);
+                            field.onChange(type);
+                          }}
+                          className={`flex items-center justify-center gap-2 p-4 rounded-lg border transition-all ${
+                            postType === type
+                              ? isDark ? "bg-cyan-400 text-gray-900 border-cyan-400" : "bg-cyan-600 text-white border-cyan-600"
+                              : isDark ? "bg-transparent text-gray-400 border-white/10 hover:border-white/30" : "bg-transparent text-gray-600 border-gray-300 hover:border-gray-400"
+                          }`}
+                        >
+                          {type === 'general' && <Briefcase className="w-4 h-4" />}
+                          {type === 'qa' && <MessageSquare className="w-4 h-4" />}
+                          {type === 'feedback' && <Star className="w-4 h-4" />}
+                          {type.charAt(0).toUpperCase() + type.slice(1)} {type === 'qa' && ' & A'}
+                        </button>
+                      ))}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Title / Question */}
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
+                    Title / Question <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., Seeking expertise in B2B marketing automation"
+                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Details Tabs */}
+            <div>
+              <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
+                Details <span className="text-red-500">*</span>
+              </FormLabel>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-3">
+                <TabsList className={`grid w-full grid-cols-3 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-300"}`}>
+                  <TabsTrigger value="problem" className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}>Problem</TabsTrigger>
+                  <TabsTrigger value="tried" className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}>What I've Tried</TabsTrigger>
+                  <TabsTrigger value="outcome" className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}>Expected Outcome</TabsTrigger>
+                </TabsList>
+                <TabsContent value="problem" className="mt-3 space-y-4">
+                   <FormField
+                    control={form.control}
+                    name="problemSummary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-gray-400">Summary (max 100 chars)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="A one-sentence summary of the problem." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="problemDetails"
+                    render={({ field }) => (
+                      <FormItem>
+                         <FormLabel className="text-sm text-gray-400">Full Details</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Describe the problem in detail..." className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="tried" className="mt-3 space-y-4">
+                   <FormField
+                    control={form.control}
+                    name="whatIveTriedSummary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-gray-400">Summary (max 100 chars)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="A one-sentence summary of what you've tried." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                   <FormField
+                    control={form.control}
+                    name="whatIveTried"
+                    render={({ field }) => (
+                       <FormItem>
+                        <FormLabel className="text-sm text-gray-400">Full Details</FormLabel>
+                        <FormControl>
+                           <Textarea placeholder="What have you already tried to solve this?" className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                        </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                    )}
+                  />
+                </TabsContent>
+                <TabsContent value="outcome" className="mt-3 space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="expectedOutcomeSummary"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm text-gray-400">Summary (max 100 chars)</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="A one-sentence summary of your desired outcome." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="expectedOutcome"
+                    render={({ field }) => (
+                       <FormItem>
+                        <FormLabel className="text-sm text-gray-400">Full Details</FormLabel>
+                        <FormControl>
+                           <Textarea placeholder="What is the ideal outcome you're looking for?" className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                        </FormControl>
+                         <FormMessage />
+                       </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+
+            {/* Images */}
+            <div>
+              <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
+                Image (Optional)
+              </FormLabel>
+              <div className="mt-3">
+                {imagePreview ? (
+                  <div className="relative group w-full max-w-xs">
+                    <Image
+                      src={imagePreview}
+                      alt="Image preview"
+                      width={400}
+                      height={225}
+                      className="rounded-lg object-cover w-full aspect-video"
+                    />
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg">
+                      <Button type="button" variant="destructive" size="icon" onClick={removeImage}>
+                        <Trash2 className="w-5 h-5" />
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`flex items-center gap-2 transition-all ${isDark ? "border-white/10 text-gray-400 hover:border-white/30 hover:text-white" : "border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-800"}`}
+                    >
+                      <Upload className="w-4 h-4" />
+                      Upload Image
+                    </Button>
+                    <Input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      className="hidden"
+                      accept="image/png, image/jpeg, image/gif"
+                    />
+                  </>
+                )}
+                {uploadProgress !== null && (
+                  <div className="mt-2 space-y-1">
+                     <p className="text-sm text-gray-400">Uploading...</p>
+                     <Progress value={uploadProgress} className="w-full h-2" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Sector */}
+            <FormField
+              control={form.control}
+              name="sector"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>Sector <span className="text-red-500">*</span></FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
+                        <SelectValue placeholder="Select a main sector" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className={isDark ? "bg-[#1a1f2e] border-white/10" : "bg-white border-gray-200"}>
+                      <SelectItem value="arts" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Arts, Entertainment, and Recreation</SelectItem>
+                      <SelectItem value="tech" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Information Technology</SelectItem>
+                      <SelectItem value="healthcare" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Healthcare and Social Assistance</SelectItem>
+                      <SelectItem value="finance" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Finance and Insurance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Tags */}
+             <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                   <div className="flex items-center justify-between">
+                    <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>Tags <span className="text-red-500">*</span></FormLabel>
+                    <Button type="button" variant="link" size="sm" onClick={handleSuggestTags} disabled={isSuggestingTags} className="text-cyan-400 p-0 h-auto">
+                      <Sparkles className="w-3.5 h-3.5 mr-1" />
+                      {isSuggestingTags ? 'Suggesting...' : 'AI Suggest'}
+                    </Button>
+                  </div>
+                  <FormControl>
+                    <Input
+                      placeholder="Add tags separated by commas..."
+                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className={`flex items-center justify-end gap-3 p-6 border-t ${isDark ? "border-white/10" : "border-gray-200"} sticky bottom-0 ${isDark ? 'bg-[#0a0e1a]' : 'bg-white'}`}>
+            <Button type="button" variant="ghost" onClick={onClose} className={isDark ? "text-gray-400 hover:text-white hover:bg-white/5" : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={form.formState.isSubmitting || uploadProgress !== null} className={isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}>
+              {form.formState.isSubmitting ? "Submitting..." : "Submit Post"}
+            </Button>
+          </div>
+        </form>
+      </Form>
+    </div>
+  );
+}
