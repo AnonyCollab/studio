@@ -1,9 +1,23 @@
+'use client';
 import AnimatedReveal from "@/app/landing/components/AnimatedReveal";
 import GradientText from "@/app/landing/components/GradientText";
 import NeonBadge from "@/app/landing/components/NeonBadge";
-import RotatingMesh from "@/app/landing/components/RotatingMesh";
 import GlowingOrb from "@/app/landing/components/GlowingOrb";
 import { heroContent } from "../data/landingContent";
+import dynamic from 'next/dynamic';
+
+const RotatingMesh = dynamic(() => import('@/app/landing/components/RotatingMesh'), {
+  ssr: false,
+  loading: () => (
+    <div className="relative w-full max-w-[520px] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_60px_rgba(23,7,71,0.55)] backdrop-blur-2xl">
+      <div className="relative flex h-[480px] w-full items-center justify-center">
+        <div className="absolute inset-0 -z-20 rounded-full bg-[radial-gradient(circle_at_center,rgba(76,29,149,0.45)_0%,rgba(10,13,32,0)_68%)]" />
+        <p className="text-white/50">Loading animation...</p>
+      </div>
+    </div>
+  ),
+});
+
 
 const HeroSection = () => {
   return (
@@ -57,11 +71,7 @@ const HeroSection = () => {
 
       <AnimatedReveal direction="horizontal" reverse distance={240}>
         <div className="relative mt-12 flex flex-1 items-center justify-center md:mt-0">
-          <div className="absolute inset-0 -z-20 rounded-full bg-[radial-gradient(circle_at_center,rgba(76,29,149,0.45)_0%,rgba(10,13,32,0)_68%)]" />
-          <div className="relative w-full max-w-[520px] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.04] p-6 shadow-[0_20px_60px_rgba(23,7,71,0.55)] backdrop-blur-2xl">
-            <div className="pointer-events-none absolute inset-0 rounded-[32px] border border-white/5" />
-            <RotatingMesh />
-          </div>
+          <RotatingMesh />
         </div>
       </AnimatedReveal>
     </section>
