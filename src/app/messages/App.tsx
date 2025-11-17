@@ -9,13 +9,14 @@ import { DirectMessagesSidebar } from './components/DirectMessagesSidebar';
 import { MembersPanel } from './components/MembersPanel';
 import { UserInfoPanel } from './components/UserInfoPanel';
 import { GroupList } from './components/GroupList';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function App() {
   const [selectedServer, setSelectedServer] = useState('home');
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [selectedDM, setSelectedDM] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'chat' | 'friends' | 'dm' | 'groups'>('friends');
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const { theme, toggleTheme } = useTheme();
 
   const isDark = theme === 'dark';
   const isInGroup = selectedServer !== 'home' && currentView === 'chat';
@@ -106,7 +107,7 @@ export default function App() {
         </div>
 
         {/* User info panel - at bottom left covering server list and sidebar */}
-        <UserInfoPanel theme={theme} onToggleTheme={() => setTheme(theme === 'dark' ? 'light' : 'dark')} />
+        <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
       </div>
     </div>
   );
