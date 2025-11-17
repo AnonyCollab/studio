@@ -262,6 +262,17 @@ export default function PostsPage() {
 
   const isDetailOpen = selectedPost !== null || showCreatePost;
 
+  useEffect(() => {
+    if (isDetailOpen) {
+      document.body.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+    }
+    return () => {
+      document.body.classList.remove("overflow-hidden");
+    };
+  }, [isDetailOpen]);
+
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
       <div className="max-w-[1920px] mx-auto">
@@ -285,7 +296,14 @@ export default function PostsPage() {
                 1280: isDetailOpen ? 2 : 3,
                 1536: isDetailOpen ? 2 : 4,
               }}
-              className="[&>div]:w-full"
+              className={cn(
+                "[&>div]:w-full",
+                isDetailOpen && "md:h-[calc(100vh-var(--header-height)-48px)] md:overflow-y-auto custom-scrollbar"
+              )}
+              style={{
+                 // @ts-ignore
+                '--header-height': '3.5rem',
+              }}
             >
               <Masonry gutter={"10px"} className="px-0 md:px-4">
                 {mockPosts.map((post) => (
@@ -313,15 +331,14 @@ export default function PostsPage() {
               )}
               <div
                 className={cn(
-                  'fixed inset-y-0 right-0 w-full sm:w-[500px] z-50 md:sticky md:top-0',
+                  'fixed inset-y-0 right-0 w-full sm:w-[500px] z-50 md:sticky',
                   'md:w-3/5 xl:w-1/2'
                 )}
                 style={{
                    // @ts-ignore
                   '--header-height': '3.5rem',
-                  height: isMobile ? 'auto' : 'calc(100vh - var(--header-height))',
-                  top: isMobile ? 'auto' : 'var(--header-height)',
-                  bottom: isMobile ? 0 : 'auto',
+                  height: 'calc(100vh - var(--header-height))',
+                  top: 'var(--header-height)',
                 }}
               >
                 <div className={cn(
@@ -347,5 +364,3 @@ export default function PostsPage() {
     </div>
   );
 }
-
-    
