@@ -1,6 +1,7 @@
 
 'use client';
 import type {Metadata} from 'next';
+import { usePathname } from 'next/navigation';
 import './globals.css';
 import './landing/index.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -15,6 +16,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const pathname = usePathname();
+  const isLandingPage = pathname === '/';
 
   const handleToggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
@@ -26,6 +29,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
+        {isLandingPage && <link rel="stylesheet" href="/landing-styles.css" />}
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
