@@ -20,7 +20,6 @@ function AppContent({ children }: { children: React.ReactNode }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
-        {isLandingPage && <link rel="stylesheet" href="/landing-styles.css" />}
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
