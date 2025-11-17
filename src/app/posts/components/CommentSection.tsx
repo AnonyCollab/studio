@@ -73,7 +73,7 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 p-6">
+      <div className={`flex-1 p-6 border-t ${isDark ? 'border-white/5' : 'border-gray-100'}`}>
         <div className="flex items-center gap-2 mb-6">
           <MessageCircle className={`w-5 h-5 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`} />
           <h3 className={isDark ? "text-white" : "text-gray-900"}>Comments ({comments.length})</h3>
@@ -87,7 +87,7 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className={`text-center py-8 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
             No comments yet. Be the first to comment!
           </div>
         )}
@@ -100,7 +100,7 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
             placeholder="Add a comment... (@mention someone)"
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
-            className={`pr-12 resize-none ${isDark ? "bg-[#131823] border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`}
+            className={`pr-12 resize-none ${isDark ? "bg-[#131823] border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
             rows={2}
           />
           <Button

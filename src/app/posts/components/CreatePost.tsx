@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from "react";
@@ -144,7 +145,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const isDark = theme === "dark";
 
   return (
-    <div className={`h-full flex flex-col ${isDark ? "bg-[#0a0e1a]" : "bg-white"}`}>
+    <div className={`h-full flex flex-col ${isDark ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
       {/* Header */}
       <div className={`flex items-center justify-between p-6 border-b ${isDark ? "border-white/10" : "border-gray-200"}`}>
         <h2 className={isDark ? "text-xl text-white" : "text-xl text-gray-900"}>Create New Post</h2>
@@ -213,7 +214,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                   <FormControl>
                     <Input
                       placeholder="e.g., Seeking expertise in B2B marketing automation"
-                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}
+                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}
                       {...field}
                     />
                   </FormControl>
@@ -228,7 +229,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                 Details <span className="text-red-500">*</span>
               </FormLabel>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-3">
-                <TabsList className={`grid w-full grid-cols-3 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-300"}`}>
+                <TabsList className={`grid w-full grid-cols-3 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"}`}>
                   <TabsTrigger value="problem" className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}>Problem</TabsTrigger>
                   <TabsTrigger value="tried" className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}>What I've Tried</TabsTrigger>
                   <TabsTrigger value="outcome" className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}>Expected Outcome</TabsTrigger>
@@ -239,9 +240,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     name="problemSummary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm text-gray-400">Summary (max 100 chars)</FormLabel>
+                        <FormLabel className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Summary (max 100 chars)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="A one-sentence summary of the problem." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                          <Textarea placeholder="A one-sentence summary of the problem." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -252,9 +253,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     name="problemDetails"
                     render={({ field }) => (
                       <FormItem>
-                         <FormLabel className="text-sm text-gray-400">Full Details</FormLabel>
+                         <FormLabel className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Full Details</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Describe the problem in detail..." className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                          <Textarea placeholder="Describe the problem in detail..." className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -267,9 +268,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     name="whatIveTriedSummary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm text-gray-400">Summary (max 100 chars)</FormLabel>
+                        <FormLabel className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Summary (max 100 chars)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="A one-sentence summary of what you've tried." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                          <Textarea placeholder="A one-sentence summary of what you've tried." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -280,9 +281,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     name="whatIveTried"
                     render={({ field }) => (
                        <FormItem>
-                        <FormLabel className="text-sm text-gray-400">Full Details</FormLabel>
+                        <FormLabel className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Full Details</FormLabel>
                         <FormControl>
-                           <Textarea placeholder="What have you already tried to solve this?" className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                           <Textarea placeholder="What have you already tried to solve this?" className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`} {...field} />
                         </FormControl>
                          <FormMessage />
                        </FormItem>
@@ -295,9 +296,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     name="expectedOutcomeSummary"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm text-gray-400">Summary (max 100 chars)</FormLabel>
+                        <FormLabel className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Summary (max 100 chars)</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="A one-sentence summary of your desired outcome." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                          <Textarea placeholder="A one-sentence summary of your desired outcome." className={`min-h-[60px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -308,9 +309,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     name="expectedOutcome"
                     render={({ field }) => (
                        <FormItem>
-                        <FormLabel className="text-sm text-gray-400">Full Details</FormLabel>
+                        <FormLabel className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>Full Details</FormLabel>
                         <FormControl>
-                           <Textarea placeholder="What is the ideal outcome you're looking for?" className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`} {...field} />
+                           <Textarea placeholder="What is the ideal outcome you're looking for?" className={`min-h-[120px] ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`} {...field} />
                         </FormControl>
                          <FormMessage />
                        </FormItem>
@@ -363,7 +364,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                 )}
                 {uploadProgress !== null && (
                   <div className="mt-2 space-y-1">
-                     <p className="text-sm text-gray-400">Uploading...</p>
+                     <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Uploading...</p>
                      <Progress value={uploadProgress} className="w-full h-2" />
                   </div>
                 )}
@@ -383,11 +384,11 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                         <SelectValue placeholder="Select a main sector" />
                       </SelectTrigger>
                     </FormControl>
-                    <SelectContent className={isDark ? "bg-[#1a1f2e] border-white/10" : "bg-white border-gray-200"}>
-                      <SelectItem value="arts" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Arts, Entertainment, and Recreation</SelectItem>
-                      <SelectItem value="tech" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Information Technology</SelectItem>
-                      <SelectItem value="healthcare" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Healthcare and Social Assistance</SelectItem>
-                      <SelectItem value="finance" className={isDark ? "text-white focus:bg-white/10" : "text-gray-900 focus:bg-gray-100"}>Finance and Insurance</SelectItem>
+                    <SelectContent className={isDark ? "bg-[#1a1f2e] border-white/10 text-white" : "bg-white border-gray-200 text-gray-900"}>
+                      <SelectItem value="arts" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Arts, Entertainment, and Recreation</SelectItem>
+                      <SelectItem value="tech" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Information Technology</SelectItem>
+                      <SelectItem value="healthcare" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Healthcare and Social Assistance</SelectItem>
+                      <SelectItem value="finance" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Finance and Insurance</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -411,7 +412,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                   <FormControl>
                     <Input
                       placeholder="Add tags separated by commas..."
-                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}
+                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}
                       {...field}
                     />
                   </FormControl>

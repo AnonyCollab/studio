@@ -54,11 +54,11 @@ const badgeColors = [
 ];
 
 const badgeColorsLight = [
-  "bg-purple-100 text-purple-800 border-purple-200",
-  "bg-cyan-100 text-cyan-800 border-cyan-200",
-  "bg-orange-100 text-orange-800 border-orange-200",
-  "bg-emerald-100 text-emerald-800 border-emerald-200",
-  "bg-pink-100 text-pink-800 border-pink-200",
+  "bg-purple-100 text-purple-700 border-purple-300",
+  "bg-cyan-100 text-cyan-700 border-cyan-300",
+  "bg-orange-100 text-orange-700 border-orange-300",
+  "bg-emerald-100 text-emerald-700 border-emerald-300",
+  "bg-pink-100 text-pink-700 border-pink-300",
 ];
 
 
@@ -87,7 +87,7 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
   };
 
   return (
-    <div className={`h-full flex flex-col ${isDark ? "bg-[#0a0e1a]" : "bg-white"}`}>
+    <div className={`h-full flex flex-col ${isDark ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
       {/* Header with close button */}
       <div className={`flex items-center justify-between p-4 border-b ${isDark ? "border-white/10" : "border-gray-200"}`}>
         <div className="flex items-center gap-3">
@@ -128,11 +128,11 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
         <div className="p-4 md:p-6">
           {/* Tags */}
           <div className="flex flex-wrap gap-2 mb-4">
-            {post.tags.map((tag) => (
+            {post.tags.map((tag, index) => (
               <Badge
                 key={`${post.id}-${tag}`}
                 variant="outline"
-                className={`text-xs ${currentBadgeColors[post.tags.indexOf(tag) % currentBadgeColors.length]} border`}
+                className={`text-xs ${currentBadgeColors[index % currentBadgeColors.length]} border`}
               >
                 #{tag.toLowerCase().replace(/\s+/g, "")}
               </Badge>
@@ -167,7 +167,7 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
 
           {/* Tabs for content */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-6">
-            <TabsList className={`grid w-full grid-cols-3 border mb-4 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-300"}`}>
+            <TabsList className={`grid w-full grid-cols-3 border mb-4 ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"}`}>
               <TabsTrigger
                 value="problem"
                 className={`text-sm ${isDark ? "text-gray-400 data-[state=active]:bg-white/10 data-[state=active]:text-white" : "text-gray-600 data-[state=active]:bg-white data-[state=active]:text-gray-900"}`}
@@ -188,7 +188,7 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
               </TabsTrigger>
             </TabsList>
 
-            <div className={`rounded-lg p-5 border min-h-[150px] ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-50 border-gray-200"}`}>
+            <div className={`rounded-lg p-5 border min-h-[150px] ${isDark ? "bg-[#131823] border-white/10" : "bg-white border-gray-200"}`}>
                 <TabsContent value="problem">
                     <Callout text={post.problemSummary} theme={theme} />
                     <p className={`text-sm leading-relaxed ${isDark ? "text-gray-300" : "text-gray-700"}`}>{post.problemDetails || "No details provided."}</p>
@@ -232,11 +232,11 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
 
             {/* Metadata Grid */}
              <div className="grid grid-cols-2 gap-4 mt-6">
-                <div className={`rounded-lg p-4 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                <div className={`rounded-lg p-4 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
                   <h4 className={`text-sm mb-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>Sector:</h4>
                   <p className={`text-sm capitalize ${isDark ? "text-white" : "text-gray-900"}`}>{post.sector}</p>
                 </div>
-                <div className={`rounded-lg p-4 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                <div className={`rounded-lg p-4 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
                   <h4 className={`text-sm mb-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>NAICS Code:</h4>
                   <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>2111</p>
                 </div>

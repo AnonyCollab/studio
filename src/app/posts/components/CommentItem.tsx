@@ -112,21 +112,21 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             <div className={`rounded-lg p-2.5 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
                 <div className="flex items-center justify-between mb-1">
                     <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{reply.author.name}</p>
-                    <span className="text-xs text-gray-500">{reply.timestamp}</span>
+                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{reply.timestamp}</span>
                 </div>
                 <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{reply.content}</p>
             </div>
              <div className="flex items-center gap-4 mt-1.5 px-3">
                 <button 
                   onClick={() => handleLikeReply(reply.id)}
-                  className={cn("flex items-center gap-1 text-xs text-gray-500 transition-colors",
-                    isReplyLiked ? "text-red-400" : "hover:text-red-400"
+                  className={cn("flex items-center gap-1 text-xs transition-colors",
+                    isReplyLiked ? "text-red-400" : isDark ? "text-gray-500 hover:text-red-400" : "text-gray-500 hover:text-red-500"
                   )}
                 >
                     <Heart className={cn("w-3.5 h-3.5", isReplyLiked && "fill-current")} />
                     <span>{reply.likes}</span>
                 </button>
-                <button className={`text-xs text-gray-500 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}>
+                <button className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
                     Reply
                 </button>
             </div>
@@ -144,25 +144,25 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             <div className={`rounded-lg p-3 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
             <div className="flex items-center justify-between mb-2">
                 <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{comment.author.name}</p>
-                <span className="text-xs text-gray-500">{comment.timestamp}</span>
+                <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{comment.timestamp}</span>
             </div>
             <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{comment.content}</p>
             </div>
             <div className="flex items-center gap-4 mt-2 px-3">
             <button 
               onClick={handleLikeComment}
-              className={cn("flex items-center gap-1 text-xs text-gray-500 transition-colors",
-                isLiked ? "text-red-400" : "hover:text-red-400"
+              className={cn("flex items-center gap-1 text-xs transition-colors",
+                isLiked ? "text-red-400" : isDark ? "text-gray-500 hover:text-red-400" : "text-gray-500 hover:text-red-500"
               )}
             >
                 <Heart className={cn("w-3.5 h-3.5", isLiked && "fill-current")} />
                 <span>{comment.likes}</span>
             </button>
-            <button onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className={`text-xs text-gray-500 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}>
+            <button onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
                 Reply
             </button>
             {replies && replies.length > 0 && (
-                <button onClick={() => toggleReplies(comment.id)} className={`text-xs text-gray-500 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}>
+                <button onClick={() => toggleReplies(comment.id)} className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
                     {visibleReplies[comment.id] ? 'Hide' : 'View'} {replies.length} replies
                 </button>
             )}
@@ -175,7 +175,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                     placeholder={`Replying to ${comment.author.name}...`}
                     value={replyContent}
                     onChange={(e) => setReplyContent(e.target.value)}
-                    className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-600/50"}`}
+                    className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
                     rows={1}
                 />
                 <Button

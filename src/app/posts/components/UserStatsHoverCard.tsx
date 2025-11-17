@@ -1,3 +1,4 @@
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { FileText, Newspaper, Grid, MessageSquare, CornerUpLeft, UserPlus } from "lucide-react";
@@ -40,14 +41,14 @@ export function UserStatsHoverCard({ author, stats = {
       <HoverCardContent 
         side="right" 
         align="start"
-        className={`w-80 p-0 overflow-hidden ${isDark ? "bg-[#131823] border-white/10" : "bg-white border-gray-200"}`}
+        className={`w-80 p-0 overflow-hidden ${isDark ? "bg-[#1a1f2e] border-white/10" : "bg-white border-gray-200"}`}
       >
         <div className="p-5 space-y-4">
           {/* User Header */}
           <div className="flex items-center gap-3">
             <Avatar className="w-14 h-14">
               <AvatarImage src={author.avatar} />
-              <AvatarFallback className={isDark ? "bg-gray-700 text-white text-lg" : "bg-gray-300 text-gray-700 text-lg"}>
+              <AvatarFallback className={isDark ? "bg-gray-700 text-white text-lg" : "bg-gray-200 text-gray-700 text-lg"}>
                 {author.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>

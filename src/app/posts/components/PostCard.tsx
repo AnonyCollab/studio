@@ -43,11 +43,11 @@ const badgeColors = [
 ];
 
 const badgeColorsLight = [
-  "bg-purple-100 text-purple-800 border-purple-200",
-  "bg-cyan-100 text-cyan-800 border-cyan-200",
-  "bg-orange-100 text-orange-800 border-orange-200",
-  "bg-emerald-100 text-emerald-800 border-emerald-200",
-  "bg-pink-100 text-pink-800 border-pink-200",
+  "bg-purple-100 text-purple-700 border-purple-300",
+  "bg-cyan-100 text-cyan-700 border-cyan-300",
+  "bg-orange-100 text-orange-700 border-orange-300",
+  "bg-emerald-100 text-emerald-700 border-emerald-300",
+  "bg-pink-100 text-pink-700 border-pink-300",
 ];
 
 
@@ -125,10 +125,11 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
       onTouchEnd={handleTouchEnd}
       className={cn(
         'block overflow-hidden transition-all cursor-pointer group h-full min-w-full',
-        'bg-transparent md:bg-[#131823] border-b-2 md:border md:rounded-lg mb-2',
+        'bg-transparent md:mb-2',
         isDark 
-          ? 'border-white/10 md:hover:border-cyan-400/50 md:hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]'
-          : 'border-gray-200 md:bg-white md:hover:border-cyan-500/50 md:hover:shadow-lg'
+          ? 'md:bg-[#131823] border-b-2 md:border border-white/10 md:hover:border-cyan-400/50 md:hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]'
+          : 'md:bg-white border-b-2 md:border border-gray-200 md:hover:border-cyan-500/50 md:hover:shadow-lg',
+        isMobile ? '' : 'md:rounded-lg'
       )}
     >
       <div className="pt-4 pb-2 px-4 md:px-6">
@@ -143,11 +144,11 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
 
         {/* 2. Tags */}
         <div className="flex flex-wrap gap-1.5 mt-4">
-          {post.tags.length > 0 && post.tags.map((tag) => (
+          {post.tags.length > 0 && post.tags.map((tag, index) => (
             <Badge 
               key={`${post.id}-${tag}`} 
               variant="outline" 
-              className={`text-xs ${currentBadgeColors[post.tags.indexOf(tag) % currentBadgeColors.length]} border`}
+              className={`text-xs ${currentBadgeColors[index % currentBadgeColors.length]} border`}
             >
               {tag}
             </Badge>
@@ -160,7 +161,7 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
         {/* Summaries Tabs */}
         {summaries.length > 0 && (
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value)} className="w-full mt-4" onClick={(e) => e.stopPropagation()}>
-            <TabsList className={`grid w-full grid-cols-3 border h-auto p-0 rounded-md ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-300"}`}>
+            <TabsList className={`grid w-full grid-cols-3 border h-auto p-0 rounded-md ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"}`}>
               {summaries.map((summary) => (
                 <TabsTrigger
                   key={summary.value}
@@ -173,8 +174,8 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
               ))}
             </TabsList>
             {summaries.map((summary) => (
-              <TabsContent key={summary.value} value={summary.value} className="mt-4 text-sm text-gray-400">
-                <p className={cn("ml-1", isDark ? "text-gray-300" : "text-gray-800")}>{summary.text}</p>
+              <TabsContent key={summary.value} value={summary.value} className="mt-4 text-sm">
+                <p className={cn("ml-1", isDark ? "text-gray-300" : "text-gray-700")}>{summary.text}</p>
               </TabsContent>
             ))}
           </Tabs>
@@ -184,21 +185,21 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
         <div className="flex items-center justify-between text-gray-500 text-sm py-2 mt-4">
             <div className="flex items-center gap-4">
                 <button 
-                    className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
+                    className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <Heart className="w-5 h-5" />
                     <span>{post.likes}</span>
                 </button>
                 <button 
-                    className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
+                    className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <MessageCircle className="w-5 h-5" />
                     <span>{post.comments}</span>
                 </button>
                 <button 
-                    className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors"
+                    className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <Repeat2 className="w-5 h-5" />
@@ -209,7 +210,6 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
                 <SharePopover>
                   <button className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`} onClick={(e) => e.stopPropagation()}>
                     <Share2 className="w-5 h-5" />
-                    <span>{post.shares}</span>
                   </button>
                 </SharePopover>
                 <SaveToCollectionDialog postTitle={post.title} onSaveToggle={setIsBookmarked} theme={theme}>
