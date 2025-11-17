@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -24,6 +23,7 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ThemeToggle } from '@/app/posts/components/ThemeToggle';
+import { Separator } from '@/components/ui/separator';
 
 interface ProfileDropdownProps {
   theme?: 'light' | 'dark';
