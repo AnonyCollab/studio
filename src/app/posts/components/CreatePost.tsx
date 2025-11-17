@@ -18,11 +18,11 @@ import {
 } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { storage } from "@/firebase/config";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { z } from 'zod';
+import { useFirebaseApp } from "@/firebase";
 
 const CreatePostSchema = z.object({
   postType: z.string(),
@@ -52,6 +52,8 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const firebaseApp = useFirebaseApp();
+  const storage = getStorage(firebaseApp);
 
   const form = useForm<CreatePostInput>({
     resolver: zodResolver(CreatePostSchema),

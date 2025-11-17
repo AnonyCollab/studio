@@ -1,15 +1,16 @@
 
+
 'use client';
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { MessageCircle, Send } from "lucide-react";
-import { db } from "@/firebase/config";
-import { collection, query, onSnapshot, orderBy, Timestamp, updateDoc, doc, increment } from "firebase/firestore";
+import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { CommentItem } from "./CommentItem";
+import { useFirestore } from "@/firebase";
 
 interface Author {
   name: string;
@@ -35,11 +36,12 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
   const [newComment, setNewComment] = useState("");
   const { toast } = useToast();
   const isDark = theme === "dark";
+  const firestore = useFirestore();
 
   useEffect(() => {
-    if (!postId) return;
+    if (!firestore || !postId) return;
 
-    const q = query(collection(db, "posts", postId, "comments"), orderBy("createdAt", "asc"));
+    const q = query(collection(firestore, "posts", postId, "comments"), orderBy("createdAt", "asc"));
 
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const commentsData = querySnapshot.docs.map((doc) => {
@@ -57,7 +59,7 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
     });
 
     return () => unsubscribe();
-  }, [postId]);
+  }, [firestore, postId]);
 
 
   const handleSubmitComment = async (e: React.FormEvent) => {

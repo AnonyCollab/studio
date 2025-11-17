@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from "react";
@@ -6,11 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Heart, Send } from "lucide-react";
-import { db } from "@/firebase/config";
 import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
+import { useFirestore } from "@/firebase";
 
 interface Author {
   name: string;
@@ -48,14 +49,15 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const [visibleReplies, setVisibleReplies] = useState<Record<string, boolean>>({});
   const [isLiked, setIsLiked] = useState(false);
   const [likedReplies, setLikedReplies] = useState<Record<string, boolean>>({});
+  const firestore = useFirestore();
 
   const { toast } = useToast();
   const isDark = theme === "dark";
 
   useEffect(() => {
-    if (!postId || !comment.id) return;
+    if (!firestore || !postId || !comment.id) return;
 
-    const repliesQuery = query(collection(db, "posts", postId, "comments", comment.id, "replies"), orderBy("createdAt", "asc"));
+    const repliesQuery = query(collection(firestore, "posts", postId, "comments", comment.id, "replies"), orderBy("createdAt", "asc"));
     
     const unsubscribe = onSnapshot(repliesQuery, (replySnapshot) => {
         const repliesData = replySnapshot.docs.map(replyDoc => {
@@ -70,7 +72,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     });
 
     return () => unsubscribe();
-  }, [postId, comment.id]);
+  }, [firestore, postId, comment.id]);
 
   const handleSubmitReply = async (commentId: string) => {
     const content = replyContent.trim();
