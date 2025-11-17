@@ -1,0 +1,52 @@
+/**
+ * @fileOverview Firestore Security Rules for AnonyCollab application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a public-read, public-write model for posts, with comments also being publicly accessible.
+ *
+ * Data Structure:
+ * - Posts are stored in the `/posts/{postId}` collection.
+ * - Comments are stored in the `/posts/{postId}/comments/{commentId}` subcollection.
+ *
+ * Key Security Decisions:
+ * - Posts and comments are publicly readable and writable by anyone, including unauthenticated users.
+ * - No authentication is required for any operation.
+ * - There is no data validation beyond ensuring the document IDs in subcollections match their paths.
+ *
+ * Denormalization for Authorization:
+ * - Not applicable in this public access scenario. If comments required role-based access, the post's member list or owner would be denormalized into the comment documents.
+ *
+ * Structural Segregation:
+ * - Not applicable, as all data is public.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows anyone to read and write posts.
+     * @path /posts/{postId}
+     * @allow (get, list) - Any user can read a post.
+     * @allow (create, update, delete) - Any user can create, update, or delete a post.
+     * @deny none
+     * @principle Public read, public write
+     */
+    match /posts/{postId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+
+    /**
+     * @description Allows anyone to read and write comments associated with a specific post.
+     * @path /posts/{postId}/comments/{commentId}
+     * @allow (get, list) - Any user can read a comment.
+     * @allow (create, update, delete) - Any user can create, update, or delete a comment.
+     * @deny none
+     * @principle Public read, public write, path-based consistency for commentId
+     */
+    match /posts/{postId}/comments/{commentId} {
+      allow get, list: if true;
+      allow create, update, delete: if true;
+    }
+  }
+}
