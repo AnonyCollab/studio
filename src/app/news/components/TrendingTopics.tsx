@@ -1,5 +1,6 @@
+
 import { TrendingUp } from "lucide-react";
-import { Badge } from "./ui/badge";
+import { Badge } from "@/components/ui/badge";
 
 const topics = [
   "Technology",
@@ -79,3 +80,5 @@ export function TrendingTopics({ theme }: TrendingTopicsProps) {
     </aside>
   );
 }
+
+    
