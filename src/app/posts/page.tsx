@@ -40,7 +40,7 @@ const mockPosts: Post[] = [
       name: "Alex Thompson",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
     },
-    imageUrl: "https://images.unsplash.com/photo-1617634667039-8e4cb277ab46?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTcyNDI5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1617634667039-8e4cb277ab46?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTcyNDI5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Peaceful Morning in the Valley",
     description: "Captured this serene moment during sunrise in the mountains.",
     tags: ["Nature", "Photography", "Landscape"],
@@ -64,7 +64,7 @@ const mockPosts: Post[] = [
       name: "Jessica Wu",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=jessica",
     },
-    imageUrl: "https://images.unsplash.com/photo-1617381519460-d87050ddeb92?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwYXJjaGl0ZWN0dXJlfGVufDF8fHx8MTc2MTE2MDU4N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1617381519460-d87050ddeb92?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwYXJjaGl0ZWN0dXJlfGVufDF8fHx8MTc2MTE2MDU4N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Modern Architecture",
     description: "The intersection of design and functionality in urban spaces.",
     tags: ["Architecture", "City", "Design"],
@@ -88,7 +88,7 @@ const mockPosts: Post[] = [
       name: "Marcus Rivera",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=marcus",
     },
-    imageUrl: "https://images.unsplash.com/photo-1615184697985-c9bde1b07da7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGFydHxlbnwxfHx8fDE3NjEyMDQxMDh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1615184697985-c9bde1b07da7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGFydHxlbnwxfHx8fDE3NjEyMDQxMDh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Abstract Expressions",
     description: "Exploring colors and forms in digital art.",
     tags: ["Art", "Abstract", "Digital"],
@@ -112,7 +112,7 @@ const mockPosts: Post[] = [
       name: "Sophie Laurent",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sophie",
     },
-    imageUrl: "https://images.unsplash.com/photo-1532980400857-e8d9d275d858?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb29kJTIwcGhvdG9ncmFwaHl8ZW58MXx8fHwxNzYxMTI5MzM1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1532980400857-e8d9d275d858?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb29kJTIwcGhvdG9ncmFwaHl8ZW58MXx8fHwxNzYxMTI5MzM1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Culinary Artistry",
     description: "Where food meets art in the most delicious way.",
     tags: ["Food", "Photography", "Culinary"],
@@ -136,7 +136,7 @@ const mockPosts: Post[] = [
       name: "Ryan Park",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ryan",
     },
-    imageUrl: "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MTE3NTc2MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MTE3NTc2MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Workspace Inspiration",
     description: "Creating the perfect environment for productivity and creativity.",
     tags: ["Workspace", "Tech", "Productivity"],
@@ -160,7 +160,7 @@ const mockPosts: Post[] = [
       name: "Olivia Martinez",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=olivia",
     },
-    imageUrl: "https://images.unsplash.com/photo-1514747975201-4715db583da9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvY2VhbiUyMHdhdmVzfGVufDF8fHx8MTc2MTIwNjQ5MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1514747975201-4715db583da9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxvY2VhbiUyMHdhdmVzfGVufDF8fHx8MTc2MTIwNjQ5MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Ocean Waves",
     description: "The rhythmic beauty of the sea captured in motion.",
     tags: ["Ocean", "Nature", "Waves"],
@@ -184,7 +184,7 @@ const mockPosts: Post[] = [
       name: "Daniel Foster",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=daniel",
     },
-    imageUrl: "https://images.unsplash.com/photo-1519414442781-fbd745c5b497?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMHN1bnNldHxlbnwxfHx8fDE3NjExNjkxNjh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1519414442781-fbd745c5b497?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxtb3VudGFpbiUyMHN1bnNldHxlbnwxfHx8fDE3NjExNjkxNjh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Mountain Sunset",
     description: "Golden hour in the peaks.",
     tags: ["Mountains", "Sunset", "Landscape"],
@@ -208,7 +208,7 @@ const mockPosts: Post[] = [
       name: "Emma Collins",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
     },
-    imageUrl: "https://images.unsplash.com/photo-1628803184377-c5167a0cb6fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHJlZXQlMjBwaG90b2dyYXBoeXxlbnwxfHx8fDE3NjExOTgzMjR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1628803184377-c5167a0cb6fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxzdHJlZXQlMjBwaG90b2dyYXBoeXxlbnwxfHx8fDE3NjExOTgzMjR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Street Stories",
     description: "Capturing the essence of urban life through candid moments.",
     tags: ["Street", "Photography", "Urban"],
@@ -265,7 +265,7 @@ export default function PostsPage() {
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
       <div className="max-w-[1920px] mx-auto">
-        <div className="flex md:items-start">
+        <div className="flex items-start">
           <div
             className={cn(
               'p-0 md:p-6 transition-all duration-300 ease-in-out',
@@ -282,7 +282,8 @@ export default function PostsPage() {
               columnsCountBreakPoints={{
                 350: 1,
                 768: isDetailOpen ? 1 : 2,
-                1280: isDetailOpen ? 2 : 4,
+                1280: isDetailOpen ? 2 : 3,
+                1536: isDetailOpen ? 2 : 4,
               }}
               className="[&>div]:w-full"
             >
@@ -304,18 +305,30 @@ export default function PostsPage() {
 
           {isDetailOpen && (
             <>
-              <div
-                className="fixed inset-0 bg-black/70 z-40 md:hidden"
-                onClick={handleCloseDetail}
-              />
+              {isMobile && (
+                <div
+                  className="fixed inset-0 bg-black/70 z-40 md:hidden"
+                  onClick={handleCloseDetail}
+                />
+              )}
               <div
                 className={cn(
-                  'fixed inset-y-0 right-0 w-full sm:w-[500px] md:w-3/5 xl:w-1/2 z-50',
-                  'md:sticky md:top-[var(--header-height)]'
+                  'fixed inset-y-0 right-0 w-full sm:w-[500px] z-50 md:sticky md:top-0',
+                  'md:w-3/5 xl:w-1/2'
                 )}
-                style={{ maxHeight: 'calc(100vh - var(--header-height, 0px))' }}
+                style={{
+                   // @ts-ignore
+                  '--header-height': '3.5rem',
+                  height: isMobile ? 'auto' : 'calc(100vh - var(--header-height))',
+                  top: isMobile ? 'auto' : 'var(--header-height)',
+                  bottom: isMobile ? 0 : 'auto',
+                }}
               >
-                <div className={`h-full shadow-2xl ${theme === 'dark' ? 'border-l border-white/10' : 'border-l' }`}>
+                <div className={cn(
+                  `h-full shadow-2xl`, 
+                  theme === 'dark' ? 'border-l border-white/10' : 'border-l',
+                  isMobile ? 'rounded-t-2xl' : ''
+                )}>
                   {showCreatePost ? (
                     <CreatePost onClose={handleCloseDetail} theme={theme} />
                   ) : selectedPost ? (
@@ -334,3 +347,5 @@ export default function PostsPage() {
     </div>
   );
 }
+
+    
