@@ -1,4 +1,4 @@
-import { motion, useMotionValue, useSpring } from "motion/react";
+import { motion, useMotionValue, useSpring } from "framer-motion";
 import { ReactNode, useMemo } from "react";
 
 interface TiltCardProps {
