@@ -311,8 +311,9 @@ export default function PostsPage() {
               <div
                 className={cn(
                   'fixed inset-y-0 right-0 w-full sm:w-[500px] md:w-3/5 xl:w-1/2 z-50',
-                  'md:sticky md:top-[var(--header-height)] h-screen md:h-[calc(100vh-var(--header-height))]'
+                  'md:sticky md:top-[var(--header-height)]'
                 )}
+                style={{ maxHeight: 'calc(100vh - var(--header-height, 0px))' }}
               >
                 <div className={`h-full shadow-2xl ${theme === 'dark' ? 'border-l border-white/10' : 'border-l' }`}>
                   {showCreatePost ? (
