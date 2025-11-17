@@ -11,6 +11,7 @@ import { StatsBar } from "./components/StatsBar";
 import { StarredProjectsList } from "./components/StarredProjectsList";
 import { ProjectGrid } from "./components/ProjectGrid";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
+import { useTheme } from "@/context/ThemeContext";
 
 const mockProjects: Record<string, Project[]> = {
   my: [
@@ -215,7 +216,7 @@ const sectionTitles: Record<string, string> = {
 };
 
 export default function App() {
-  const [theme, setTheme] = useState<"light" | "dark">("dark");
+  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -357,10 +358,6 @@ export default function App() {
     return <ProjectGrid projects={projectsToDisplay} theme={theme} />;
   };
 
-  const handleToggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
-  };
-
   return (
     <div
       className={`min-h-screen ${
@@ -410,7 +407,7 @@ export default function App() {
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">New Project</span>
               </Button>
-              <ProfileDropdown theme={theme} onToggleTheme={handleToggleTheme} />
+              <ProfileDropdown theme={theme} onToggleTheme={toggleTheme} />
             </div>
           </div>
         </div>

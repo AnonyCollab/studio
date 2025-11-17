@@ -7,21 +7,12 @@ import './landing/index.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { TopNav } from './header/components/TopNav';
-import { useState } from 'react';
+import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+function AppContent({ children }: { children: React.ReactNode }) {
+  const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const isLandingPage = pathname === '/';
-
-  const handleToggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
-  };
 
   return (
     <html lang="en" className={theme} style={{colorScheme: theme}}>
@@ -33,11 +24,24 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <TopNav theme={theme} onToggleTheme={handleToggleTheme} />
+          <TopNav theme={theme} onToggleTheme={toggleTheme} />
           <main>{children}</main>
           <Toaster />
         </FirebaseClientProvider>
       </body>
     </html>
+  );
+}
+
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <ThemeProvider>
+      <AppContent>{children}</AppContent>
+    </ThemeProvider>
   );
 }
