@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { ServerList } from './components/ServerList';
 import { ChannelSidebar } from './components/ChannelSidebar';
@@ -26,7 +27,10 @@ export default function App() {
   };
 
   return (
-    <div className={`h-screen w-screen overflow-hidden ${isDark ? 'bg-[#0a0e1a]' : 'bg-gray-50'} relative`}>
+    <div
+      style={{ height: 'calc(100vh - 3.5rem)' }}
+      className={`w-screen overflow-hidden ${isDark ? 'bg-[#0a0e1a]' : 'bg-gray-50'} relative`}
+    >
       {/* Animated background blobs - only in dark mode */}
       {isDark && (
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -49,7 +53,7 @@ export default function App() {
               setSelectedDM(null);
             } else {
               setCurrentView('chat');
-              setSelectedChannel(null);
+              setSelectedChannel('general'); // Select 'general' by default
               setSelectedDM(null);
             }
           }}
