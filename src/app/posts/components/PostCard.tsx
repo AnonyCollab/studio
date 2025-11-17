@@ -9,6 +9,7 @@ import { SaveToCollectionDialog } from "./SaveToCollectionDialog";
 import { useState, TouchEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 
 interface PostCardProps {
@@ -53,6 +54,7 @@ const badgeColorsLight = [
 
 export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
   const isDark = theme === "dark";
+  const isMobile = useIsMobile();
   const currentBadgeColors = isDark ? badgeColors : badgeColorsLight;
   const [isBookmarked, setIsBookmarked] = useState(false);
   
