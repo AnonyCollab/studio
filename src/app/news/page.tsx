@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import { ArticleCard } from './components/ArticleCard';
 import { CategoryNav } from './components/CategoryNav';
 import { TrendingTopics } from './components/TrendingTopics';
@@ -54,7 +54,7 @@ const mockArticles = [
 ];
 
 export default function NewsPage() {
-  const [theme] = useState<'light' | 'dark'>('dark');
+  const { theme } = useTheme();
   const isDark = theme === 'dark';
 
   return (
