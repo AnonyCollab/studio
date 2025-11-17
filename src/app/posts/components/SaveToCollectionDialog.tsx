@@ -124,7 +124,7 @@ export function SaveToCollectionDialog({
   const CollectionsContent = () => (
     <div className={`flex flex-col h-auto max-h-[500px] w-full sm:w-[350px] ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
         <DrawerHeader className={`p-4 border-b text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-            <DrawerTitle className="font-semibold leading-none tracking-tight">Save to collection</DrawerTitle>
+            <DrawerTitle>Save to collection</DrawerTitle>
             <DrawerDescription className="sr-only">Select a collection to save the post to, or create a new one.</DrawerDescription>
         </DrawerHeader>
 
