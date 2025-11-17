@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ThemeToggle } from "./ThemeToggle";
+import { ThemeToggle } from "../../posts/components/ThemeToggle";
 
 interface TopNavProps {
   onCreatePost?: () => void;
@@ -29,7 +29,7 @@ export function TopNav({ onCreatePost, onToggleFilter, theme = "dark", onToggleT
   const [isSearchActive, setIsSearchActive] = useState(false);
   
   return (
-    <nav className={`sticky top-0 z-50 h-14 flex items-center ${isDark ? "bg-[#0a0e1a] border-b border-white/10" : "bg-white border-b border-gray-200"}`}>
+    <nav className={`sticky top-0 z-50 h-[var(--header-height)] flex items-center ${isDark ? "bg-[#0a0e1a] border-b border-white/10" : "bg-white border-b border-gray-200"}`}>
       <div className="max-w-[1920px] mx-auto px-4 md:px-6 flex items-center justify-between gap-6 w-full">
 
         {/* Mobile View */}
@@ -136,22 +136,22 @@ export function TopNav({ onCreatePost, onToggleFilter, theme = "dark", onToggleT
               <span className={`tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>AnonyCollab</span>
             </Link>
             <div className="hidden md:flex items-center gap-1">
-              <Link href="/landing" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-300 hover:text-white" : "text-gray-700 hover:text-gray-900"}`}>
+              <a href="#" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-300 hover:text-white" : "text-gray-700 hover:text-gray-900"}`}>
                 <Home className="w-4 h-4" />
                 Home
-              </Link>
-              <Link href="/discover" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
+              </a>
+              <a href="#" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
                 <Compass className="w-4 h-4" />
                 Discover
-              </Link>
-              <Link href="/news" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
+              </a>
+              <a href="#" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
                 <Newspaper className="w-4 h-4" />
                 News
-              </Link>
-              <Link href="/messages" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
+              </a>
+              <a href="#" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}>
                 <MessageSquare className="w-4 h-4" />
                 Messages
-              </Link>
+              </a>
             </div>
           </div>
           <div className="flex items-center gap-3 flex-1 max-w-2xl">

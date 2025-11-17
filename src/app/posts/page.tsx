@@ -2,7 +2,6 @@
 'use client';
 import { useState, useEffect } from "react";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
-import { TopNav } from "./components/TopNav";
 import { PostCard } from "./components/PostCard";
 import { PostDetail } from "./components/PostDetail";
 import { CreatePost } from "./components/CreatePost";
@@ -113,7 +112,7 @@ const mockPosts: Post[] = [
       name: "Sophie Laurent",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sophie",
     },
-    imageUrl: "https://images.unsplash.com/photo-1532980400857-e8d9d275d858?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb29kJTIwcGhvdG9ncmFwaHl8ZW58MXx8fHwxNzYxMTI5MzM1fDA&ixlib-rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1532980400857-e8d9d275d858?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb29kJTIwcGhvdG9ncmFwaHl8ZW58MXx8fHwxNzYxMTI5MzM1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Culinary Artistry",
     description: "Where food meets art in the most delicious way.",
     tags: ["Food", "Photography", "Culinary"],
@@ -185,7 +184,7 @@ const mockPosts: Post[] = [
       name: "Daniel Foster",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=daniel",
     },
-    imageUrl: "https://images.unsplash.com/photo-1519414442781-fbd745c5b497?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMHN1bnNldHxlbnwxfHx8fDE3NjExNjkxNjh8MA&ixlib-rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1519414442781-fbd745c5b497?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMHN1bnNldHxlbnwxfHx8fDE3NjExNjkxNjh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Mountain Sunset",
     description: "Golden hour in the peaks.",
     tags: ["Mountains", "Sunset", "Landscape"],
@@ -209,7 +208,7 @@ const mockPosts: Post[] = [
       name: "Emma Collins",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
     },
-    imageUrl: "https://images.unsplash.com/photo-1628803184377-c5167a0cb6fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHJlZXQlMjBwaG90b2dyYXBoeXxlbnwxfHx8fDE3NjExOTgzMjR8MA&ixlib-rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1628803184377-c5167a0cb6fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdHJlZXQlMjBwaG90b2dyYXBoeXxlbnwxfHx8fDE3NjExOTgzMjR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Street Stories",
     description: "Capturing the essence of urban life through candid moments.",
     tags: ["Street", "Photography", "Urban"],
@@ -265,13 +264,6 @@ export default function PostsPage() {
 
   return (
     <div className={`min-h-screen ${theme === "dark" ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
-      <TopNav 
-        onCreatePost={handleOpenCreatePost}
-        onToggleFilter={() => setShowFilter(!showFilter)}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
-      />
-
       <div className="max-w-[1920px] mx-auto">
         <div className="flex">
           <div

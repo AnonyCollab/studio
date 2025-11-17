@@ -1,22 +1,27 @@
+
+'use client';
 import type {Metadata} from 'next';
 import './globals.css';
 import './landing/index.css';
-import Header from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { TopNav } from './posts/components/TopNav';
+import { useState } from 'react';
 
-export const metadata: Metadata = {
-  title: 'AnonyCollab',
-  description: 'Collaborate Anonymously',
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+
+  const handleToggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
-    <html lang="en" className="dark" style={{colorScheme: 'dark'}}>
+    <html lang="en" className={theme} style={{colorScheme: theme}}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -24,7 +29,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <Header />
+          <TopNav theme={theme} onToggleTheme={handleToggleTheme} />
           <main>{children}</main>
           <Toaster />
         </FirebaseClientProvider>
