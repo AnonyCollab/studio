@@ -5,7 +5,7 @@ import './globals.css';
 import './landing/index.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { TopNav } from './posts/components/TopNav';
+import { TopNav } from './header/components/TopNav';
 import { useState } from 'react';
 
 

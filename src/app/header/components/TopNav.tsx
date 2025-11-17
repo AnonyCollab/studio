@@ -30,7 +30,7 @@ export function TopNav({ onCreatePost, onToggleFilter, theme = "dark", onToggleT
             <span className={`hidden sm:inline tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>AnonyCollab</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">
-            <Link href="/landing" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-md ${isDark ? "text-gray-300 hover:text-white hover:bg-white/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"}`}>
+            <Link href="/posts" className={`flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-md ${isDark ? "text-gray-300 hover:text-white hover:bg-white/5" : "text-gray-700 hover:text-gray-900 hover:bg-gray-100"}`}>
               <Home className="w-4 h-4" />
               Home
             </Link>
