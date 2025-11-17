@@ -1,10 +1,12 @@
 
+'use client';
+
 import { useState, ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog"
-import { Drawer, DrawerContent, DrawerTrigger, DrawerTitle, DrawerDescription, DrawerHeader } from "@/components/ui/drawer"
+import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import {
   Popover,
   PopoverContent,
@@ -121,70 +123,65 @@ export function SaveToCollectionDialog({
     setIsOpen(open);
   }
 
-  const CollectionsContent = () => (
-    <div className={`flex flex-col h-auto max-h-[500px] w-full sm:w-[350px] ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
-        <DrawerHeader className={`p-4 border-b text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-            <DrawerTitle>Save to collection</DrawerTitle>
-            <DrawerDescription className="sr-only">Select a collection to save the post to, or create a new one.</DrawerDescription>
-        </DrawerHeader>
+  const CollectionsList = () => (
+    <>
+      <div className="flex-1 overflow-y-auto">
+        {/* Create New Collection */}
+        <button
+          onClick={() => setIsCreating(true)}
+          className={`w-full flex items-center gap-3 p-4 transition-colors border-b ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'}`}
+        >
+          <div className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
+            <Plus className={`w-6 h-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+          </div>
+          <div className="flex-1 text-left">New Collection</div>
+        </button>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Create New Collection */}
-          <button
-            onClick={() => setIsCreating(true)}
-            className={`w-full flex items-center gap-3 p-4 transition-colors border-b ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'}`}
+        {/* Existing Collections */}
+        {collections.map((collection) => (
+          <div
+            key={collection.id}
+            className="flex items-center gap-3 p-4"
           >
-            <div className={`w-12 h-12 rounded-lg border-2 flex items-center justify-center ${isDark ? 'border-gray-700' : 'border-gray-300'}`}>
-              <Plus className={`w-6 h-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
-            </div>
-            <div className="flex-1 text-left">New Collection</div>
-          </button>
-
-          {/* Existing Collections */}
-          {collections.map((collection) => (
-            <div
-              key={collection.id}
-              className="flex items-center gap-3 p-4"
-            >
-              <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
-                <Image
-                  src={collection.thumbnailUrl}
-                  alt={collection.name}
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span>{collection.name}</span>
-                  {collection.isPrivate && (
-                    <Lock className={`w-3 h-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
-                  )}
-                </div>
-                <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                  {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
-                </div>
-              </div>
-              <Checkbox
-                checked={collection.isSaved}
-                onCheckedChange={() => toggleCollection(collection.id)}
-                className="w-6 h-6"
+            <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0">
+              <Image
+                src={collection.thumbnailUrl}
+                alt={collection.name}
+                width={48}
+                height={48}
+                className="w-full h-full object-cover"
               />
             </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className={`p-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-          <Button
-            onClick={() => setIsOpen(false)}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
-          >
-            Done
-          </Button>
-        </div>
+            <div className="flex-1">
+              <div className="flex items-center gap-1.5">
+                <span>{collection.name}</span>
+                {collection.isPrivate && (
+                  <Lock className={`w-3 h-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+                )}
+              </div>
+              <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
+              </div>
+            </div>
+            <Checkbox
+              checked={collection.isSaved}
+              onCheckedChange={() => toggleCollection(collection.id)}
+              className="w-6 h-6"
+            />
+          </div>
+        ))}
       </div>
+
+      {/* Footer */}
+      <div className={`p-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+        <Button
+          onClick={() => setIsOpen(false)}
+          className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+        >
+          Done
+        </Button>
+      </div>
+    </>
   );
 
   if (isMobile) {
@@ -201,7 +198,13 @@ export function SaveToCollectionDialog({
               onCreate={handleCreateCollection}
             />
           ) : (
-            <CollectionsContent />
+            <div className={`flex flex-col h-auto max-h-[500px] w-full ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
+              <DrawerHeader className={`p-4 border-b text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                  <DrawerTitle>Save to collection</DrawerTitle>
+                  <DrawerDescription className="sr-only">Select a collection to save the post to, or create a new one.</DrawerDescription>
+              </DrawerHeader>
+              <CollectionsList />
+            </div>
           )}
         </DrawerContent>
       </Drawer>
@@ -229,7 +232,13 @@ export function SaveToCollectionDialog({
               </DialogContent>
             </Dialog>
           ) : (
-            <CollectionsContent />
+            <div className={`flex flex-col h-auto max-h-[500px] w-full sm:w-[350px] ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
+              <div className={`p-4 border-b text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+                <h4 className="font-medium leading-none">Save to collection</h4>
+                <p className="sr-only">Select a collection to save the post to, or create a new one.</p>
+              </div>
+              <CollectionsList />
+            </div>
           )}
       </PopoverContent>
     </Popover>
