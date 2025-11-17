@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { ProjectCard, Project } from "./components/ProjectCard";
 import { Button } from "@/components/ui/button";
-import { Plus, Search, Sun, Moon, Menu } from "lucide-react";
+import { Plus, Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SideNavigation } from "./components/SideNavigation";
 import { FeaturedProjectCard } from "./components/FeaturedProjectCard";
 import { StatsBar } from "./components/StatsBar";
 import { StarredProjectsList } from "./components/StarredProjectsList";
 import { ProjectGrid } from "./components/ProjectGrid";
+import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 
 const mockProjects: Record<string, Project[]> = {
   my: [
@@ -356,6 +357,10 @@ export default function App() {
     return <ProjectGrid projects={projectsToDisplay} theme={theme} />;
   };
 
+  const handleToggleTheme = () => {
+    setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <div
       className={`min-h-screen ${
@@ -396,22 +401,6 @@ export default function App() {
 
             <div className="flex items-center gap-3">
               <Button
-                onClick={() => setTheme(isDark ? "light" : "dark")}
-                variant="outline"
-                size="icon"
-                className={
-                  isDark
-                    ? "bg-white/5 border-white/10 hover:bg-white/10 text-[#e5e7eb]"
-                    : "bg-gray-100 border-gray-300 hover:bg-gray-200 text-gray-900"
-                }
-              >
-                {isDark ? (
-                  <Sun className="h-4 w-4" />
-                ) : (
-                  <Moon className="h-4 w-4" />
-                )}
-              </Button>
-              <Button
                 className={
                   isDark
                     ? "bg-cyan-400 hover:bg-cyan-500 text-white"
@@ -421,6 +410,7 @@ export default function App() {
                 <Plus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">New Project</span>
               </Button>
+              <ProfileDropdown theme={theme} onToggleTheme={handleToggleTheme} />
             </div>
           </div>
         </div>

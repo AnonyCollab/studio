@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -78,7 +79,7 @@ const DropdownContent = ({ theme, onToggleTheme }: ProfileDropdownProps) => {
         Saved Posts
       </DropdownMenuItem>
       <DropdownMenuSeparator className={separatorClass} />
-      {onToggleTheme && (
+      {onToggleTheme && theme && (
         <>
           <div className="px-2 py-1">
             <ThemeToggle theme={theme} onToggle={onToggleTheme} />
@@ -130,7 +131,7 @@ const MobileMenu = ({
             <ChevronRight />
           </button>
           <Separator className={separatorClass} />
-          {onToggleTheme && (
+          {onToggleTheme && theme && (
             <div className={itemClass}>
               <span>Theme</span>
               <button
@@ -167,7 +168,7 @@ export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) 
         <Button
           variant="ghost"
           size="icon"
-          className="relative z-50"
+          className="relative"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? (
