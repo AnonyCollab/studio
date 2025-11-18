@@ -36,9 +36,9 @@ function AppContent({ children }: { children: ReactNode }) {
       <body className={bodyClassName}>
         <FirebaseClientProvider>
           <div className="relative isolate min-h-screen">
-            {!isLandingPage && theme === 'dark' && (
+            {!isLandingPage && (
               <Suspense fallback={null}>
-                <AnimatedBackground />
+                <AnimatedBackground theme={theme} />
               </Suspense>
             )}
             <TopNav theme={theme} onToggleTheme={toggleTheme} />
