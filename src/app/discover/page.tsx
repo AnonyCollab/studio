@@ -1,8 +1,7 @@
 
 'use client';
 import { useState } from "react";
-import { ProjectCard, Project } from "./components/ProjectCard";
-import { Button } from "@/components/ui/button";
+import { Project, ProjectCard } from "./components/ProjectCard";
 import { Plus, Search, Menu } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SideNavigation } from "./components/SideNavigation";
@@ -361,7 +360,7 @@ export default function App() {
   return (
     <div
       className={`min-h-screen ${
-        isDark ? "bg-[#0a0e1a]" : "bg-gray-50"
+        isDark ? "" : "bg-gray-50"
       }`}
     >
       {/* Mobile Navigation Drawer */}

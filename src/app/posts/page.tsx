@@ -271,7 +271,7 @@ export default function PostsPage() {
   }, [isDetailOpen]);
 
   return (
-    <div className={`min-h-screen ${theme === "dark" ? "bg-[#0a0e1a]" : "bg-gray-50"}`}>
+    <div className={`min-h-screen ${theme === "light" ? "bg-gray-50" : ""}`}>
       <div className="max-w-[1920px] mx-auto">
         <div className="flex items-start">
           <div
