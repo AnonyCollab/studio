@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode, Suspense, lazy } from 'react';
 import { usePathname } from 'next/navigation';
 import './globals.css';
 import './landing/index.css';
@@ -9,7 +9,8 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { TopNav } from './header/components/TopNav';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { cn } from '@/lib/utils';
-import GlowingOrb from './landing/components/GlowingOrb';
+
+const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackground'));
 
 function AppContent({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme();
@@ -35,12 +36,10 @@ function AppContent({ children }: { children: ReactNode }) {
       <body className={bodyClassName}>
         <FirebaseClientProvider>
           <div className="relative isolate min-h-screen">
-             {!isLandingPage && theme === 'dark' && (
-              <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-                <GlowingOrb size={500} color="rgba(34, 211, 238, 0.15)" className="-top-1/4 left-1/4" />
-                <GlowingOrb size={400} color="rgba(56, 189, 248, 0.1)" className="top-1/3 right-1/4" />
-                <GlowingOrb size={450} color="rgba(168, 85, 247, 0.1)" className="bottom-0 left-1/2 -translate-x-1/2" />
-              </div>
+            {!isLandingPage && theme === 'dark' && (
+              <Suspense fallback={null}>
+                <AnimatedBackground />
+              </Suspense>
             )}
             <TopNav theme={theme} onToggleTheme={toggleTheme} />
             <main>{children}</main>
