@@ -23,8 +23,9 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { z } from 'zod';
-import { useFirebaseApp } from "@/firebase";
+import { useFirebaseApp, useFirestore, usePosts } from "@/firebase";
 import { cn } from "@/lib/utils";
+import { addPost } from "@/firebase/non-blocking-updates";
 
 const CreatePostSchema = z.object({
   postType: z.string(),
@@ -55,6 +56,8 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const firebaseApp = useFirebaseApp();
+  const firestore = useFirestore();
+  const { handleCloseDetail } = usePosts();
   const storage = getStorage(firebaseApp);
 
   const form = useForm<CreatePostInput>({
@@ -134,13 +137,35 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
       }
   };
 
-
   const onSubmit = async (data: CreatePostInput) => {
-    toast({
-      variant: "destructive",
-      title: "Not Implemented",
-      description: "Creating posts is currently unavailable.",
-    });
+    if (!firestore) return;
+    try {
+      await addPost(firestore, {
+        ...data,
+        tags: data.tags.split(',').map(tag => tag.trim()),
+        author: { // Mock author, replace with real user data
+          name: "Anonymous User",
+          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
+        },
+        likes: 0,
+        comments: 0,
+        reposts: 0,
+        shares: 0,
+        timestamp: new Date().toISOString(),
+      });
+      toast({
+        title: "Post Created!",
+        description: "Your post has been successfully created.",
+      });
+      handleCloseDetail();
+    } catch(e) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "There was an error creating your post.",
+      });
+    }
   };
 
   const isDark = theme === "dark";

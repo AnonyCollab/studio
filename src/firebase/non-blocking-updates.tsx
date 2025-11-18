@@ -1,3 +1,4 @@
+
 'use client';
     
 import {
@@ -5,9 +6,12 @@ import {
   addDoc,
   updateDoc,
   deleteDoc,
+  collection,
   CollectionReference,
   DocumentReference,
+  Firestore,
   SetOptions,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -86,4 +90,15 @@ export function deleteDocumentNonBlocking(docRef: DocumentReference) {
         })
       )
     });
+}
+
+/**
+ * Adds a new post to the 'posts' collection in Firestore.
+ */
+export function addPost(firestore: Firestore, postData: any) {
+  const postsCollection = collection(firestore, 'posts');
+  return addDocumentNonBlocking(postsCollection, {
+    ...postData,
+    createdAt: serverTimestamp(),
+  });
 }
