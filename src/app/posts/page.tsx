@@ -9,6 +9,7 @@ import { FilterPanel } from "./components/FilterPanel";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/context/ThemeContext";
+import { usePosts } from "@/context/PostContext";
 
 interface Post {
   id: string;
@@ -241,23 +242,17 @@ const ClientOnlyMasonry = ({ children, ...props }: any) => {
 
 
 export default function PostsPage() {
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-  const [showCreatePost, setShowCreatePost] = useState(false);
+  const { 
+    selectedPost, 
+    setSelectedPost, 
+    showCreatePost,
+    isDetailOpen,
+    handleCloseDetail
+  } = usePosts();
+
   const [showFilter, setShowFilter] = useState(false);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
-
-  const handleOpenCreatePost = () => {
-    setSelectedPost(null);
-    setShowCreatePost(true);
-  };
-
-  const handleCloseDetail = () => {
-    setSelectedPost(null);
-    setShowCreatePost(false);
-  };
-
-  const isDetailOpen = selectedPost !== null || showCreatePost;
 
   useEffect(() => {
     if (isDetailOpen) {
@@ -308,7 +303,6 @@ export default function PostsPage() {
                     key={post.id}
                     post={post}
                     onClick={() => {
-                      setShowCreatePost(false);
                       setSelectedPost(post);
                     }}
                     theme={theme}

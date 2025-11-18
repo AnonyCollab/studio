@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { TopNav } from './header/components/TopNav';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { PostProvider } from '@/context/PostContext';
 import { cn } from '@/lib/utils';
 
 const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackground'));
@@ -59,7 +60,9 @@ export default function RootLayout({
 }>) {
   return (
     <ThemeProvider>
-      <AppContent>{children}</AppContent>
+      <PostProvider>
+        <AppContent>{children}</AppContent>
+      </PostProvider>
     </ThemeProvider>
   );
 }

@@ -7,17 +7,18 @@ import { Search, Plus, Bell, SlidersHorizontal, Shield, Home, Compass, Newspaper
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
+import { usePosts } from "@/context/PostContext";
 
 interface TopNavProps {
-  onCreatePost?: () => void;
   onToggleFilter?: () => void;
   theme?: "light" | "dark";
   onToggleTheme?: () => void;
 }
 
-export function TopNav({ onCreatePost, onToggleFilter, theme = "dark", onToggleTheme }: TopNavProps) {
+export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme }: TopNavProps) {
   const isDark = theme === "dark";
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const { handleOpenCreatePost } = usePosts();
   
   return (
     <nav style={{ '--header-height': '3.5rem' } as React.CSSProperties} className={`sticky top-0 z-50 h-[var(--header-height)] flex items-center ${isDark ? "bg-background/80 backdrop-blur-sm border-b border-white/10" : "bg-background/80 backdrop-blur-sm border-b border-gray-200"}`}>
@@ -83,7 +84,7 @@ export function TopNav({ onCreatePost, onToggleFilter, theme = "dark", onToggleT
           {/* Create Post Button */}
           <Button 
             className={`gap-2 ${isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}`}
-            onClick={onCreatePost}
+            onClick={handleOpenCreatePost}
             size="sm"
           >
             <Plus className="w-4 h-4" />
