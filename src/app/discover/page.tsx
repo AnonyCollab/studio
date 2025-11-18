@@ -364,55 +364,6 @@ export default function App() {
         isDark ? "bg-[#0a0e1a]" : "bg-gray-50"
       }`}
     >
-      {/* Navigation */}
-      <nav
-        className={`sticky top-0 z-50 border-b ${
-          isDark
-            ? "bg-[#0a0e1a] border-white/10"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        <div className="px-6 py-3.5">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
-                variant="ghost"
-                size="icon"
-                className={`lg:hidden ${
-                  isDark
-                    ? "hover:bg-white/5 text-[#e5e7eb]"
-                    : "hover:bg-gray-100 text-gray-900"
-                }`}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <div
-                className={`font-semibold ${
-                  isDark ? "text-[#e5e7eb]" : "text-gray-900"
-                }`}
-              >
-                AnonyCollab
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                className={
-                  isDark
-                    ? "bg-cyan-400 hover:bg-cyan-500 text-white"
-                    : "bg-cyan-600 hover:bg-cyan-700 text-white"
-                }
-              >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">New Project</span>
-              </Button>
-              <ProfileDropdown theme={theme} onToggleTheme={toggleTheme} />
-            </div>
-          </div>
-        </div>
-      </nav>
-
       {/* Mobile Navigation Drawer */}
       {sidebarOpen && (
         <div
