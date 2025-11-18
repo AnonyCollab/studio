@@ -60,15 +60,6 @@ export default function NewsPage() {
   return (
     <div className={`min-h-screen ${isDark ? 'bg-[#0a0e1a]' : 'bg-white'}`}>
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="text-center mb-12">
-          <h1 className={`text-4xl font-bold tracking-tight mb-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            The AnonyCollab Blog
-          </h1>
-          <p className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-            Insights on privacy, technology, and the future of work.
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Main Content */}
           <main className="lg:col-span-8">
