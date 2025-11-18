@@ -359,9 +359,7 @@ export default function App() {
 
   return (
     <div
-      className={`min-h-screen ${
-        isDark ? "" : "bg-gray-50"
-      }`}
+      className="min-h-screen"
     >
       {/* Mobile Navigation Drawer */}
       {sidebarOpen && (

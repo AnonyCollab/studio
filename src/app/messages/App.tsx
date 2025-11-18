@@ -30,7 +30,7 @@ export default function App() {
   return (
     <div
       style={{ height: 'calc(100vh - 3.5rem)' }}
-      className={`w-screen overflow-hidden ${isDark ? '' : 'bg-gray-50'} relative`}
+      className="w-screen overflow-hidden relative"
     >
       {/* Animated background blobs - only in dark mode */}
       {isDark && (
