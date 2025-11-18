@@ -23,7 +23,8 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { z } from 'zod';
-import { useFirebaseApp, useFirestore, usePosts } from "@/firebase";
+import { useFirebaseApp, useFirestore } from "@/firebase";
+import { usePosts } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { addPost } from "@/firebase/non-blocking-updates";
 
