@@ -24,6 +24,7 @@ import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { z } from 'zod';
 import { useFirebaseApp } from "@/firebase";
+import { cn } from "@/lib/utils";
 
 const CreatePostSchema = z.object({
   postType: z.string(),
@@ -161,7 +162,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
 
       {/* Scrollable Form Content */}
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto custom-scrollbar">
           <div className="p-6 space-y-6">
             
             {/* Post Type Selection */}
