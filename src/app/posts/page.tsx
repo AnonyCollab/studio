@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { PostCard } from "./components/PostCard";
 import { PostDetail } from "./components/PostDetail";
@@ -10,6 +10,9 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/context/ThemeContext";
 import { usePosts } from "@/context/PostContext";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy } from "firebase/firestore";
+import type { Timestamp } from "firebase/firestore";
 
 interface Post {
   id: string;
@@ -26,6 +29,7 @@ interface Post {
   reposts: number;
   shares: number;
   timestamp: string;
+  createdAt?: Timestamp | string;
   problemDetails: string;
   problemSummary: string;
   whatIveTried: string;
@@ -51,6 +55,7 @@ const mockPosts: Post[] = [
     reposts: 34,
     shares: 15,
     timestamp: "3 hours ago",
+    createdAt: "2024-07-30T10:00:00Z",
     problemDetails:
       "This photo was taken during a solo hiking trip in the mountains. I woke up at 5 AM to catch the sunrise, and it was absolutely worth it. The valley was covered in a gentle mist, and the first rays of sunlight created this magical atmosphere. Nature has a way of putting everything into perspective.",
     problemSummary: "Woke up at 5 AM for a hike and was rewarded with a misty sunrise that was truly magical.",
@@ -75,6 +80,7 @@ const mockPosts: Post[] = [
     reposts: 12,
     shares: 8,
     timestamp: "5 hours ago",
+    createdAt: "2024-07-30T08:00:00Z",
     problemDetails:
       "Urban architecture continues to fascinate me. This building represents the perfect blend of modern design principles and functional space. The clean lines and geometric patterns create a visual rhythm that's both calming and inspiring.",
     problemSummary: "This building blends modern design and function, with clean lines creating a calming visual rhythm.",
@@ -99,6 +105,7 @@ const mockPosts: Post[] = [
     reposts: 55,
     shares: 29,
     timestamp: "8 hours ago",
+    createdAt: "2024-07-30T05:00:00Z",
     problemDetails:
       "This piece is part of my ongoing exploration of abstract forms and vibrant colors. I wanted to create something that evokes emotion without relying on recognizable shapes. The interplay of light and shadow, warm and cool tones, creates a dynamic visual experience.",
      problemSummary: "Creating a piece that evokes emotion through abstract forms and vibrant colors.",
@@ -123,6 +130,7 @@ const mockPosts: Post[] = [
     reposts: 89,
     shares: 41,
     timestamp: "12 hours ago",
+    createdAt: "2024-07-30T01:00:00Z",
     problemDetails:
       "Food photography has become my passion. This dish was crafted by a talented chef friend, and I had the pleasure of capturing its beauty before it was enjoyed. The presentation, colors, and textures all come together to create not just a meal, but a work of art.",
      problemSummary: "Trying to capture the artful presentation of a dish made by a talented chef.",
@@ -138,7 +146,7 @@ const mockPosts: Post[] = [
       name: "Ryan Park",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ryan",
     },
-    imageUrl: "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MTE3NTc2MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MTE3NTc2MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Workspace Inspiration",
     description: "Creating the perfect environment for productivity and creativity.",
     tags: ["Workspace", "Tech", "Productivity"],
@@ -147,6 +155,7 @@ const mockPosts: Post[] = [
     reposts: 20,
     shares: 11,
     timestamp: "1 day ago",
+    createdAt: "2024-07-29T13:00:00Z",
     problemDetails:
       "After months of tweaking and adjusting, I've finally created my ideal workspace. Good lighting, minimal distractions, and all the tools I need within reach. A well-designed workspace can make all the difference in productivity and creative output.",
      problemSummary: "Designing a workspace that is both productive and creatively inspiring.",
@@ -171,6 +180,7 @@ const mockPosts: Post[] = [
     reposts: 120,
     shares: 63,
     timestamp: "1 day ago",
+    createdAt: "2024-07-29T12:00:00Z",
     problemDetails:
       "There's something meditative about watching ocean waves. This was captured during a beach walk at sunset. The way the light catches the water, the constant movement, a- it all creates a sense of peace and connection to nature.",
      problemSummary: "Capturing the meditative and peaceful quality of ocean waves at sunset.",
@@ -195,6 +205,7 @@ const mockPosts: Post[] = [
     reposts: 76,
     shares: 38,
     timestamp: "2 days ago",
+    createdAt: "2024-07-28T13:00:00Z",
     problemDetails:
       "This sunset view from the mountain peak made the challenging hike completely worthwhile. The golden light painting the sky, the silhouette of the distant peaks, and the crisp mountain air – moments like these remind us why we seek adventure.",
      problemSummary: "The challenge of a tough hike was rewarded with a stunning sunset from a mountain peak.",
@@ -219,6 +230,7 @@ const mockPosts: Post[] = [
     reposts: 45,
     shares: 22,
     timestamp: "2 days ago",
+    createdAt: "2024-07-28T11:00:00Z",
     problemDetails:
       "Street photography allows us to capture authentic moments of everyday life. This shot represents the energy and diversity of the city – people going about their day, each with their own story, all part of the urban tapestry.",
      problemSummary: "Capturing the authentic, candid moments that define the energy of urban life.",
@@ -253,17 +265,33 @@ export default function PostsPage() {
   const [showFilter, setShowFilter] = useState(false);
   const { theme } = useTheme();
   const isMobile = useIsMobile();
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    if (isDetailOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
+  const postsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
+
+  const { data: firestorePosts } = useCollection<Post>(postsQuery);
+
+  const allPosts = useMemo(() => {
+    const combinedPosts = [...mockPosts];
+    const mockPostIds = new Set(mockPosts.map(p => p.id));
+
+    if (firestorePosts) {
+      firestorePosts.forEach(fp => {
+        if (!mockPostIds.has(fp.id)) {
+          combinedPosts.push(fp);
+        }
+      });
     }
-    return () => {
-      document.body.classList.remove("overflow-hidden");
-    };
-  }, [isDetailOpen]);
+
+    return combinedPosts.sort((a, b) => {
+      const dateA = a.createdAt ? (a.createdAt as Timestamp).toMillis?.() || new Date(a.createdAt as string).getTime() : 0;
+      const dateB = b.createdAt ? (b.createdAt as Timestamp).toMillis?.() || new Date(b.createdAt as string).getTime() : 0;
+      return dateB - dateA;
+    });
+  }, [firestorePosts]);
 
   return (
     <div className="min-h-screen">
@@ -289,8 +317,7 @@ export default function PostsPage() {
                 1536: isDetailOpen ? 2 : 4,
               }}
               className={cn(
-                "[&>div]:w-full",
-                isDetailOpen && "md:h-[calc(100vh-var(--header-height)-48px)] md:overflow-y-auto custom-scrollbar"
+                "[&>div]:w-full"
               )}
               style={{
                  // @ts-ignore
@@ -298,7 +325,7 @@ export default function PostsPage() {
               }}
             >
               <Masonry gutter={"10px"} className="px-0 md:px-4">
-                {mockPosts.map((post) => (
+                {allPosts.map((post) => (
                   <PostCard
                     key={post.id}
                     post={post}
@@ -355,3 +382,5 @@ export default function PostsPage() {
     </div>
   );
 }
+
+    
