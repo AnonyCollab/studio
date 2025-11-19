@@ -9,18 +9,26 @@ import { UserProfileTrigger } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, addDoc, doc, onSnapshot } from 'firebase/firestore';
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { formatDistanceToNow } from 'date-fns';
 import { PostShareCard } from './PostShareCard';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import { FileCard } from './FileCard';
 
 
 interface Message {
     id: string;
     senderId: string;
     text: string;
-    type: 'text' | 'postShare';
+    type: 'text' | 'postShare' | 'file';
     postId?: string;
+    fileInfo?: {
+      name: string;
+      size: number;
+      type: string;
+      url: string;
+    };
     createdAt: {
       seconds: number;
       nanoseconds: number;
@@ -41,6 +49,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const { user: currentUser } = useUser();
   const firestore = useFirestore();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch the DM document to get conversation details (group name, participants, etc.)
   const dmRef = useMemoFirebase(() => {
@@ -116,6 +125,47 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
         // Handle group messages
         await addDoc(collection(firestore, 'servers', channelId, 'messages'), messageData);
     }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !channelId || !currentUser) return;
+
+    const storage = getStorage();
+    // Path: /dms/{dmId}/{userId}/{fileName}
+    const filePath = `dms/${channelId}/${currentUser.uid}/${file.name}`;
+    const fileStorageRef = storageRef(storage, filePath);
+    const uploadTask = uploadBytesResumable(fileStorageRef, file);
+
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        // Can be used to show upload progress
+      }, 
+      (error) => {
+        console.error("Upload failed:", error);
+      }, 
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+          const fileMessage = {
+            senderId: currentUser.uid,
+            type: 'file' as const,
+            fileInfo: {
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              url: downloadURL,
+            },
+            createdAt: serverTimestamp(),
+          };
+
+          if (isDM) {
+            await addDoc(collection(firestore, 'dms', channelId, 'messages'), fileMessage);
+          } else {
+            await addDoc(collection(firestore, 'servers', channelId, 'messages'), fileMessage);
+          }
+        });
+      }
+    );
   };
   
   useEffect(() => {
@@ -240,8 +290,10 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
                         </span>
                       </div>
                   )}
-                  {msg.type === 'postShare' && msg.postId ? (
+                   {msg.type === 'postShare' && msg.postId ? (
                     <PostShareCard postId={msg.postId} theme={theme} />
+                  ) : msg.type === 'file' && msg.fileInfo ? (
+                    <FileCard fileInfo={msg.fileInfo} theme={theme} />
                   ) : (
                     <p className={`mt-0.5 ${isDarkTheme ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{msg.text}</p>
                   )}
@@ -259,11 +311,12 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
             ? 'bg-white/5 border border-white/10 focus-within:bg-white/10 focus-within:border-[#22d3ee]/50' 
             : 'bg-gray-100 border border-gray-300 focus-within:bg-gray-200 focus-within:border-cyan-500/50'
         } transition-all`}>
-          <button className={`p-1 transition-colors ${
+           <button onClick={() => fileInputRef.current?.click()} className={`p-1 transition-colors ${
             isDarkTheme ? 'text-white/70 hover:text-[#22d3ee]' : 'text-gray-600 hover:text-cyan-600'
           }`}>
             <Plus className="w-5 h-5" />
           </button>
+          <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
           <div className="flex-1">
             <input
               type="text"
