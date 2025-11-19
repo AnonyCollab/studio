@@ -391,10 +391,10 @@ export default function App() {
       {/* Main Content */}
       <main>
         <div className="max-w-[1800px] mx-auto px-6 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
              {/* Side Navigation - Takes 3 columns on large screens */}
-             <div className="lg:col-span-3">
-                  <div className="sticky top-24 hidden lg:block">
+             <div className="lg:col-span-3 h-full">
+                  <div className="sticky top-24 hidden lg:block h-full">
                     <SideNavigation
                       theme={theme}
                       activeSection={activeSection}
