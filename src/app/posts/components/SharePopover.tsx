@@ -21,20 +21,28 @@ export function SharePopover({ children }: SharePopoverProps) {
   const [hasCopied, setHasCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
-  const copyToClipboard = () => {
-    // This needs to be handled carefully in SSR environments like Next.js
+  const copyToClipboard = async () => {
     if (typeof window === 'undefined') return;
 
-    navigator.clipboard.writeText(window.location.href);
-    setHasCopied(true);
-    toast({
-      title: "Link Copied!",
-      description: "The post URL has been copied to your clipboard.",
-    });
-    setTimeout(() => {
-        setHasCopied(false);
-        setIsOpen(false);
-    }, 2000);
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setHasCopied(true);
+      toast({
+        title: "Link Copied!",
+        description: "The post URL has been copied to your clipboard.",
+      });
+      setTimeout(() => {
+          setHasCopied(false);
+          setIsOpen(false);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+      toast({
+        variant: "destructive",
+        title: "Copy Failed",
+        description: "Could not copy link to clipboard. Please try again.",
+      });
+    }
   };
 
   return (

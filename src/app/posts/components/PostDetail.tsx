@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Bookmark, Heart, Repeat2, MessageCircle, Share2, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/carousel"
 import { useFirestore } from "@/firebase";
 import { toggleLikePost } from "@/firebase/non-blocking-updates";
+import { collection, query, onSnapshot } from "firebase/firestore";
 
 interface PostDetailProps {
   post: {
@@ -68,9 +69,23 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
   const [activeTab, setActiveTab] = useState("problem");
   const [isLiked, setIsLiked] = useState(false);
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [commentCount, setCommentCount] = useState(post.comments);
   const isDark = theme === "dark";
   const currentBadgeColors = isDark ? badgeColors : badgeColorsLight;
   const firestore = useFirestore();
+
+  useEffect(() => {
+    if (!firestore || !post.id) return;
+
+    const commentsQuery = query(collection(firestore, "posts", post.id, "comments"));
+    
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      setCommentCount(snapshot.size);
+    });
+
+    return () => unsubscribe();
+  }, [firestore, post.id]);
+
 
   const handleLike = async () => {
     const newLikedState = !isLiked;
@@ -226,7 +241,7 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
             </button>
             <button className={`flex items-center gap-2 transition-colors ${isDark ? 'text-gray-400 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
                 <MessageCircle className="w-5 h-5" />
-                <span>{post.comments} <span className="hidden sm:inline">Comments</span></span>
+                <span>{commentCount} <span className="hidden sm:inline">Comments</span></span>
             </button>
             <SharePopover>
                 <button className={`flex items-center gap-2 ml-auto transition-colors ${isDark ? 'text-gray-400 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
