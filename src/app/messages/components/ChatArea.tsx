@@ -11,6 +11,8 @@ import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@
 import { collection, query, orderBy, serverTimestamp, addDoc, doc, onSnapshot } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { PostShareCard } from './PostShareCard';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 
 
 interface Message {
@@ -33,6 +35,7 @@ interface ChatAreaProps {
 
 export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const [message, setMessage] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const isDarkTheme = theme === 'dark';
   const { user: currentUser } = useUser();
   const firestore = useFirestore();
@@ -103,6 +106,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     };
     
     setMessage(''); // Clear input immediately
+    setShowEmojiPicker(false);
     
     if (isDM) {
         await addDoc(collection(firestore, 'dms', channelId, 'messages'), messageData);
@@ -120,6 +124,10 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
         }
     }
   }, [messages]);
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    setMessage(prevMessage => prevMessage + emojiData.emoji);
+  };
 
   if (!channelId) {
     return (
@@ -157,7 +165,11 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
       }`}>
         <div className="flex items-center gap-2">
           {isDM ? (
-            <MessageCircle className={`w-5 h-5 ${isDarkTheme ? 'text-white/70' : 'text-gray-600'}`} />
+             dmData?.isGroup ? (
+              <Users className={`w-5 h-5 ${isDarkTheme ? 'text-white/70' : 'text-gray-600'}`} />
+             ) : (
+              <MessageCircle className={`w-5 h-5 ${isDarkTheme ? 'text-white/70' : 'text-gray-600'}`} />
+             )
           ) : (
             <Hash className={`w-5 h-5 ${isDarkTheme ? 'text-white/70' : 'text-gray-600'}`} />
           )}
@@ -280,11 +292,16 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
             }`}>
               <Sticker className="w-5 h-5" />
             </button>
-            <button className={`p-1 transition-colors ${
-              isDarkTheme ? 'text-white/70 hover:text-[#22d3ee]' : 'text-gray-600 hover:text-cyan-600'
-            }`}>
-              <Smile className="w-5 h-5" />
-            </button>
+             <Popover open={showEmojiPicker} onOpenChange={setShowEmojiPicker}>
+                <PopoverTrigger asChild>
+                    <button className={`p-1 transition-colors ${ isDarkTheme ? 'text-white/70 hover:text-[#22d3ee]' : 'text-gray-600 hover:text-cyan-600' }`}>
+                      <Smile className="w-5 h-5" />
+                    </button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0 border-0 mb-2">
+                    <EmojiPicker onEmojiClick={onEmojiClick} theme={isDarkTheme ? 'dark' : 'light'} />
+                </PopoverContent>
+            </Popover>
             {message && (
               <button onClick={handleSendMessage} className={`p-1 transition-colors ${
                 isDarkTheme ? 'text-[#22d3ee] hover:text-cyan-300' : 'text-cyan-600 hover:text-cyan-700'
