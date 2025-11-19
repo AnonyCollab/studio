@@ -6,8 +6,8 @@
  * This ruleset enforces a public-read, public-write model for posts, with comments also being publicly accessible.
  *
  * Data Structure:
- * - Posts are stored in the `/posts/{postId}` collection.
- * - Comments are stored in the `/posts/{postId}/comments/{commentId}` subcollection.
+ * - Posts are stored in the /posts/{postId} collection.
+ * - Comments are stored in the /posts/{postId}/comments/{commentId} subcollection.
  *
  * Key Security Decisions:
  * - Posts and comments are publicly readable and writable by anyone, including unauthenticated users.
@@ -71,8 +71,8 @@ service cloud.firestore {
         allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
         
         match /messages/{messageId} {
-            // Allow read if user is a participant of the parent DM
-            allow read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/dms/$(dmId)).data.participants;
+            // Allow read/list if user is a participant of the parent DM
+            allow read, list: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/dms/$(dmId)).data.participants;
             
             // Allow create if user is a participant and the senderId matches their UID
             allow create: if request.auth != null 
