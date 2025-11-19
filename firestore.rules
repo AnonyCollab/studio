@@ -26,10 +26,13 @@ service cloud.firestore {
   
     // Helper function to check for an accepted friend request
     function acceptedFriendRequestExists(user1, user2) {
-      return exists(/databases/$(database)/documents/friendRequests/$(user1)_$(user2)) &&
-             get(/databases/$(database)/documents/friendRequests/$(user1)_$(user2)).data.status == 'accepted' ||
-             exists(/databases/$(database)/documents/friendRequests/$(user2)_$(user1)) &&
-             get(/databases/$(database)/documents/friendRequests/$(user2)_$(user1)).data.status == 'accepted';
+      return (
+        exists(/databases/$(database)/documents/friendRequests/$(user1 + '_' + user2)) &&
+        get(/databases/$(database)/documents/friendRequests/$(user1 + '_' + user2)).data.status == 'accepted'
+      ) || (
+        exists(/databases/$(database)/documents/friendRequests/$(user2 + '_' + user1)) &&
+        get(/databases/$(database)/documents/friendRequests/$(user2 + '_' + user1)).data.status == 'accepted'
+      );
     }
 
     // Users can be read by anyone. Writes are restricted.
