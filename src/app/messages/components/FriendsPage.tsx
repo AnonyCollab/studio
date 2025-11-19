@@ -1,4 +1,6 @@
 
+'use client';
+
 import { useState } from 'react';
 import { Users, UserPlus, MessageCircle, MoreVertical, Check, X, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,8 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserProfileTrigger } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
+import { useToast } from '@/hooks/use-toast';
 
-const friendsData = {
+const initialFriendsData = {
   online: [
     {
       id: 'user1',
@@ -107,7 +110,69 @@ interface FriendsPageProps {
 export function FriendsPage({ theme }: FriendsPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendInput, setNewFriendInput] = useState('');
+  const [friendsData, setFriendsData] = useState(initialFriendsData);
+  const { toast } = useToast();
   const isDark = theme === 'dark';
+  
+  const handleAddFriend = () => {
+    if (!newFriendInput.trim()) return;
+
+    const newRequest = {
+      id: Date.now().toString(),
+      name: newFriendInput.trim(),
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newFriendInput.trim()}`,
+      type: 'outgoing' as const,
+    };
+
+    setFriendsData(prevData => ({
+      ...prevData,
+      pending: [...prevData.pending, newRequest],
+    }));
+
+    toast({
+      title: 'Friend Request Sent',
+      description: `Your friend request to ${newFriendInput.trim()} has been sent.`,
+    });
+
+    setNewFriendInput('');
+  };
+
+  const handlePendingRequest = (friendId: string, action: 'accept' | 'decline') => {
+    const friend = friendsData.pending.find(f => f.id === friendId);
+    if (!friend) return;
+
+    if (action === 'accept') {
+      const newFriend = {
+        id: friend.id,
+        name: friend.name,
+        avatar: friend.avatar,
+        status: 'Online',
+        statusType: 'online' as const,
+      };
+
+      setFriendsData(prevData => ({
+        ...prevData,
+        online: [...prevData.online, newFriend],
+        all: [...prevData.all, newFriend],
+        pending: prevData.pending.filter(f => f.id !== friendId),
+      }));
+       toast({
+        title: 'Friend Added',
+        description: `You are now friends with ${friend.name}.`,
+      });
+    } else {
+      setFriendsData(prevData => ({
+        ...prevData,
+        pending: prevData.pending.filter(f => f.id !== friendId),
+      }));
+      toast({
+        title: 'Request Removed',
+        description: `You have removed the friend request from ${friend.name}.`,
+        variant: 'destructive',
+      });
+    }
+  };
+
 
   return (
     <div className={`flex-1 flex flex-col ${isDark ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
@@ -252,7 +317,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                   {friendsData.pending
                     .filter((f) => f.type === 'incoming')
                     .map((friend) => (
-                      <PendingFriendItem key={friend.id} friend={friend} isDark={isDark} />
+                      <PendingFriendItem key={friend.id} friend={friend} isDark={isDark} onAction={handlePendingRequest} />
                     ))}
                 </div>
 
@@ -264,7 +329,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                   {friendsData.pending
                     .filter((f) => f.type === 'outgoing')
                     .map((friend) => (
-                      <PendingFriendItem key={friend.id} friend={friend} isDark={isDark} />
+                      <PendingFriendItem key={friend.id} friend={friend} isDark={isDark} onAction={handlePendingRequest} />
                     ))}
                 </div>
               </div>
@@ -298,6 +363,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                       }`}
                     />
                     <Button 
+                      onClick={handleAddFriend}
                       className={isDark ? 'bg-[#22d3ee] hover:bg-cyan-500 text-white' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}
                       disabled={!newFriendInput}
                     >
@@ -406,7 +472,7 @@ function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; t
   );
 }
 
-function PendingFriendItem({ friend, isDark }: { friend: any; isDark: boolean }) {
+function PendingFriendItem({ friend, isDark, onAction }: { friend: any; isDark: boolean; onAction: (id: string, action: 'accept' | 'decline') => void }) {
   return (
     <div className={`p-3 rounded-xl flex items-center gap-3 ${
       isDark 
@@ -426,10 +492,10 @@ function PendingFriendItem({ friend, isDark }: { friend: any; isDark: boolean })
       <div className="flex items-center gap-2">
         {friend.type === 'incoming' ? (
           <>
-            <button className="p-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 transition-colors">
+            <button onClick={() => onAction(friend.id, 'accept')} className="p-2 rounded-lg bg-emerald-500 hover:bg-emerald-600 transition-colors">
               <Check className="w-5 h-5 text-white" />
             </button>
-            <button className={`p-2 rounded-lg transition-colors ${
+            <button onClick={() => onAction(friend.id, 'decline')} className={`p-2 rounded-lg transition-colors ${
               isDark 
                 ? 'bg-[#131823] border border-white/10 hover:bg-red-500/20' 
                 : 'bg-gray-100 border border-gray-200 hover:bg-red-100'
@@ -438,7 +504,7 @@ function PendingFriendItem({ friend, isDark }: { friend: any; isDark: boolean })
             </button>
           </>
         ) : (
-          <button className={`p-2 rounded-lg transition-colors ${
+          <button onClick={() => onAction(friend.id, 'decline')} className={`p-2 rounded-lg transition-colors ${
             isDark 
               ? 'bg-[#131823] border border-white/10 hover:bg-red-500/20' 
               : 'bg-gray-100 border border-gray-200 hover:bg-red-100'
