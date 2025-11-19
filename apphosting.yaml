@@ -12,6 +12,7 @@ cors:
       - GET
       - POST
       - HEAD
+      - OPTIONS
     headers:
       - content-type
       - x-firebase-storage-upload
