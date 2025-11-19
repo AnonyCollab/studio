@@ -62,23 +62,28 @@ export default function App() {
 
       {/* Main app layout */}
       <div className="relative h-full flex">
-        {/* Server list */}
-        <ServerList 
-          selectedServer={selectedServer}
-          onSelectServer={(id) => {
-            setSelectedServer(id);
-            if (id === 'home') {
-              setCurrentView('friends');
-              setSelectedChannel(null);
-              setSelectedDM(null);
-            } else {
-              setCurrentView('chat');
-              setSelectedChannel('general'); // Select 'general' by default
-              setSelectedDM(null);
-            }
-          }}
-          theme={theme}
-        />
+        {/* Server list - conditionally rendered on mobile */}
+        <div className={cn(
+          "transition-all duration-300",
+          isMobile && selectedDM ? 'w-0 hidden' : 'w-20'
+        )}>
+          <ServerList 
+            selectedServer={selectedServer}
+            onSelectServer={(id) => {
+              setSelectedServer(id);
+              if (id === 'home') {
+                setCurrentView('friends');
+                setSelectedChannel(null);
+                setSelectedDM(null);
+              } else {
+                setCurrentView('chat');
+                setSelectedChannel('general'); // Select 'general' by default
+                setSelectedDM(null);
+              }
+            }}
+            theme={theme}
+          />
+        </div>
 
         {/* Left Sidebars */}
         <div className={cn(
