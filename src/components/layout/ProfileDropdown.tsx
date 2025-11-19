@@ -25,7 +25,9 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ThemeToggle } from '@/app/posts/components/ThemeToggle';
 import { Separator } from '@/components/ui/separator';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 interface ProfileDropdownProps {
   theme?: 'light' | 'dark';
@@ -58,6 +60,13 @@ const DropdownContent = ({ theme, onToggleTheme, user }: ProfileDropdownProps & 
     ? 'text-gray-300 focus:bg-white/5 focus:text-white'
     : 'text-gray-700 focus:bg-gray-100 focus:text-gray-900';
   const separatorClass = isDark ? 'bg-white/10' : 'bg-gray-200';
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
 
   return (
     <>
@@ -88,7 +97,7 @@ const DropdownContent = ({ theme, onToggleTheme, user }: ProfileDropdownProps & 
           <DropdownMenuSeparator className={separatorClass} />
         </>
       )}
-      <DropdownMenuItem className={itemClass}>
+      <DropdownMenuItem className={itemClass} onClick={handleLogout}>
         <LogOut />
         Log out
       </DropdownMenuItem>
@@ -106,6 +115,13 @@ const MobileMenu = ({
     isDark ? 'text-gray-300' : 'text-gray-700'
   }`;
   const separatorClass = `mx-4 ${isDark ? 'bg-white/10' : 'bg-gray-200'}`;
+  const auth = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
+  };
 
   return (
     <div
@@ -148,7 +164,7 @@ const MobileMenu = ({
             </div>
           )}
           <Separator className={separatorClass} />
-          <button className={itemClass}>
+          <button className={itemClass} onClick={handleLogout}>
             <span>Log Out</span>
             <LogOut />
           </button>
