@@ -136,7 +136,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     const fileStorageRef = storageRef(storage, filePath);
   
     // Perform the upload without setting content type to avoid preflight
-    const uploadTask = uploadBytesResumable(fileStorageRef, file);
+    const uploadTask = uploadBytesResumable(fileStorageRef, file, { contentType: undefined });
   
     uploadTask.on('state_changed',
       (snapshot) => {
@@ -389,3 +389,5 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     </div>
   );
 }
+
+    
