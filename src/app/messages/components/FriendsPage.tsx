@@ -1,175 +1,204 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId } from 'firebase/firestore';
 import { Users, UserPlus, MessageCircle, MoreVertical, Check, X, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { UserProfileTrigger } from './ProfileCard';
-import { mockUsers } from '../data/mockUsers';
+import { UserProfileTrigger, UserProfile } from './ProfileCard';
 import { useToast } from '@/hooks/use-toast';
 
-const initialFriendsData = {
-  online: [
-    {
-      id: 'user1',
-      name: 'Alice Wonderland',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-      status: 'Creating amazing designs',
-      statusType: 'game' as const,
-    },
-    {
-      id: 'user2',
-      name: 'Bob the Builder',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-      status: 'Online',
-      statusType: 'online' as const,
-    },
-    {
-      id: 'user3',
-      name: 'Charlie Notes',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
-      status: 'Listening to some tunes',
-      statusType: 'voice' as const,
-    },
-  ],
-  all: [
-    {
-      id: 'user1',
-      name: 'Alice Wonderland',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-      status: 'Creating amazing designs',
-      statusType: 'game' as const,
-    },
-    {
-      id: 'user2',
-      name: 'Bob the Builder',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-      status: 'Online',
-      statusType: 'online' as const,
-    },
-    {
-      id: 'user3',
-      name: 'Charlie Notes',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
-      status: 'Listening to some tunes',
-      statusType: 'voice' as const,
-    },
-    {
-      id: 'user4',
-      name: 'Diana',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana',
-      status: 'Offline',
-      statusType: 'offline' as const,
-    },
-    {
-      id: 'user5',
-      name: 'Eve',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Eve',
-      status: 'Offline',
-      statusType: 'offline' as const,
-    },
-    {
-      id: 'user6',
-      name: 'Frank Words',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Frank',
-      status: 'Offline',
-      statusType: 'offline' as const,
-    },
-  ],
-  pending: [
-    {
-      id: '7',
-      name: 'John Smith',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-      type: 'incoming' as const,
-    },
-    {
-      id: '8',
-      name: 'Maria Rodriguez',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Maria',
-      type: 'incoming' as const,
-    },
-    {
-      id: '9',
-      name: 'David Lee',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David',
-      type: 'outgoing' as const,
-    },
-  ],
-};
+interface FriendData {
+  id: string;
+  name: string;
+  avatar: string;
+  status: 'online' | 'offline';
+  statusType: 'online' | 'offline' | 'game' | 'voice';
+  customStatus?: string;
+}
+
+interface PendingRequest {
+  id: string;
+  name: string;
+  avatar: string;
+  type: 'incoming' | 'outgoing';
+  senderId: string;
+  receiverId: string;
+}
 
 interface FriendsPageProps {
   theme: 'light' | 'dark';
 }
 
 export function FriendsPage({ theme }: FriendsPageProps) {
+  const { user } = useUser();
+  const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendInput, setNewFriendInput] = useState('');
-  const [friendsData, setFriendsData] = useState(initialFriendsData);
+  const [activeTab, setActiveTab] = useState("online");
   const { toast } = useToast();
   const isDark = theme === 'dark';
+
+  // --- Firestore Queries ---
+
+  // Fetch pending friend requests
+  const incomingRequestsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'friendRequests'), where('receiverId', '==', user.uid), where('status', '==', 'pending'));
+  }, [firestore, user]);
+  const { data: incomingRequestsData } = useCollection(incomingRequestsQuery);
   
-  const handleAddFriend = () => {
-    if (!newFriendInput.trim()) return;
+  const outgoingRequestsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'friendRequests'), where('senderId', '==', user.uid), where('status', '==', 'pending'));
+  }, [firestore, user]);
+  const { data: outgoingRequestsData } = useCollection(outgoingRequestsQuery);
 
-    const newRequest = {
-      id: Date.now().toString(),
-      name: newFriendInput.trim(),
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${newFriendInput.trim()}`,
-      type: 'outgoing' as const,
-    };
+  // Fetch user's friends list
+  const userDocQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
 
-    setFriendsData(prevData => ({
-      ...prevData,
-      pending: [...prevData.pending, newRequest],
+  const [friendUIDs, setFriendUIDs] = useState<string[]>([]);
+  useEffect(() => {
+    if (!userDocQuery) return;
+    const unsub = onSnapshot(userDocQuery, (doc) => {
+      setFriendUIDs(doc.data()?.friends || []);
+    });
+    return () => unsub();
+  }, [userDocQuery]);
+
+  // Fetch friend profiles
+  const friendsQuery = useMemoFirebase(() => {
+    if (!firestore || friendUIDs.length === 0) return null;
+    return query(collection(firestore, 'users'), where(documentId(), 'in', friendUIDs));
+  }, [firestore, friendUIDs]);
+  const { data: friendsData } = useCollection(friendsQuery);
+
+  // --- Memoized Data Transformation ---
+
+  const pendingRequests = useMemo((): PendingRequest[] => {
+    const incoming = (incomingRequestsData || []).map(req => ({
+      id: req.id,
+      name: 'Unknown User', // Placeholder, will be fetched
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.senderId}`,
+      type: 'incoming' as const,
+      senderId: req.senderId,
+      receiverId: req.receiverId
     }));
 
-    toast({
-      title: 'Friend Request Sent',
-      description: `Your friend request to ${newFriendInput.trim()} has been sent.`,
-    });
+    const outgoing = (outgoingRequestsData || []).map(req => ({
+      id: req.id,
+      name: 'Unknown User', // Placeholder
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.receiverId}`,
+      type: 'outgoing' as const,
+      senderId: req.senderId,
+      receiverId: req.receiverId
+    }));
+    
+    return [...incoming, ...outgoing];
+  }, [incomingRequestsData, outgoingRequestsData]);
+  
+  const allFriends = useMemo((): FriendData[] => {
+    return (friendsData || []).map(friend => ({
+      id: friend.id,
+      name: friend.profile.displayName,
+      avatar: friend.profile.photoURL,
+      status: 'online', // TODO: Implement real-time status
+      statusType: 'online',
+    }));
+  }, [friendsData]);
+  
+  const onlineFriends = useMemo(() => allFriends.filter(f => f.status === 'online'), [allFriends]);
 
-    setNewFriendInput('');
+
+  // --- Actions ---
+
+  const handleAddFriend = async () => {
+    if (!newFriendInput.trim() || !user || !firestore) return;
+
+    try {
+      // Find user by displayName
+      const usersRef = collection(firestore, 'users');
+      const q = query(usersRef, where("profile.displayName", "==", newFriendInput.trim()), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        toast({ title: "User not found", description: `Could not find user ${newFriendInput.trim()}.`, variant: 'destructive' });
+        return;
+      }
+      
+      const receiver = querySnapshot.docs[0];
+      const receiverId = receiver.id;
+
+      if (receiverId === user.uid) {
+        toast({ title: "Cannot add yourself", description: "You cannot send a friend request to yourself.", variant: 'destructive' });
+        return;
+      }
+
+      // Create friend request
+      const friendRequestRef = collection(firestore, 'friendRequests');
+      await addDoc(friendRequestRef, {
+        senderId: user.uid,
+        receiverId: receiverId,
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+
+      toast({ title: 'Friend Request Sent', description: `Your friend request to ${newFriendInput.trim()} has been sent.` });
+      setNewFriendInput('');
+      setActiveTab("pending");
+      
+    } catch (error) {
+      console.error("Error sending friend request: ", error);
+      toast({ title: 'Error', description: 'Failed to send friend request.', variant: 'destructive' });
+    }
   };
 
-  const handlePendingRequest = (friendId: string, action: 'accept' | 'decline') => {
-    const friend = friendsData.pending.find(f => f.id === friendId);
-    if (!friend) return;
+  const handlePendingRequest = async (requestId: string, action: 'accept' | 'decline') => {
+    if (!firestore || !user) return;
+
+    const requestRef = doc(firestore, 'friendRequests', requestId);
 
     if (action === 'accept') {
-      const newFriend = {
-        id: friend.id,
-        name: friend.name,
-        avatar: friend.avatar,
-        status: 'Online',
-        statusType: 'online' as const,
-      };
+      try {
+        const batch = writeBatch(firestore);
+        
+        // Update request status
+        batch.update(requestRef, { status: 'accepted' });
 
-      setFriendsData(prevData => ({
-        ...prevData,
-        online: [...prevData.online, newFriend],
-        all: [...prevData.all, newFriend],
-        pending: prevData.pending.filter(f => f.id !== friendId),
-      }));
-       toast({
-        title: 'Friend Added',
-        description: `You are now friends with ${friend.name}.`,
-      });
-    } else {
-      setFriendsData(prevData => ({
-        ...prevData,
-        pending: prevData.pending.filter(f => f.id !== friendId),
-      }));
-      toast({
-        title: 'Request Removed',
-        description: `You have removed the friend request from ${friend.name}.`,
-        variant: 'destructive',
-      });
+        const requestDoc = await getDoc(requestRef);
+        if (!requestDoc.exists()) throw new Error("Request not found");
+        const { senderId, receiverId } = requestDoc.data();
+        
+        // Add to each other's friends list
+        const senderRef = doc(firestore, 'users', senderId);
+        const receiverRef = doc(firestore, 'users', receiverId);
+        batch.update(senderRef, { friends: arrayUnion(receiverId) });
+        batch.update(receiverRef, { friends: arrayUnion(senderId) });
+
+        await batch.commit();
+
+        toast({ title: 'Friend Added', description: 'You are now friends.' });
+
+      } catch (error) {
+        console.error("Error accepting friend request: ", error);
+        toast({ title: 'Error', description: 'Failed to accept friend request.', variant: 'destructive' });
+      }
+    } else { // Decline or Cancel
+      try {
+        await deleteDoc(requestRef);
+        toast({ title: 'Request Removed', description: 'The friend request has been removed.' });
+      } catch (error) {
+        console.error("Error removing friend request: ", error);
+        toast({ title: 'Error', description: 'Failed to remove friend request.', variant: 'destructive' });
+      }
     }
   };
 
@@ -187,7 +216,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
 
       {/* Content */}
       <div className="flex-1 overflow-hidden">
-        <Tabs defaultValue="online" className="h-full flex flex-col">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
           <div className="px-6 pt-4 bg-[rgba(0,0,0,0)]">
             <TabsList className={`p-1 ${
               isDark ? 'bg-[#131823] border border-white/10' : 'bg-white border border-gray-200'
@@ -218,6 +247,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                 }
               >
                 Pending
+                 {pendingRequests.length > 0 && <span className="ml-2 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">{pendingRequests.length}</span>}
               </TabsTrigger>
               <TabsTrigger 
                 value="add"
@@ -233,7 +263,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
           </div>
 
           <TabsContent value="online" className="flex-1 mt-0 overflow-hidden">
-            <div className="h-full flex flex-col">
+             <div className="h-full flex flex-col">
               {/* Search */}
               <div className="px-6 py-4">
                 <div className="relative">
@@ -259,9 +289,9 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                   <p className={`text-xs uppercase tracking-wider mb-2 ${
                     isDark ? 'text-[#94a3b8]' : 'text-gray-500'
                   }`}>
-                    Online — {friendsData.online.length}
+                    Online — {onlineFriends.length}
                   </p>
-                  {friendsData.online.map((friend) => (
+                  {onlineFriends.map((friend) => (
                     <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} />
                   ))}
                 </div>
@@ -296,9 +326,9 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                   <p className={`text-xs uppercase tracking-wider mb-2 ${
                     isDark ? 'text-[#94a3b8]' : 'text-gray-500'
                   }`}>
-                    All Friends — {friendsData.all.length}
+                    All Friends — {allFriends.length}
                   </p>
-                  {friendsData.all.map((friend) => (
+                  {allFriends.map((friend) => (
                     <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} />
                   ))}
                 </div>
@@ -307,26 +337,24 @@ export function FriendsPage({ theme }: FriendsPageProps) {
           </TabsContent>
 
           <TabsContent value="pending" className="flex-1 mt-0 overflow-hidden">
-            <ScrollArea className="h-full">
+             <ScrollArea className="h-full">
               <div className="px-6 py-4 space-y-4">
-                {/* Incoming requests */}
                 <div className="space-y-2">
                   <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-[#94a3b8]' : 'text-gray-500'}`}>
-                    Incoming — {friendsData.pending.filter(f => f.type === 'incoming').length}
+                    Incoming — {pendingRequests.filter(f => f.type === 'incoming').length}
                   </p>
-                  {friendsData.pending
+                  {pendingRequests
                     .filter((f) => f.type === 'incoming')
                     .map((friend) => (
                       <PendingFriendItem key={friend.id} friend={friend} isDark={isDark} onAction={handlePendingRequest} />
                     ))}
                 </div>
 
-                {/* Outgoing requests */}
                 <div className="space-y-2">
                   <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-[#94a3b8]' : 'text-gray-500'}`}>
-                    Outgoing — {friendsData.pending.filter(f => f.type === 'outgoing').length}
+                    Outgoing — {pendingRequests.filter(f => f.type === 'outgoing').length}
                   </p>
-                  {friendsData.pending
+                  {pendingRequests
                     .filter((f) => f.type === 'outgoing')
                     .map((friend) => (
                       <PendingFriendItem key={friend.id} friend={friend} isDark={isDark} onAction={handlePendingRequest} />
@@ -347,7 +375,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                   <div>
                     <h3 className={isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}>Add Friend</h3>
                     <p className={`text-sm mt-1 ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>
-                      You can add friends with their username.
+                      You can add friends with their display name. It's case-sensitive!
                     </p>
                   </div>
 
@@ -355,7 +383,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                     <Input
                       value={newFriendInput}
                       onChange={(e) => setNewFriendInput(e.target.value)}
-                      placeholder="Enter a username#0000"
+                      placeholder="Enter a username"
                       className={`flex-1 ${
                         isDark 
                           ? 'bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10' 
@@ -369,45 +397,6 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                     >
                       Send Request
                     </Button>
-                  </div>
-                </div>
-
-                {/* Suggestions */}
-                <div className="mt-8">
-                  <h4 className={isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}>Suggestions</h4>
-                  <div className="space-y-2 mt-4">
-                    {[
-                      { name: 'Chris Taylor', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Chris', mutualFriends: 3 },
-                      { name: 'Nina Patel', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nina', mutualFriends: 5 },
-                      { name: 'Tom Anderson', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Tom', mutualFriends: 2 },
-                    ].map((suggestion, i) => (
-                      <div key={i} className={`p-4 rounded-xl flex items-center gap-3 transition-all ${
-                        isDark 
-                          ? 'bg-[#131823] border border-white/10 hover:bg-white/5 hover:border-cyan-400/50' 
-                          : 'bg-white border border-gray-200 hover:bg-gray-50 hover:border-cyan-500/50'
-                      }`}>
-                        <Avatar className={`w-12 h-12 ${isDark ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                          <AvatarImage src={suggestion.avatar} />
-                          <AvatarFallback>{suggestion.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className={isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}>{suggestion.name}</p>
-                          <p className={`text-xs ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>
-                            {suggestion.mutualFriends} mutual friends
-                          </p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          className={isDark 
-                            ? 'bg-white/20 hover:bg-white/30 text-white border-0' 
-                            : 'bg-gray-100 hover:bg-gray-200 text-gray-900 border-0'
-                          }
-                        >
-                          <UserPlus className="w-4 h-4 mr-2" />
-                          Add
-                        </Button>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -425,9 +414,9 @@ function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; t
     game: 'bg-purple-500',
     voice: 'bg-emerald-500',
     offline: 'bg-gray-500',
-  }[friend.statusType];
+  }['online']; // Simplified for now
 
-  const userProfile = mockUsers[friend.id];
+  // const userProfile = mockUsers[friend.id]; // This would need to be fetched
 
   return (
     <div className={`p-3 rounded-xl flex items-center gap-3 transition-all group ${
@@ -435,7 +424,7 @@ function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; t
         ? 'bg-[#131823] border border-white/10 hover:bg-white/5 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]' 
         : 'bg-white border border-gray-200 hover:bg-gray-50 hover:border-cyan-500/50 hover:shadow-lg'
     }`}>
-      <UserProfileTrigger user={userProfile} theme={theme}>
+      {/* <UserProfileTrigger user={userProfile} theme={theme}> */}
         <div className="relative">
           <Avatar className={`w-12 h-12 ${isDark ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
             <AvatarImage src={friend.avatar} />
@@ -445,11 +434,11 @@ function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; t
             isDark ? 'border-2 border-[#131823]' : 'border-2 border-white'
           }`} />
         </div>
-      </UserProfileTrigger>
+      {/* </UserProfileTrigger> */}
       <div className="flex-1 min-w-0">
-        <UserProfileTrigger user={userProfile} theme={theme}>
+        {/* <UserProfileTrigger user={userProfile} theme={theme}> */}
           <p className={`truncate cursor-pointer hover:underline ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{friend.name}</p>
-        </UserProfileTrigger>
+        {/* </UserProfileTrigger> */}
         <p className={`text-sm truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{friend.status}</p>
       </div>
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -472,7 +461,7 @@ function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; t
   );
 }
 
-function PendingFriendItem({ friend, isDark, onAction }: { friend: any; isDark: boolean; onAction: (id: string, action: 'accept' | 'decline') => void }) {
+function PendingFriendItem({ friend, isDark, onAction }: { friend: PendingRequest; isDark: boolean; onAction: (id: string, action: 'accept' | 'decline') => void }) {
   return (
     <div className={`p-3 rounded-xl flex items-center gap-3 ${
       isDark 
@@ -516,3 +505,5 @@ function PendingFriendItem({ friend, isDark, onAction }: { friend: any; isDark: 
     </div>
   );
 }
+
+    

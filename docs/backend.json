@@ -10,9 +10,90 @@
           "type": "string",
           "description": "Unique identifier for the Post entity."
         },
-        "content": {
+        "postType": {
           "type": "string",
-          "description": "The text content of the post."
+          "enum": [
+            "general",
+            "qa",
+            "feedback"
+          ],
+          "description": "The type of the post."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title or question of the post."
+        },
+        "problemDetails": {
+          "type": "string",
+          "description": "Detailed description of the problem."
+        },
+        "problemSummary": {
+          "type": "string",
+          "description": "A short summary of the problem."
+        },
+        "whatIveTried": {
+          "type": "string",
+          "description": "Details on what has been tried to solve the problem."
+        },
+        "whatIveTriedSummary": {
+          "type": "string",
+          "description": "A short summary of what has been tried."
+        },
+        "expectedOutcome": {
+          "type": "string",
+          "description": "Details on the expected outcome."
+        },
+        "expectedOutcomeSummary": {
+          "type": "string",
+          "description": "A short summary of the expected outcome."
+        },
+        "sector": {
+          "type": "string",
+          "description": "The industry sector the post relates to."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of tags associated with the post."
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of an optional image for the post."
+        },
+        "author": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "avatar": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "required": [
+            "name",
+            "avatar"
+          ]
+        },
+        "likes": {
+          "type": "integer"
+        },
+        "comments": {
+          "type": "integer"
+        },
+        "reposts": {
+          "type": "integer"
+        },
+        "shares": {
+          "type": "integer"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
         },
         "createdAt": {
           "type": "string",
@@ -22,7 +103,7 @@
       },
       "required": [
         "id",
-        "content",
+        "title",
         "createdAt"
       ]
     },
@@ -56,6 +137,88 @@
         "text",
         "createdAt"
       ]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Publicly accessible user profile information.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "photoURL": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the user's avatar."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName"
+      ]
+    },
+    "User": {
+      "title": "User",
+      "description": "Represents a user's private data and relationships.",
+      "type": "object",
+      "properties": {
+        "profile": {
+          "$ref": "#/backend/entities/UserProfile"
+        },
+        "friends": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of UIDs of the user's friends."
+        }
+      },
+      "required": [
+        "profile"
+      ]
+    },
+    "FriendRequest": {
+      "title": "Friend Request",
+      "description": "Represents a friend request between two users.",
+      "type": "object",
+      "properties": {
+        "senderId": {
+          "type": "string",
+          "description": "UID of the user sending the request."
+        },
+        "receiverId": {
+          "type": "string",
+          "description": "UID of the user receiving the request."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "accepted",
+            "declined"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "senderId",
+        "receiverId",
+        "status",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -66,6 +229,26 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information and their list of friends."
+        }
+      },
+      {
+        "path": "/friendRequests/{requestId}",
+        "definition": {
+          "entityName": "FriendRequest",
+          "schema": {
+            "$ref": "#/backend/entities/FriendRequest"
+          },
+          "description": "Stores friend requests between users."
+        }
+      },
       {
         "path": "/posts/{postId}",
         "definition": {
@@ -106,3 +289,4 @@
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
+    
