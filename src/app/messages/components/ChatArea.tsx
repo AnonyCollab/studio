@@ -202,16 +202,18 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
             return (
               <div key={msg.id} className={`flex gap-3 p-2 rounded-lg transition-colors group ${
                 isDarkTheme ? 'hover:bg-white/5' : 'hover:bg-gray-100'
-              } ${!showAvatarAndName ? 'pl-14' : ''}`}>
+              }`}>
                 
-                {showAvatarAndName ? (
-                    <UserProfileTrigger user={{...mockUsers.currentUser, ...senderProfile}} theme={theme}>
-                        <Avatar className={`w-10 h-10 ${isDarkTheme ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                        <AvatarImage src={senderProfile.photoURL} />
-                        <AvatarFallback>{senderProfile.displayName[0]}</AvatarFallback>
-                        </Avatar>
-                    </UserProfileTrigger>
-                ) : <div className="w-10 flex-shrink-0" />}
+                <div className="w-10 flex-shrink-0">
+                    {showAvatarAndName && (
+                        <UserProfileTrigger user={{...mockUsers.currentUser, ...senderProfile}} theme={theme}>
+                            <Avatar className={`w-10 h-10 ${isDarkTheme ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
+                                <AvatarImage src={senderProfile.photoURL} />
+                                <AvatarFallback>{senderProfile.displayName[0]}</AvatarFallback>
+                            </Avatar>
+                        </UserProfileTrigger>
+                    )}
+                </div>
 
                 <div className="flex-1 min-w-0">
                   {showAvatarAndName && (
@@ -296,5 +298,3 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     </div>
   );
 }
-
-    
