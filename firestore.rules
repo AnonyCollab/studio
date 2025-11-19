@@ -32,21 +32,31 @@ service cloud.firestore {
      * @principle Public read, public write
      */
     match /posts/{postId} {
-      allow get, list: if true;
-      allow create, update, delete: if true;
-    }
+      allow get, list, create, update, delete: if true;
 
-    /**
-     * @description Allows anyone to read and write comments associated with a specific post.
-     * @path /posts/{postId}/comments/{commentId}
-     * @allow (get, list) - Any user can read a comment.
-     * @allow (create, update, delete) - Any user can create, update, or delete a comment.
-     * @deny none
-     * @principle Public read, public write, path-based consistency for commentId
-     */
-    match /posts/{postId}/comments/{commentId} {
-      allow get, list: if true;
-      allow create, update, delete: if true;
+      /**
+       * @description Allows anyone to read and write comments associated with a specific post.
+       * @path /posts/{postId}/comments/{commentId}
+       * @allow (get, list) - Any user can read a comment.
+       * @allow (create, update, delete) - Any user can create, update, or delete a comment.
+       * @deny none
+       * @principle Public read, public write, path-based consistency for commentId
+       */
+      match /comments/{commentId} {
+        allow get, list, create, update, delete: if true;
+
+        /**
+         * @description Allows anyone to read and write replies associated with a specific comment.
+         * @path /posts/{postId}/comments/{commentId}/replies/{replyId}
+         * @allow (get, list) - Any user can read a reply.
+         * @allow (create, update, delete) - Any user can create, update, or delete a reply.
+         * @deny none
+         * @principle Public read, public write
+         */
+        match /replies/{replyId} {
+          allow get, list, create, update, delete: if true;
+        }
+      }
     }
   }
 }
