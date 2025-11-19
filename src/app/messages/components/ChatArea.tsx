@@ -36,6 +36,7 @@ interface ChatAreaProps {
 export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showGifPicker, setShowGifPicker] = useState(false);
   const isDarkTheme = theme === 'dark';
   const { user: currentUser } = useUser();
   const firestore = useFirestore();
@@ -107,12 +108,13 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     
     setMessage(''); // Clear input immediately
     setShowEmojiPicker(false);
+    setShowGifPicker(false);
     
     if (isDM) {
         await addDoc(collection(firestore, 'dms', channelId, 'messages'), messageData);
     } else {
         // Handle group messages
-        // await addDoc(collection(firestore, 'servers', channelId, 'messages'), messageData);
+        await addDoc(collection(firestore, 'servers', channelId, 'messages'), messageData);
     }
   };
   
@@ -282,11 +284,23 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
             />
           </div>
           <div className="flex items-center gap-2">
-            <button className={`p-1 transition-colors ${
-              isDarkTheme ? 'text-white/70 hover:text-[#22d3ee]' : 'text-gray-600 hover:text-cyan-600'
-            }`}>
-              <Gift className="w-5 h-5" />
-            </button>
+            <Popover open={showGifPicker} onOpenChange={setShowGifPicker}>
+              <PopoverTrigger asChild>
+                <button className={`p-1 transition-colors ${ isDarkTheme ? 'text-white/70 hover:text-[#22d3ee]' : 'text-gray-600 hover:text-cyan-600' }`}>
+                  <Gift className="w-5 h-5" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="p-0 border-0 mb-2 w-96">
+                <div className={`${isDarkTheme ? 'bg-[#1a1f2e]' : 'bg-white'} rounded-lg`}>
+                  <div className="p-4">
+                    <input type="text" placeholder="Search Giphy" className={`w-full p-2 rounded ${isDarkTheme ? 'bg-black/20 text-white' : 'bg-gray-100'}`} />
+                  </div>
+                  <div className="h-64 flex items-center justify-center">
+                    <p className={`${isDarkTheme ? 'text-gray-400' : 'text-gray-600'}`}>GIFs will load here...</p>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
             <button className={`p-1 transition-colors ${
               isDarkTheme ? 'text-white/70 hover:text-[#22d3ee]' : 'text-gray-600 hover:text-cyan-600'
             }`}>
