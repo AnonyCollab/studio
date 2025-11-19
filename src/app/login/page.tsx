@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '@/firebase/provider';
+import { useAuth, useFirestore } from '@/firebase/provider';
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword,
@@ -16,6 +16,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { generateAnonymousName } from '../data/pseudonym/pseudonymUtils';
 import { useRouter } from 'next/navigation';
@@ -73,6 +74,7 @@ export default function LoginPage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -94,6 +96,18 @@ export default function LoginPage() {
       const user = userCredential.user;
       const anonymousName = generateAnonymousName(user.uid);
       await updateProfile(user, { displayName: anonymousName, photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}` });
+
+      // Create user document in Firestore
+      const userDocRef = doc(firestore, 'users', user.uid);
+      await setDoc(userDocRef, {
+        profile: {
+          uid: user.uid,
+          displayName: anonymousName,
+          photoURL: `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+          email: user.email
+        },
+        friends: []
+      });
       
       toast({ title: 'Account Created', description: `Welcome, ${anonymousName}!` });
       router.push('/posts');
@@ -122,10 +136,23 @@ export default function LoginPage() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
-      // If the user is new, generate an anonymous name
+      // If the user is new, generate an anonymous name and create a Firestore doc
       if (result.user.metadata.creationTime === result.user.metadata.lastSignInTime) {
         const anonymousName = generateAnonymousName(user.uid);
         await updateProfile(user, { displayName: anonymousName, photoURL: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}` });
+
+        // Create user document in Firestore for new Google user
+        const userDocRef = doc(firestore, 'users', user.uid);
+        await setDoc(userDocRef, {
+          profile: {
+            uid: user.uid,
+            displayName: anonymousName,
+            photoURL: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+            email: user.email
+          },
+          friends: []
+        });
+
         toast({ title: 'Account Created', description: `Welcome, ${anonymousName}!` });
       } else {
         toast({ title: 'Signed In', description: `Welcome back, ${user.displayName}!` });
