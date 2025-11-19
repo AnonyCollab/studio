@@ -3,8 +3,8 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError } from '@/firebase';
-import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId, onSnapshot, getDoc, arrayUnion, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
+import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError, errorEmitter } from '@/firebase';
+import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId, onSnapshot, getDoc, arrayUnion, deleteDoc, addDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { Users, UserPlus, MessageCircle, MoreVertical, Check, X, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserProfileTrigger, UserProfile } from './ProfileCard';
 import { useToast } from '@/hooks/use-toast';
-import { errorEmitter } from '@/firebase';
 
 interface FriendData {
   id: string;
@@ -133,8 +132,15 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
     const dmDoc = await getDoc(dmRef);
 
     if (!dmDoc.exists()) {
-        await setDoc(dmRef, {
-            participants: [user.uid, friendId]
+      const participantsData = { participants: [user.uid, friendId] };
+      setDoc(dmRef, participantsData)
+        .catch(error => {
+            const permissionError = new FirestorePermissionError({
+                path: dmRef.path,
+                operation: 'create',
+                requestResourceData: participantsData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
     }
 
@@ -165,12 +171,22 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
 
       // Create friend request
       const friendRequestRef = collection(firestore, 'friendRequests');
-      await addDoc(friendRequestRef, {
+      const requestData = {
         senderId: user.uid,
         receiverId: receiverId,
         status: 'pending',
         createdAt: serverTimestamp(),
-      });
+      };
+      addDoc(friendRequestRef, requestData)
+        .catch(error => {
+            const permissionError = new FirestorePermissionError({
+                path: friendRequestRef.path,
+                operation: 'create',
+                requestResourceData: requestData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            toast({ title: 'Error', description: 'Failed to send friend request.', variant: 'destructive' });
+        });
 
       toast({ title: 'Friend Request Sent', description: `Your friend request to ${newFriendInput.trim()} has been sent.` });
       setNewFriendInput('');
