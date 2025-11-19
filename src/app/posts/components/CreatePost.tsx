@@ -28,6 +28,7 @@ import { usePosts } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { addPost } from "@/firebase/non-blocking-updates";
 import { detailedSectorsData, SectorWithSubSectors, SubSector } from "@/app/data/naics";
+import { Badge } from "@/components/ui/badge";
 
 
 const CreatePostSchema = z.object({
@@ -40,7 +41,7 @@ const CreatePostSchema = z.object({
   expectedOutcome: z.string().optional(),
   expectedOutcomeSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
   sector: z.string().min(1, "Sector is required."),
-  tags: z.string().min(1, "At least one tag is required."),
+  tags: z.array(z.string()).min(1, "At least one tag is required."),
   imageUrl: z.string().optional(),
 });
 type CreatePostInput = z.infer<typeof CreatePostSchema>;
@@ -67,6 +68,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const [selectedSectorCode, setSelectedSectorCode] = useState<string>("");
   const [selectedSubSectorCode, setSelectedSubSectorCode] = useState<string>("");
 
+  const [tagInput, setTagInput] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+
   const form = useForm<CreatePostInput>({
     resolver: zodResolver(CreatePostSchema),
     defaultValues: {
@@ -79,7 +83,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
       expectedOutcome: "",
       expectedOutcomeSummary: "",
       sector: "",
-      tags: "",
+      tags: [],
       imageUrl: "",
     },
   });
@@ -155,6 +159,26 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
       }
   };
 
+  const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const newTag = tagInput.trim();
+      if (newTag && !tags.includes(newTag)) {
+        const newTags = [...tags, newTag];
+        setTags(newTags);
+        setValue("tags", newTags, { shouldValidate: true });
+        setTagInput("");
+      }
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    const newTags = tags.filter((tag) => tag !== tagToRemove);
+    setTags(newTags);
+    setValue("tags", newTags, { shouldValidate: true });
+  };
+
+
   const onSubmit = async (data: CreatePostInput) => {
     if (!firestore) return;
     if (!user) {
@@ -166,10 +190,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
         return;
     }
     try {
-      await addPost(firestore, {
-        ...data,
-        tags: data.tags.split(',').map(tag => tag.trim()),
-      }, user);
+      await addPost(firestore, data, user);
       toast({
         title: "Post Created!",
         description: "Your post has been successfully created.",
@@ -494,7 +515,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
              <FormField
               control={form.control}
               name="tags"
-              render={({ field }) => (
+              render={() => (
                 <FormItem>
                    <div className="flex items-center justify-between">
                     <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>Tags <span className="text-red-500">*</span></FormLabel>
@@ -504,11 +525,31 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     </Button>
                   </div>
                   <FormControl>
-                    <Input
-                      placeholder="Add tags separated by commas..."
-                      className={isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}
-                      {...field}
-                    />
+                    <div className={cn("flex flex-wrap items-center gap-2 rounded-md border p-2", isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-300")}>
+                       {tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className={cn("flex items-center gap-1.5", isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" : "bg-cyan-100 text-cyan-700 border-cyan-300" )}
+                          >
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="rounded-full hover:bg-black/20"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      <Input
+                        placeholder={tags.length === 0 ? "Add tags..." : "Add more..."}
+                        value={tagInput}
+                        onChange={(e) => setTagInput(e.target.value)}
+                        onKeyDown={handleTagKeyDown}
+                        className={cn("flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto", isDark ? "text-white placeholder:text-gray-500" : "text-gray-900 placeholder:text-gray-500")}
+                      />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
