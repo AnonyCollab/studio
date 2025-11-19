@@ -20,7 +20,7 @@ export function ServerList({ selectedServer, onSelectServer, theme }: ServerList
   const isDark = theme === 'dark';
   return (
     <TooltipProvider delayDuration={100}>
-      <div className={`w-20 flex-shrink-0 flex flex-col items-center py-3 gap-2 ${
+      <div className={`w-20 h-full flex-shrink-0 flex flex-col items-center py-3 gap-2 ${
         isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'
       }`}>
         {servers.map((server) => {
