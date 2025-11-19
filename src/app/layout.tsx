@@ -7,9 +7,11 @@ import './landing/index.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { TopNav } from './header/components/TopNav';
+import { BottomNav } from './header/components/BottomNav';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import { PostProvider } from '@/context/PostContext';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackground'));
 
@@ -18,13 +20,15 @@ function AppContent({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [bodyClassName, setBodyClassName] = useState('font-body antialiased');
   const isLandingPage = pathname === '/';
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     setBodyClassName(cn(
       "font-body antialiased",
-      isLandingPage ? 'landing-page-body' : ''
+      isLandingPage ? 'landing-page-body' : '',
+      isMobile ? 'pb-16' : '' // Add padding for bottom nav on mobile
     ));
-  }, [pathname, isLandingPage]);
+  }, [pathname, isLandingPage, isMobile]);
 
 
   return (
@@ -43,6 +47,7 @@ function AppContent({ children }: { children: ReactNode }) {
           )}
           <TopNav theme={theme} onToggleTheme={toggleTheme} />
           <main>{children}</main>
+          {isMobile && !isLandingPage && <BottomNav theme={theme} />}
         </div>
         <Toaster />
       </body>
