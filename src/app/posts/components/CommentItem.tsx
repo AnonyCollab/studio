@@ -11,7 +11,8 @@ import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/fire
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
+import { addReply } from "@/firebase/non-blocking-updates";
 
 interface Author {
   name: string;
@@ -50,7 +51,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const [isLiked, setIsLiked] = useState(false);
   const [likedReplies, setLikedReplies] = useState<Record<string, boolean>>({});
   const firestore = useFirestore();
-
+  const { user } = useUser();
   const { toast } = useToast();
   const isDark = theme === "dark";
 
@@ -77,11 +78,20 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const handleSubmitReply = async (commentId: string) => {
     const content = replyContent.trim();
     if (!content) return;
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication required", description: "You must be logged in to reply." });
+      return;
+    }
+    if (!firestore) return;
 
-    setReplyContent("");
-    setReplyingTo(null);
-
-    toast({ variant: "destructive", title: "Error", description: "Replying is currently disabled." });
+    try {
+      await addReply(firestore, postId, commentId, content, user);
+      setReplyContent("");
+      setReplyingTo(null);
+    } catch (err) {
+      console.error("Error adding reply: ", err);
+      toast({ variant: "destructive", title: "Error", description: "Failed to add reply." });
+    }
   };
 
   const handleLikeComment = async () => {

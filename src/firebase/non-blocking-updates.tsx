@@ -140,3 +140,23 @@ export function addComment(firestore: Firestore, postId: string, commentText: st
     createdAt: serverTimestamp(),
   });
 }
+
+/**
+ * Adds a new reply to a comment's 'replies' subcollection in Firestore.
+ */
+export function addReply(firestore: Firestore, postId: string, commentId: string, replyText: string, user: User) {
+  const repliesCollection = collection(firestore, 'posts', postId, 'comments', commentId, 'replies');
+  
+  const authorData = {
+    name: user.displayName || 'Anonymous User',
+    avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+    uid: user.uid,
+  };
+
+  return addDocumentNonBlocking(repliesCollection, {
+    author: authorData,
+    content: replyText,
+    likes: 0,
+    createdAt: serverTimestamp(),
+  });
+}
