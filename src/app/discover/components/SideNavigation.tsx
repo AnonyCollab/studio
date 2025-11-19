@@ -1,3 +1,4 @@
+
 import { 
     Folder, 
     Users, 
@@ -31,7 +32,7 @@ import {
   
     return (
       <div
-        className={`rounded-lg border h-full ${
+        className={`rounded-lg border flex flex-col flex-1 ${
           isDark ? "bg-[#131823] border-white/10" : "bg-white border-gray-200"
         }`}
       >
