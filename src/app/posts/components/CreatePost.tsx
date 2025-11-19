@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { X, Upload, Briefcase, MessageSquare, Star, Sparkles, Image as ImageIcon, Trash2, Info } from "lucide-react";
@@ -27,15 +27,17 @@ import { useFirebaseApp, useFirestore, useUser } from "@/firebase";
 import { usePosts } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { addPost } from "@/firebase/non-blocking-updates";
+import { detailedSectorsData, SectorWithSubSectors, SubSector } from "@/app/data/naics";
+
 
 const CreatePostSchema = z.object({
   postType: z.string(),
   title: z.string().min(1, "Title is required."),
-  problemDetails: z.string().min(1, "Problem details are required."),
+  problemDetails: z.string().min(1, "Problem details are required.").optional(),
   problemSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
-  whatIveTried: z.string(),
+  whatIveTried: z.string().optional(),
   whatIveTriedSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
-  expectedOutcome: z.string(),
+  expectedOutcome: z.string().optional(),
   expectedOutcomeSummary: z.string().max(100, "Summary must be 100 characters or less.").optional(),
   sector: z.string().min(1, "Sector is required."),
   tags: z.string().min(1, "At least one tag is required."),
@@ -62,6 +64,9 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const { handleCloseDetail } = usePosts();
   const storage = getStorage(firebaseApp);
 
+  const [selectedSectorCode, setSelectedSectorCode] = useState<string>("");
+  const [selectedSubSectorCode, setSelectedSubSectorCode] = useState<string>("");
+
   const form = useForm<CreatePostInput>({
     resolver: zodResolver(CreatePostSchema),
     defaultValues: {
@@ -79,10 +84,21 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
     },
   });
 
-  const { watch, setValue, getValues } = form;
-  const title = watch("title");
-  const problemDetails = watch("problemDetails");
+  const { watch, setValue, getValues, trigger, control } = form;
   const imageUrl = watch("imageUrl");
+
+  const availableSubSectors = useMemo(() => {
+    if (!selectedSectorCode) return [];
+    const sector = detailedSectorsData.find(s => s.code === selectedSectorCode);
+    return sector ? sector.subSectors : [];
+  }, [selectedSectorCode]);
+
+  const availableIndustries = useMemo(() => {
+    if (!selectedSubSectorCode) return [];
+    const subSector = availableSubSectors.find(ss => ss.code === selectedSubSectorCode);
+    return subSector ? subSector.industries : [];
+  }, [selectedSubSectorCode, availableSubSectors]);
+
 
   const handleSuggestTags = async () => {
     setIsSuggestingTags(true);
@@ -253,7 +269,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
             {/* Details Tabs */}
             <div>
               <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
-                Details <span className="text-red-500">*</span>
+                Details
               </FormLabel>
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mt-3">
                 <TabsList className={`grid w-full grid-cols-3 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-100 border-gray-200"}`}>
@@ -403,21 +419,72 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
               control={form.control}
               name="sector"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>Sector <span className="text-red-500">*</span></FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormItem className="space-y-4">
+                  <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
+                    Sector <span className="text-red-500">*</span>
+                  </FormLabel>
+                  
+                  <Select onValueChange={(value) => {
+                      setSelectedSectorCode(value);
+                      setSelectedSubSectorCode("");
+                      field.onChange(value); // Keep top-level sector as fallback
+                      trigger("sector");
+                  }}>
                     <FormControl>
                       <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
                         <SelectValue placeholder="Select a main sector" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent className={isDark ? "bg-[#1a1f2e] border-white/10 text-white" : "bg-white border-gray-200 text-gray-900"}>
-                      <SelectItem value="arts" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Arts, Entertainment, and Recreation</SelectItem>
-                      <SelectItem value="tech" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Information Technology</SelectItem>
-                      <SelectItem value="healthcare" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Healthcare and Social Assistance</SelectItem>
-                      <SelectItem value="finance" className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>Finance and Insurance</SelectItem>
+                      {detailedSectorsData.map((sector) => (
+                        <SelectItem key={sector.code} value={sector.code} className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>
+                          {sector.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
+
+                  {availableSubSectors.length > 0 && (
+                    <Select onValueChange={(value) => {
+                        setSelectedSubSectorCode(value);
+                        field.onChange(value); // Update form value to sub-sector
+                        trigger("sector");
+                    }}>
+                        <FormControl>
+                            <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
+                                <SelectValue placeholder="Select a sub-sector" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className={isDark ? "bg-[#1a1f2e] border-white/10 text-white" : "bg-white border-gray-200 text-gray-900"}>
+                            {availableSubSectors.map((subSector) => (
+                                <SelectItem key={subSector.code} value={subSector.code} className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>
+                                    {subSector.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                  )}
+
+                  {availableIndustries.length > 0 && (
+                    <Select onValueChange={(value) => {
+                        field.onChange(value); // Update form value to industry
+                        trigger("sector");
+                    }}>
+                        <FormControl>
+                            <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
+                                <SelectValue placeholder="Select an industry" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className={isDark ? "bg-[#1a1f2e] border-white/10 text-white" : "bg-white border-gray-200 text-gray-900"}>
+                           {availableIndustries.map((industry) => (
+                                <SelectItem key={industry.code} value={industry.code} className={isDark ? "focus:bg-white/10" : "focus:bg-gray-100"}>
+                                    {industry.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                  )}
+
                   <FormMessage />
                 </FormItem>
               )}
