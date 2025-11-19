@@ -65,7 +65,6 @@ export function CreateCollection({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Collection name"
                 className="border-neutral-300 focus:border-neutral-400"
-                autoFocus
               />
             </div>
 
