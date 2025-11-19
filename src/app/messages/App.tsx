@@ -42,9 +42,8 @@ export default function App() {
     }
   }
 
-  const showSidebar = !isMobile || (selectedServer === 'home' && !selectedDM);
-  const showChat = !isMobile || !!selectedDM || (currentView === 'chat' && selectedServer !== 'home');
-  const showMainContent = !isMobile || (isMobile && !!selectedDM);
+  const showSidebarContainer = !isMobile || (selectedServer === 'home' && !selectedDM && currentView !== 'dm');
+  const showMainContent = !isMobile || !!selectedDM || (currentView === 'chat' && selectedServer !== 'home');
 
   return (
     <div
@@ -64,11 +63,11 @@ export default function App() {
       <div className="relative h-full flex">
         {/* Combined Server and Channel/DM sidebars */}
         <div className={cn(
-          "flex flex-shrink-0 transition-all duration-300",
-          isMobile && !!selectedDM ? "w-0" : "w-[25rem]"
+          "flex flex-shrink-0 transition-all duration-300 h-full",
+          showSidebarContainer ? "w-[25rem]" : "w-0"
         )}>
           {/* Server list */}
-          <div className={cn("transition-all duration-300 w-20")}>
+          <div className={cn("transition-all duration-300 w-20 h-full")}>
             <ServerList 
               selectedServer={selectedServer}
               onSelectServer={(id) => {
@@ -88,7 +87,7 @@ export default function App() {
           </div>
 
           {/* Left Sidebars Container */}
-          <div className={cn("transition-all duration-300 w-80")}>
+          <div className={cn("transition-all duration-300 w-80 h-full")} style={{ height: '-webkit-fill-available' as any }}>
             {selectedServer === 'home' && (
               <DirectMessagesSidebar
                 activeView={currentView}
@@ -125,11 +124,11 @@ export default function App() {
               <ChatArea channelId={selectedChannel} isDM={false} theme={theme} onBack={isMobile ? handleBack : undefined} />
             )}
           </div>
-          {isInGroup && <MembersPanel theme={theme} />}
+          {isInGroup && !isMobile && <MembersPanel theme={theme} />}
         </div>
 
         {/* User info panel - at bottom left covering server list and sidebar */}
-        <div className={cn(isMobile && selectedDM ? 'hidden' : 'block')}>
+        <div className={cn(showSidebarContainer ? 'block' : 'hidden')}>
             <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
         </div>
       </div>
