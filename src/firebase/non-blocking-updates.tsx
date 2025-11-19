@@ -8,6 +8,8 @@ import {
   updateDoc,
   deleteDoc,
   collection,
+  doc,
+  increment,
   CollectionReference,
   DocumentReference,
   Firestore,
@@ -124,7 +126,7 @@ export function addPost(firestore: Firestore, postData: any, user: User | null) 
 /**
  * Adds a new comment to a post's 'comments' subcollection in Firestore.
  */
-export function addComment(firestore: Firestore, postId: string, commentText: string, user: User) {
+export async function addComment(firestore: Firestore, postId: string, commentText: string, user: User) {
   const commentsCollection = collection(firestore, 'posts', postId, 'comments');
   
   const authorData = {
@@ -133,11 +135,19 @@ export function addComment(firestore: Firestore, postId: string, commentText: st
     uid: user.uid,
   };
 
-  return addDocumentNonBlocking(commentsCollection, {
+  const postRef = doc(firestore, 'posts', postId);
+
+  // First, add the comment
+  await addDocumentNonBlocking(commentsCollection, {
     author: authorData,
     content: commentText,
     likes: 0,
     createdAt: serverTimestamp(),
+  });
+
+  // Then, increment the comment count on the post
+  return updateDocumentNonBlocking(postRef, {
+    comments: increment(1)
   });
 }
 
@@ -159,4 +169,37 @@ export function addReply(firestore: Firestore, postId: string, commentId: string
     likes: 0,
     createdAt: serverTimestamp(),
   });
+}
+
+/**
+ * Toggles a like on a post.
+ */
+export function toggleLikePost(firestore: Firestore, postId: string, isLiked: boolean) {
+    const postRef = doc(firestore, 'posts', postId);
+    const likeIncrement = isLiked ? increment(-1) : increment(1);
+    return updateDocumentNonBlocking(postRef, {
+        likes: likeIncrement
+    });
+}
+
+/**
+ * Toggles a like on a comment.
+ */
+export function toggleLikeComment(firestore: Firestore, postId: string, commentId: string, isLiked: boolean) {
+    const commentRef = doc(firestore, 'posts', postId, 'comments', commentId);
+    const likeIncrement = isLiked ? increment(-1) : increment(1);
+    return updateDocumentNonBlocking(commentRef, {
+        likes: likeIncrement
+    });
+}
+
+/**
+ * Toggles a like on a reply.
+ */
+export function toggleLikeReply(firestore: Firestore, postId: string, commentId: string, replyId: string, isLiked: boolean) {
+    const replyRef = doc(firestore, 'posts', postId, 'comments', commentId, 'replies', replyId);
+    const likeIncrement = isLiked ? increment(-1) : increment(1);
+    return updateDocumentNonBlocking(replyRef, {
+        likes: likeIncrement
+    });
 }

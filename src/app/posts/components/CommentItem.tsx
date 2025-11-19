@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { useFirestore, useUser } from "@/firebase";
-import { addReply } from "@/firebase/non-blocking-updates";
+import { addReply, toggleLikeComment, toggleLikeReply } from "@/firebase/non-blocking-updates";
 
 interface Author {
   name: string;
@@ -96,14 +96,18 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
 
   const handleLikeComment = async () => {
     const newLikedState = !isLiked;
-    setIsLiked(newLikedState); // Optimistic UI update
-    // Like functionality is disabled
+    setIsLiked(newLikedState);
+    if(firestore) {
+        toggleLikeComment(firestore, postId, comment.id, isLiked);
+    }
   }
 
   const handleLikeReply = async (replyId: string) => {
     const newLikedState = !likedReplies[replyId];
-    setLikedReplies(prev => ({...prev, [replyId]: newLikedState})); // Optimistic UI update
-    // Like functionality is disabled
+    setLikedReplies(prev => ({...prev, [replyId]: newLikedState}));
+    if (firestore) {
+        toggleLikeReply(firestore, postId, comment.id, replyId, likedReplies[replyId]);
+    }
   }
 
   const toggleReplies = (commentId: string) => {

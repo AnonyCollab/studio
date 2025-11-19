@@ -18,6 +18,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
+import { useFirestore } from "@/firebase";
+import { toggleLikePost } from "@/firebase/non-blocking-updates";
 
 interface PostDetailProps {
   post: {
@@ -68,11 +70,14 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const isDark = theme === "dark";
   const currentBadgeColors = isDark ? badgeColors : badgeColorsLight;
+  const firestore = useFirestore();
 
   const handleLike = async () => {
     const newLikedState = !isLiked;
     setIsLiked(newLikedState);
-    // likePost functionality is removed.
+    if (firestore) {
+      toggleLikePost(firestore, post.id, isLiked);
+    }
   };
 
   const Callout = ({ text, theme }: { text?: string, theme: "light" | "dark" }) => {
