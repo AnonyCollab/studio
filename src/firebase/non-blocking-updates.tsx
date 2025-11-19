@@ -120,3 +120,23 @@ export function addPost(firestore: Firestore, postData: any, user: User | null) 
     createdAt: serverTimestamp(),
   });
 }
+
+/**
+ * Adds a new comment to a post's 'comments' subcollection in Firestore.
+ */
+export function addComment(firestore: Firestore, postId: string, commentText: string, user: User) {
+  const commentsCollection = collection(firestore, 'posts', postId, 'comments');
+  
+  const authorData = {
+    name: user.displayName || 'Anonymous User',
+    avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+    uid: user.uid,
+  };
+
+  return addDocumentNonBlocking(commentsCollection, {
+    author: authorData,
+    content: commentText,
+    likes: 0,
+    createdAt: serverTimestamp(),
+  });
+}

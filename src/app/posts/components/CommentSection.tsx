@@ -10,7 +10,8 @@ import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/fire
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { CommentItem } from "./CommentItem";
-import { useFirestore } from "@/firebase";
+import { useFirestore, useUser } from "@/firebase";
+import { addComment } from "@/firebase/non-blocking-updates";
 
 interface Author {
   name: string;
@@ -37,6 +38,7 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
   const { toast } = useToast();
   const isDark = theme === "dark";
   const firestore = useFirestore();
+  const { user } = useUser();
 
   useEffect(() => {
     if (!firestore || !postId) return;
@@ -67,8 +69,20 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
     const content = newComment.trim();
     if (!content) return;
 
-    setNewComment("");
-    toast({ variant: "destructive", title: "Error", description: "Adding comments is currently disabled." });
+    if (!user) {
+      toast({ variant: "destructive", title: "Authentication required", description: "You must be logged in to comment." });
+      return;
+    }
+    
+    if (!firestore) return;
+
+    try {
+      await addComment(firestore, postId, content, user);
+      setNewComment("");
+    } catch(err) {
+      console.error("Error adding comment: ", err);
+      toast({ variant: "destructive", title: "Error", description: "Failed to add comment." });
+    }
   };
 
   return (
