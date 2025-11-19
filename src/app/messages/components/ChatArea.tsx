@@ -148,9 +148,9 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   }, [isDM, channelId, dmData, otherUser]);
 
   return (
-    <div className={`flex-1 flex flex-col ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
+    <div className={`flex-1 flex flex-col h-full ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
       {/* Channel header */}
-      <div className={`h-12 px-4 flex items-center justify-between ${
+      <div className={`h-12 px-4 flex-shrink-0 flex items-center justify-between ${
         isDarkTheme 
           ? 'bg-[#131823] border-b border-white/10' 
           : 'bg-white border-b border-gray-200'
@@ -189,7 +189,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
       </div>
 
       {/* Messages area */}
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 min-h-0" ref={scrollAreaRef}>
         <div className="p-4 space-y-4">
           {isLoading && <p>Loading messages...</p>}
           {messages && messages.map((msg, index) => {
@@ -239,7 +239,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
       </ScrollArea>
 
       {/* Message input */}
-      <div className="p-4">
+      <div className="p-4 flex-shrink-0">
         <div className={`rounded-lg p-3 flex items-end gap-2 ${
           isDarkTheme 
             ? 'bg-white/5 border border-white/10 focus-within:bg-white/10 focus-within:border-[#22d3ee]/50' 
