@@ -38,6 +38,8 @@ interface FriendsPageProps {
   onSelectDM: (id: string) => void;
 }
 
+const getDmId = (uid1: string, uid2: string) => [uid1, uid2].sort().join('_');
+
 export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   const { user } = useUser();
   const firestore = useFirestore();
@@ -122,6 +124,22 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
 
 
   // --- Actions ---
+
+  const handleOpenDM = async (friendId: string) => {
+    if (!user || !firestore) return;
+    const dmId = getDmId(user.uid, friendId);
+    
+    const dmRef = doc(firestore, 'dms', dmId);
+    const dmDoc = await getDoc(dmRef);
+
+    if (!dmDoc.exists()) {
+        await setDoc(dmRef, {
+            participants: [user.uid, friendId]
+        });
+    }
+
+    onSelectDM(dmId);
+  };
 
   const handleAddFriend = async () => {
     if (!newFriendInput.trim() || !user || !firestore) return;
@@ -320,7 +338,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
                     Online — {onlineFriends.length}
                   </p>
                   {onlineFriends.map((friend) => (
-                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} onMessageClick={() => onSelectDM(friend.id)} />
+                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} onMessageClick={() => handleOpenDM(friend.id)} />
                   ))}
                 </div>
               </ScrollArea>
@@ -357,7 +375,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
                     All Friends — {allFriends.length}
                   </p>
                   {allFriends.map((friend) => (
-                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} onMessageClick={() => onSelectDM(friend.id)} />
+                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} onMessageClick={() => handleOpenDM(friend.id)} />
                   ))}
                 </div>
               </ScrollArea>
@@ -536,3 +554,5 @@ function PendingFriendItem({ friend, isDark, onAction }: { friend: PendingReques
   );
 }
 
+
+    

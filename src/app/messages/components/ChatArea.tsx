@@ -2,52 +2,22 @@
 import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
-import { UserProfileTrigger } from './ProfileCard';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { UserProfileTrigger, UserProfile } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
+import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
 
-const mockMessages = [
-  {
-    id: '1',
-    userId: 'user1',
-    user: 'Alice Wonderland',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-    timestamp: '10:30 AM',
-    content: 'Hey everyone! Ready for the game tonight?',
-  },
-  {
-    id: '2',
-    userId: 'user2',
-    user: 'Bob the Builder',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-    timestamp: '10:32 AM',
-    content: 'Absolutely! I\'ve been practicing all week 🎮',
-  },
-  {
-    id: '3',
-    userId: 'user3',
-    user: 'Charlie Notes',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
-    timestamp: '10:35 AM',
-    content: 'Count me in! What time are we starting?',
-  },
-  {
-    id: '4',
-    userId: 'user1',
-    user: 'Alice Wonderland',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-    timestamp: '10:36 AM',
-    content: 'How about 8 PM? That should give everyone time to get online.',
-  },
-  {
-    id: '5',
-    userId: 'user4',
-    user: 'Diana',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana',
-    timestamp: '10:40 AM',
-    content: 'Perfect! See you all then 👍',
-  },
-];
+interface Message {
+    id: string;
+    senderId: string;
+    text: string;
+    createdAt: {
+      seconds: number;
+      nanoseconds: number;
+    } | null;
+  }
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -58,6 +28,57 @@ interface ChatAreaProps {
 export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const [message, setMessage] = useState('');
   const isDarkTheme = theme === 'dark';
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  
+  const otherUser = useMemo(() => {
+    if (isDM && channelId) {
+        // In a real app, you'd fetch this user's profile from Firestore
+        // For now, we find them in the mock data.
+        return Object.values(mockUsers).find(u => u.id === channelId);
+    }
+    return null;
+  }, [channelId, isDM]);
+
+  const messagesQuery = useMemoFirebase(() => {
+    if (!firestore || !channelId) return null;
+    if (isDM) {
+        return query(collection(firestore, 'dms', channelId, 'messages'), orderBy('createdAt', 'asc'));
+    }
+    // For group chats
+    return query(collection(firestore, 'servers', channelId, 'messages'), orderBy('createdAt', 'asc'));
+  }, [firestore, channelId, isDM]);
+
+  const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
+  
+  const handleSendMessage = async () => {
+    if (message.trim() === '' || !firestore || !user || !channelId) return;
+
+    const messageData = {
+        senderId: user.uid,
+        text: message,
+        createdAt: serverTimestamp(),
+    };
+    
+    setMessage(''); // Clear input immediately
+    
+    if (isDM) {
+        await addDoc(collection(firestore, 'dms', channelId, 'messages'), messageData);
+    } else {
+        // Handle group messages
+        // await addDoc(collection(firestore, 'servers', channelId, 'messages'), messageData);
+    }
+  };
+  
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+        const scrollContainer = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+    }
+  }, [messages]);
 
   if (!channelId) {
     return (
@@ -77,6 +98,8 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
       </div>
     );
   }
+  
+  const chatName = isDM ? (otherUser?.displayName || channelId) : channelId;
 
   return (
     <div className={`flex-1 flex flex-col ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
@@ -92,7 +115,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
           ) : (
             <Hash className={`w-5 h-5 ${isDarkTheme ? 'text-white/70' : 'text-gray-600'}`} />
           )}
-          <span className={isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}>{channelId}</span>
+          <span className={isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}>{chatName}</span>
         </div>
         <div className="flex items-center gap-3">
           <button className={`transition-colors ${
@@ -120,30 +143,42 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
       </div>
 
       {/* Messages area */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="p-4 space-y-4">
-          {mockMessages.map((msg) => {
-            const userProfile = mockUsers[msg.userId];
+          {isLoading && <p>Loading messages...</p>}
+          {messages && messages.map((msg, index) => {
+            const senderProfile = msg.senderId === user?.uid ? mockUsers.currentUser : Object.values(mockUsers).find(u => u.id === msg.senderId) || null;
+            if (!senderProfile) return null; // Or show a placeholder
+            
+            const prevMessage = messages[index - 1];
+            const showAvatarAndName = !prevMessage || prevMessage.senderId !== msg.senderId;
+
             return (
               <div key={msg.id} className={`flex gap-3 p-2 rounded-lg transition-colors group ${
                 isDarkTheme ? 'hover:bg-white/5' : 'hover:bg-gray-100'
-              }`}>
-                <UserProfileTrigger user={userProfile} theme={theme}>
-                  <Avatar className={`w-10 h-10 ${isDarkTheme ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                    <AvatarImage src={msg.avatar} />
-                    <AvatarFallback>{msg.user[0]}</AvatarFallback>
-                  </Avatar>
-                </UserProfileTrigger>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2">
-                    <UserProfileTrigger user={userProfile} theme={theme}>
-                      <span className={`cursor-pointer hover:underline ${isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{msg.user}</span>
+              } ${!showAvatarAndName ? 'pl-14' : ''}`}>
+                
+                {showAvatarAndName ? (
+                    <UserProfileTrigger user={senderProfile} theme={theme}>
+                        <Avatar className={`w-10 h-10 ${isDarkTheme ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
+                        <AvatarImage src={senderProfile.avatar} />
+                        <AvatarFallback>{senderProfile.username[0]}</AvatarFallback>
+                        </Avatar>
                     </UserProfileTrigger>
-                    <span className={`text-xs ${isDarkTheme ? 'text-[#6b7280]' : 'text-gray-500'}`}>
-                      {msg.timestamp}
-                    </span>
-                  </div>
-                  <p className={`mt-0.5 ${isDarkTheme ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{msg.content}</p>
+                ) : <div className="w-10 flex-shrink-0" />}
+
+                <div className="flex-1 min-w-0">
+                  {showAvatarAndName && (
+                      <div className="flex items-baseline gap-2">
+                        <UserProfileTrigger user={senderProfile} theme={theme}>
+                            <span className={`cursor-pointer hover:underline ${isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{senderProfile.displayName}</span>
+                        </UserProfileTrigger>
+                        <span className={`text-xs ${isDarkTheme ? 'text-[#6b7280]' : 'text-gray-500'}`}>
+                            {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000)) + ' ago' : 'sending...'}
+                        </span>
+                      </div>
+                  )}
+                  <p className={`mt-0.5 ${isDarkTheme ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{msg.text}</p>
                 </div>
               </div>
             );
@@ -168,7 +203,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder={isDM ? `Message ${channelId}` : `Message #${channelId}`}
+              placeholder={`Message ${isDM ? `@${chatName}` : `#${chatName}`}`}
               className={`w-full bg-transparent outline-none ${
                 isDarkTheme 
                   ? 'text-white placeholder:text-gray-500' 
@@ -177,7 +212,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  setMessage('');
+                  handleSendMessage();
                 }
               }}
             />
@@ -199,7 +234,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
               <Smile className="w-5 h-5" />
             </button>
             {message && (
-              <button className={`p-1 transition-colors ${
+              <button onClick={handleSendMessage} className={`p-1 transition-colors ${
                 isDarkTheme ? 'text-[#22d3ee] hover:text-cyan-300' : 'text-cyan-600 hover:text-cyan-700'
               }`}>
                 <Send className="w-5 h-5" />
@@ -211,3 +246,5 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     </div>
   );
 }
+
+    
