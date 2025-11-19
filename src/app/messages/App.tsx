@@ -11,6 +11,8 @@ import { MembersPanel } from './components/MembersPanel';
 import { UserInfoPanel } from './components/UserInfoPanel';
 import { GroupList } from './components/GroupList';
 import { useTheme } from '@/context/ThemeContext';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 export default function App() {
   const [selectedServer, setSelectedServer] = useState('home');
@@ -18,10 +20,10 @@ export default function App() {
   const [selectedDM, setSelectedDM] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'chat' | 'friends' | 'dm' | 'groups'>('friends');
   const { theme, toggleTheme } = useTheme();
+  const isMobile = useIsMobile();
 
   const isDark = theme === 'dark';
   const isInGroup = selectedServer !== 'home' && currentView === 'chat';
-  const showLeftSidebar = selectedServer === 'home' || currentView === 'chat';
 
   const handleSelectHomeView = (view: 'friends' | 'groups') => {
     setSelectedDM(null);
@@ -32,6 +34,17 @@ export default function App() {
     setSelectedDM(id);
     setCurrentView('dm');
   };
+  
+  const handleBack = () => {
+    setSelectedDM(null);
+    if(selectedServer === 'home') {
+      setCurrentView('friends');
+    }
+  }
+
+  const showSidebar = !isMobile || (selectedServer === 'home' && !selectedDM);
+  const showChat = !isMobile || !!selectedDM || (currentView === 'chat' && selectedServer !== 'home');
+  const showMainContent = !isMobile || (isMobile && !!selectedDM);
 
   return (
     <div
@@ -67,29 +80,32 @@ export default function App() {
           theme={theme}
         />
 
-        {/* Direct messages sidebar - show when on home */}
-        {selectedServer === 'home' && (
-          <DirectMessagesSidebar
-            activeView={currentView}
-            selectedDM={selectedDM}
-            onSelectDM={handleSelectDM}
-            onSelectHomeView={handleSelectHomeView}
-            theme={theme}
-          />
-        )}
+        {/* Left Sidebars */}
+        <div className={cn(
+          "flex-shrink-0 transition-all duration-300",
+          isMobile && selectedDM ? 'w-0 hidden' : 'w-80'
+        )}>
+          {selectedServer === 'home' && (
+            <DirectMessagesSidebar
+              activeView={currentView}
+              selectedDM={selectedDM}
+              onSelectDM={handleSelectDM}
+              onSelectHomeView={handleSelectHomeView}
+              theme={theme}
+            />
+          )}
+          {currentView === 'chat' && selectedServer !== 'home' && (
+            <ChannelSidebar 
+              serverId={selectedServer}
+              selectedChannel={selectedChannel}
+              onSelectChannel={setSelectedChannel}
+              theme={theme}
+            />
+          )}
+        </div>
 
-        {/* Channel sidebar - only show when not on home */}
-        {currentView === 'chat' && selectedServer !== 'home' && (
-          <ChannelSidebar 
-            serverId={selectedServer}
-            selectedChannel={selectedChannel}
-            onSelectChannel={setSelectedChannel}
-            theme={theme}
-          />
-        )}
-
-        {/* Main content area */}
-        <div className="flex-1 flex min-w-0">
+        {/* Main Content Area */}
+        <div className={cn("flex-1 flex min-w-0 transition-all duration-300", isMobile && !selectedDM && selectedServer === 'home' ? 'hidden' : 'flex')}>
           <div className="flex-1 flex flex-col min-w-0">
             {currentView === 'friends' && selectedServer === 'home' ? (
               <FriendsPage theme={theme} onSelectDM={handleSelectDM} />
@@ -99,21 +115,19 @@ export default function App() {
                 setCurrentView('dm');
               }} />
             ) : currentView === 'dm' && selectedServer === 'home' ? (
-              <ChatArea channelId={selectedDM} isDM={true} theme={theme} />
+              <ChatArea channelId={selectedDM} isDM={true} theme={theme} onBack={isMobile ? handleBack : undefined} />
             ) : (
-              <ChatArea channelId={selectedChannel} isDM={false} theme={theme} />
+              <ChatArea channelId={selectedChannel} isDM={false} theme={theme} onBack={isMobile ? handleBack : undefined} />
             )}
           </div>
-
-          {/* Members panel - only show when in a group */}
           {isInGroup && <MembersPanel theme={theme} />}
         </div>
 
         {/* User info panel - at bottom left covering server list and sidebar */}
-        <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
+         <div className={cn(isMobile && selectedDM ? 'hidden' : 'block')}>
+            <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
+        </div>
       </div>
     </div>
   );
 }
-
-    

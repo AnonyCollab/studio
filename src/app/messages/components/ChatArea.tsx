@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle } from 'lucide-react';
+import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -39,9 +39,10 @@ interface ChatAreaProps {
   channelId: string | null;
   isDM: boolean;
   theme: 'light' | 'dark';
+  onBack?: () => void;
 }
 
-export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
+export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -136,7 +137,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     const fileStorageRef = storageRef(storage, filePath);
   
     // Perform the upload without setting content type to avoid preflight
-    const uploadTask = uploadBytesResumable(fileStorageRef, file, { contentType: undefined });
+    const uploadTask = uploadBytesResumable(fileStorageRef, file);
   
     uploadTask.on('state_changed',
       (snapshot) => {
@@ -223,6 +224,11 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
           : 'bg-white border-b border-gray-200'
       }`}>
         <div className="flex items-center gap-2">
+          {onBack && (
+             <button onClick={onBack} className={`mr-2 p-1 rounded-full transition-colors ${isDarkTheme ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}>
+                <ArrowLeft className="w-5 h-5" />
+             </button>
+          )}
           {isDM ? (
              dmData?.isGroup ? (
               <Users className={`w-5 h-5 ${isDarkTheme ? 'text-white/70' : 'text-gray-600'}`} />
@@ -389,5 +395,3 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     </div>
   );
 }
-
-    
