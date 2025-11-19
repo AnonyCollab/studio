@@ -130,27 +130,27 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !channelId || !currentUser) return;
-
+  
     const storage = getStorage();
     const filePath = `dms/${channelId}/${currentUser.uid}/${file.name}`;
     const fileStorageRef = storageRef(storage, filePath);
-    
-    // Upload with a simple content type to avoid preflight
-    const uploadTask = uploadBytesResumable(fileStorageRef, file, { contentType: 'text/plain' });
-
-    uploadTask.on('state_changed', 
+  
+    // Perform the upload without setting content type to avoid preflight
+    const uploadTask = uploadBytesResumable(fileStorageRef, file);
+  
+    uploadTask.on('state_changed',
       (snapshot) => {
         // Can be used to show upload progress
-      }, 
+      },
       (error) => {
         console.error("Upload failed:", error);
-      }, 
+      },
       async () => {
         try {
-          // After upload, update the metadata to the correct content type
+          // After the upload is complete, update metadata with the correct content type
           await updateMetadata(uploadTask.snapshot.ref, { contentType: file.type });
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
+  
           const fileMessage = {
             senderId: currentUser.uid,
             type: 'file' as const,
@@ -162,7 +162,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
             },
             createdAt: serverTimestamp(),
           };
-
+  
           if (isDM) {
             await addDoc(collection(firestore, 'dms', channelId, 'messages'), fileMessage);
           } else {
