@@ -1,12 +1,14 @@
 
+'use client';
+
 import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { UserProfileTrigger, UserProfile } from './ProfileCard';
+import { UserProfileTrigger } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, serverTimestamp, addDoc } from 'firebase/firestore';
+import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, serverTimestamp, addDoc, doc } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Message {
@@ -28,18 +30,22 @@ interface ChatAreaProps {
 export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const [message, setMessage] = useState('');
   const isDarkTheme = theme === 'dark';
-  const { user } = useUser();
+  const { user: currentUser } = useUser();
   const firestore = useFirestore();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  const otherUser = useMemo(() => {
-    if (isDM && channelId) {
-        // In a real app, you'd fetch this user's profile from Firestore
-        // For now, we find them in the mock data.
-        return Object.values(mockUsers).find(u => u.id === channelId);
-    }
-    return null;
-  }, [channelId, isDM]);
+  const otherUserUid = useMemo(() => {
+    if (!isDM || !channelId || !currentUser) return null;
+    return channelId.split('_').find(uid => uid !== currentUser.uid);
+  }, [channelId, isDM, currentUser]);
+
+  const otherUserRef = useMemoFirebase(() => {
+    if (!firestore || !otherUserUid) return null;
+    return doc(firestore, 'users', otherUserUid);
+  }, [firestore, otherUserUid]);
+
+  const { data: otherUserData } = useDoc(otherUserRef);
+  const otherUser = otherUserData?.profile;
 
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore || !channelId) return null;
@@ -51,12 +57,34 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   }, [firestore, channelId, isDM]);
 
   const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
+  const [senderProfiles, setSenderProfiles] = useState<Record<string, any>>({});
+
+  useEffect(() => {
+    const fetchSenderProfiles = async () => {
+        if (!messages || !firestore) return;
+        const newProfiles: Record<string, any> = {};
+        for (const msg of messages) {
+            if (!senderProfiles[msg.senderId]) {
+                const userDocRef = doc(firestore, 'users', msg.senderId);
+                const unsub = onSnapshot(userDocRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        setSenderProfiles(prev => ({...prev, [msg.senderId]: docSnap.data().profile}));
+                    }
+                });
+                // In a real app, manage unsubscribing
+            }
+        }
+    };
+    fetchSenderProfiles();
+  }, [messages, firestore, senderProfiles]);
+
+
   
   const handleSendMessage = async () => {
-    if (message.trim() === '' || !firestore || !user || !channelId) return;
+    if (message.trim() === '' || !firestore || !currentUser || !channelId) return;
 
     const messageData = {
-        senderId: user.uid,
+        senderId: currentUser.uid,
         text: message,
         createdAt: serverTimestamp(),
     };
@@ -99,7 +127,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     );
   }
   
-  const chatName = isDM ? (otherUser?.displayName || channelId) : channelId;
+  const chatName = isDM ? (otherUser?.displayName || "Loading...") : channelId;
 
   return (
     <div className={`flex-1 flex flex-col ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
@@ -147,8 +175,8 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
         <div className="p-4 space-y-4">
           {isLoading && <p>Loading messages...</p>}
           {messages && messages.map((msg, index) => {
-            const senderProfile = msg.senderId === user?.uid ? mockUsers.currentUser : Object.values(mockUsers).find(u => u.id === msg.senderId) || null;
-            if (!senderProfile) return null; // Or show a placeholder
+            const senderProfile = senderProfiles[msg.senderId];
+            if (!senderProfile) return <div key={msg.id}></div>; // Or a placeholder
             
             const prevMessage = messages[index - 1];
             const showAvatarAndName = !prevMessage || prevMessage.senderId !== msg.senderId;
@@ -159,10 +187,10 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
               } ${!showAvatarAndName ? 'pl-14' : ''}`}>
                 
                 {showAvatarAndName ? (
-                    <UserProfileTrigger user={senderProfile} theme={theme}>
+                    <UserProfileTrigger user={{...mockUsers.currentUser, ...senderProfile}} theme={theme}>
                         <Avatar className={`w-10 h-10 ${isDarkTheme ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                        <AvatarImage src={senderProfile.avatar} />
-                        <AvatarFallback>{senderProfile.username[0]}</AvatarFallback>
+                        <AvatarImage src={senderProfile.photoURL} />
+                        <AvatarFallback>{senderProfile.displayName[0]}</AvatarFallback>
                         </Avatar>
                     </UserProfileTrigger>
                 ) : <div className="w-10 flex-shrink-0" />}
@@ -170,7 +198,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
                 <div className="flex-1 min-w-0">
                   {showAvatarAndName && (
                       <div className="flex items-baseline gap-2">
-                        <UserProfileTrigger user={senderProfile} theme={theme}>
+                        <UserProfileTrigger user={{...mockUsers.currentUser, ...senderProfile}} theme={theme}>
                             <span className={`cursor-pointer hover:underline ${isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{senderProfile.displayName}</span>
                         </UserProfileTrigger>
                         <span className={`text-xs ${isDarkTheme ? 'text-[#6b7280]' : 'text-gray-500'}`}>
@@ -246,5 +274,3 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     </div>
   );
 }
-
-    

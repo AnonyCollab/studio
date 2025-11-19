@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Mic, Headphones, Settings, MicOff, HeadphoneOff, Sun, Moon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
@@ -53,7 +55,7 @@ export function UserInfoPanel({ theme, onToggleTheme }: UserInfoPanelProps) {
               }`} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`text-sm truncate ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{currentUser.username}</p>
+              <p className={`text-sm truncate ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{currentUser.displayName}</p>
               <p className={`text-xs truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>Online</p>
             </div>
           </div>
