@@ -3,7 +3,7 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useUser, useFirestore, useCollection, useMemoFirebase, FirestorePermissionError } from '@/firebase';
 import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId, onSnapshot, getDoc, arrayUnion, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Users, UserPlus, MessageCircle, MoreVertical, Check, X, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -188,63 +188,68 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
     const requestRef = doc(firestore, 'friendRequests', requestId);
   
     if (action === 'accept') {
-      try {
         const requestDoc = await getDoc(requestRef);
-        if (!requestDoc.exists()) throw new Error("Request not found");
+        if (!requestDoc.exists()) {
+            toast({ title: 'Error', description: 'Friend request not found.', variant: 'destructive' });
+            return;
+        }
         const { senderId, receiverId } = requestDoc.data();
   
-        // Update friend request status to 'accepted'
-        await updateDoc(requestRef, { status: 'accepted' }).catch((error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: requestRef.path,
-            operation: 'update',
-            requestResourceData: { status: 'accepted' },
-          }));
-          throw error; // Propagate error to be caught by outer catch
-        });
-  
-        // Add each user to the other's friend list
-        const senderRef = doc(firestore, 'users', senderId);
-        const receiverRef = doc(firestore, 'users', receiverId);
-        
-        await updateDoc(receiverRef, { friends: arrayUnion(senderId) }).catch((error) => {
-           errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: receiverRef.path,
-            operation: 'update',
-            requestResourceData: { friends: arrayUnion(senderId) },
-          }));
-           throw error;
-        });
+        // 1. Update friend request status to 'accepted'
+        updateDoc(requestRef, { status: 'accepted' })
+            .then(() => {
+                const receiverRef = doc(firestore, 'users', receiverId);
+                const senderRef = doc(firestore, 'users', senderId);
 
-        await updateDoc(senderRef, { friends: arrayUnion(receiverId) }).catch((error) => {
-            errorEmitter.emit('permission-error', new FirestorePermissionError({
-              path: senderRef.path,
-              operation: 'update',
-              requestResourceData: { friends: arrayUnion(receiverId) },
-            }));
-            throw error;
-        });
+                // 2. Add sender to receiver's friend list
+                updateDoc(receiverRef, { friends: arrayUnion(senderId) })
+                    .catch((error) => {
+                        const permissionError = new FirestorePermissionError({
+                            path: receiverRef.path,
+                            operation: 'update',
+                            requestResourceData: { friends: arrayUnion(senderId) },
+                        });
+                        errorEmitter.emit('permission-error', permissionError);
+                        toast({ title: 'Error', description: 'Failed to update your friend list.', variant: 'destructive' });
+                    });
+                
+                // 3. Add receiver to sender's friend list
+                updateDoc(senderRef, { friends: arrayUnion(receiverId) })
+                     .catch((error) => {
+                        const permissionError = new FirestorePermissionError({
+                            path: senderRef.path,
+                            operation: 'update',
+                            requestResourceData: { friends: arrayUnion(receiverId) },
+                        });
+                        errorEmitter.emit('permission-error', permissionError);
+                        toast({ title: 'Error', description: "Failed to update the sender's friend list.", variant: 'destructive' });
+                    });
+
+                toast({ title: 'Friend Added', description: 'You are now friends.' });
+            })
+            .catch((error) => {
+                const permissionError = new FirestorePermissionError({
+                    path: requestRef.path,
+                    operation: 'update',
+                    requestResourceData: { status: 'accepted' },
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({ title: 'Error', description: 'Failed to accept friend request.', variant: 'destructive' });
+            });
   
-        toast({ title: 'Friend Added', description: 'You are now friends.' });
-  
-      } catch (error) {
-        console.error("Error accepting friend request: ", error);
-        toast({ title: 'Error', description: 'Failed to accept friend request.', variant: 'destructive' });
-      }
     } else { // Decline or Cancel
-      try {
-        await deleteDoc(requestRef).catch((error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: requestRef.path,
-            operation: 'delete',
-          }));
-          throw error;
-        });
-        toast({ title: 'Request Removed', description: 'The friend request has been removed.' });
-      } catch (error) {
-        console.error("Error removing friend request: ", error);
-        toast({ title: 'Error', description: 'Failed to remove friend request.', variant: 'destructive' });
-      }
+        deleteDoc(requestRef)
+            .then(() => {
+                toast({ title: 'Request Removed', description: 'The friend request has been removed.' });
+            })
+            .catch((error) => {
+                const permissionError = new FirestorePermissionError({
+                    path: requestRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
+                toast({ title: 'Error', description: 'Failed to remove friend request.', variant: 'destructive' });
+            });
     }
   };
 
