@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ProfileCard } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
+import { useUser } from '@/firebase';
 
 interface UserInfoPanelProps {
   theme: 'light' | 'dark';
@@ -22,7 +23,15 @@ export function UserInfoPanel({ theme, onToggleTheme }: UserInfoPanelProps) {
   const [isDeafened, setIsDeafened] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const isDark = theme === 'dark';
-  const currentUser = mockUsers.currentUser;
+  const { user } = useUser();
+  
+  const currentUser = {
+    ...mockUsers.currentUser,
+    username: user?.displayName || mockUsers.currentUser.username,
+    displayName: user?.displayName || mockUsers.currentUser.displayName,
+    avatar: user?.photoURL || mockUsers.currentUser.avatar
+  };
+
 
   return (
     <>
@@ -36,15 +45,15 @@ export function UserInfoPanel({ theme, onToggleTheme }: UserInfoPanelProps) {
           >
             <div className="relative">
               <Avatar className={`w-10 h-10 ${isDark ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=You" />
-                <AvatarFallback>ME</AvatarFallback>
+                <AvatarImage src={currentUser.avatar} />
+                <AvatarFallback>{currentUser.username[0]}</AvatarFallback>
               </Avatar>
               <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full ${
                 isDark ? 'border-2 border-[#131823]' : 'border-2 border-white'
               }`} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`text-sm truncate ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>YourUsername</p>
+              <p className={`text-sm truncate ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{currentUser.username}</p>
               <p className={`text-xs truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>Online</p>
             </div>
           </div>

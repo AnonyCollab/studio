@@ -25,6 +25,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ThemeToggle } from '@/app/posts/components/ThemeToggle';
 import { Separator } from '@/components/ui/separator';
+import { useUser } from '@/firebase';
 
 interface ProfileDropdownProps {
   theme?: 'light' | 'dark';
@@ -51,7 +52,7 @@ const HamburgerIcon = ({ isOpen }: { isOpen: boolean }) => (
   </div>
 );
 
-const DropdownContent = ({ theme, onToggleTheme }: ProfileDropdownProps) => {
+const DropdownContent = ({ theme, onToggleTheme, user }: ProfileDropdownProps & { user: any }) => {
   const isDark = theme === 'dark';
   const itemClass = isDark
     ? 'text-gray-300 focus:bg-white/5 focus:text-white'
@@ -63,7 +64,7 @@ const DropdownContent = ({ theme, onToggleTheme }: ProfileDropdownProps) => {
       <DropdownMenuLabel
         className={isDark ? 'text-gray-300' : 'text-gray-700'}
       >
-        My Account
+        {user ? user.displayName : 'My Account'}
       </DropdownMenuLabel>
       <DropdownMenuSeparator className={separatorClass} />
       <DropdownMenuItem className={itemClass}>
@@ -158,9 +159,12 @@ const MobileMenu = ({
 };
 
 export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) {
+  const { user } = useUser();
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const isDark = theme === 'dark';
+  const userAvatar = user?.photoURL;
+  const userInitials = user?.displayName ? user.displayName.charAt(0) : "U";
 
   if (isMobile) {
     return (
@@ -175,8 +179,8 @@ export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) 
             <HamburgerIcon isOpen={true} />
           ) : (
             <Avatar className="w-8 h-8">
-              <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
-              <AvatarFallback>U</AvatarFallback>
+              <AvatarImage src={userAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'} />
+              <AvatarFallback>{userInitials}</AvatarFallback>
             </Avatar>
           )}
         </Button>
@@ -194,8 +198,8 @@ export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) 
       <DropdownMenuTrigger asChild>
         <button className="rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-400 focus:ring-offset-background">
           <Avatar className="w-9 h-9">
-            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
-            <AvatarFallback>U</AvatarFallback>
+             <AvatarImage src={userAvatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=user'} />
+             <AvatarFallback>{userInitials}</AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
@@ -207,7 +211,7 @@ export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) 
             : 'bg-popover border-gray-200'
         }`}
       >
-        <DropdownContent theme={theme} onToggleTheme={onToggleTheme} />
+        <DropdownContent user={user} theme={theme} onToggleTheme={onToggleTheme} />
       </DropdownMenuContent>
     </DropdownMenu>
   );
