@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId, onSnapshot, getDoc, arrayUnion, deleteDoc, addDoc } from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId, onSnapshot, getDoc, arrayUnion, deleteDoc, addDoc, updateDoc } from 'firebase/firestore';
 import { Users, UserPlus, MessageCircle, MoreVertical, Check, X, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -168,22 +168,19 @@ export function FriendsPage({ theme }: FriendsPageProps) {
 
     if (action === 'accept') {
       try {
-        const batch = writeBatch(firestore);
-        
-        // Update request status
-        batch.update(requestRef, { status: 'accepted' });
-
         const requestDoc = await getDoc(requestRef);
         if (!requestDoc.exists()) throw new Error("Request not found");
         const { senderId, receiverId } = requestDoc.data();
-        
-        // Add to each other's friends list
+
+        // 1. Update the friend request status
+        await updateDoc(requestRef, { status: 'accepted' });
+
+        // 2. Add each user to the other's friend list
         const senderRef = doc(firestore, 'users', senderId);
         const receiverRef = doc(firestore, 'users', receiverId);
-        batch.update(senderRef, { friends: arrayUnion(receiverId) });
-        batch.update(receiverRef, { friends: arrayUnion(senderId) });
-
-        await batch.commit();
+        
+        await updateDoc(receiverRef, { friends: arrayUnion(senderId) });
+        await updateDoc(senderRef, { friends: arrayUnion(receiverId) });
 
         toast({ title: 'Friend Added', description: 'You are now friends.' });
 
@@ -505,5 +502,3 @@ function PendingFriendItem({ friend, isDark, onAction }: { friend: PendingReques
     </div>
   );
 }
-
-    
