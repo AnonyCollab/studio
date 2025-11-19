@@ -8,7 +8,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { UserProfileTrigger } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, serverTimestamp, addDoc, doc } from 'firebase/firestore';
+import { collection, query, orderBy, serverTimestamp, addDoc, doc, onSnapshot } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface Message {
