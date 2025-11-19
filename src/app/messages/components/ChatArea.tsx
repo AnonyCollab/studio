@@ -33,11 +33,19 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
   const { user: currentUser } = useUser();
   const firestore = useFirestore();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // Fetch the DM document to get conversation details (group name, participants, etc.)
+  const dmRef = useMemoFirebase(() => {
+    if (!firestore || !channelId || !isDM) return null;
+    return doc(firestore, 'dms', channelId);
+  }, [firestore, channelId, isDM]);
   
+  const { data: dmData } = useDoc(dmRef);
+
   const otherUserUid = useMemo(() => {
-    if (!isDM || !channelId || !currentUser) return null;
-    return channelId.split('_').find(uid => uid !== currentUser.uid);
-  }, [channelId, isDM, currentUser]);
+    if (!isDM || !channelId || !currentUser || !dmData || dmData.isGroup) return null;
+    return dmData.participants.find((uid: string) => uid !== currentUser.uid);
+  }, [channelId, isDM, currentUser, dmData]);
 
   const otherUserRef = useMemoFirebase(() => {
     if (!firestore || !otherUserUid) return null;
@@ -127,7 +135,12 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     );
   }
   
-  const chatName = isDM ? (otherUser?.displayName || "Loading...") : channelId;
+  const chatName = useMemo(() => {
+    if (!isDM) return channelId;
+    if (!dmData) return "Loading...";
+    if (dmData.isGroup) return dmData.groupName;
+    return otherUser?.displayName || "Loading...";
+  }, [isDM, channelId, dmData, otherUser]);
 
   return (
     <div className={`flex-1 flex flex-col ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
