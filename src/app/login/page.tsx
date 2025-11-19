@@ -41,6 +41,33 @@ const GoogleIcon = () => (
   </svg>
 );
 
+const FormInput = ({ icon, type, placeholder, value, onChange, showPasswordToggle = false, isDark, disabled, onPasswordToggle, showPassword }: any) => {
+    const Icon = icon;
+    return (
+      <div className="relative">
+        <Icon className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5", isDark ? "text-gray-400" : "text-gray-500")} />
+        <Input
+          type={type}
+          placeholder={placeholder}
+          value={value}
+          onChange={onChange}
+          className={cn(
+            "pl-11 h-12 text-base",
+            isDark
+              ? "bg-black/20 border-white/20 text-white placeholder:text-gray-500 focus:bg-black/30 focus:border-cyan-400/50"
+              : "bg-white/50 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:bg-white/70 focus:border-cyan-500/50"
+          )}
+          disabled={disabled}
+        />
+        {showPasswordToggle && (
+          <button type="button" onClick={onPasswordToggle} className="absolute right-3 top-1/2 -translate-y-1/2">
+             {showPassword ? <EyeOff className={cn("w-5 h-5", isDark ? "text-gray-400" : "text-gray-500")} /> : <Eye className={cn("w-5 h-5", isDark ? "text-gray-400" : "text-gray-500")} />}
+          </button>
+        )}
+      </div>
+    );
+};
+
 
 export default function LoginPage() {
   const { theme } = useTheme();
@@ -110,33 +137,6 @@ export default function LoginPage() {
     setIsGoogleLoading(false);
   };
 
-  const FormInput = ({ icon, type, placeholder, value, onChange, showPasswordToggle = false }: any) => {
-    const Icon = icon;
-    return (
-      <div className="relative">
-        <Icon className={cn("absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5", isDark ? "text-gray-400" : "text-gray-500")} />
-        <Input
-          type={type}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          className={cn(
-            "pl-11 h-12 text-base",
-            isDark
-              ? "bg-black/20 border-white/20 text-white placeholder:text-gray-500 focus:bg-black/30 focus:border-cyan-400/50"
-              : "bg-white/50 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:bg-white/70 focus:border-cyan-500/50"
-          )}
-          disabled={isLoading || isGoogleLoading}
-        />
-        {showPasswordToggle && (
-          <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2">
-             {showPassword ? <EyeOff className={cn("w-5 h-5", isDark ? "text-gray-400" : "text-gray-500")} /> : <Eye className={cn("w-5 h-5", isDark ? "text-gray-400" : "text-gray-500")} />}
-          </button>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className={cn(
       "min-h-screen w-full flex items-center justify-center p-4",
@@ -175,8 +175,8 @@ export default function LoginPage() {
           
           <TabsContent value="signin" className="mt-6">
             <div className="space-y-4">
-              <FormInput icon={Mail} type="email" placeholder="Email" value={email} onChange={(e: any) => setEmail(e.target.value)} />
-              <FormInput icon={Lock} type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e: any) => setPassword(e.target.value)} showPasswordToggle />
+              <FormInput icon={Mail} type="email" placeholder="Email" value={email} onChange={(e: any) => setEmail(e.target.value)} isDark={isDark} disabled={isLoading || isGoogleLoading}/>
+              <FormInput icon={Lock} type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e: any) => setPassword(e.target.value)} showPasswordToggle onPasswordToggle={() => setShowPassword(!showPassword)} showPassword={showPassword} isDark={isDark} disabled={isLoading || isGoogleLoading}/>
               <Button 
                 onClick={handleSignIn}
                 className={cn("w-full h-12 text-base", isDark ? "bg-cyan-400 hover:bg-cyan-500 text-black" : "bg-cyan-600 hover:bg-cyan-700 text-white")}
@@ -189,9 +189,9 @@ export default function LoginPage() {
           
           <TabsContent value="signup" className="mt-6">
             <div className="space-y-4">
-              <FormInput icon={Mail} type="email" placeholder="Email" value={email} onChange={(e: any) => setEmail(e.target.value)} />
-              <FormInput icon={Lock} type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e: any) => setPassword(e.target.value)} showPasswordToggle />
-              <FormInput icon={Lock} type={showPassword ? "text" : "password"} placeholder="Confirm Password" value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} />
+              <FormInput icon={Mail} type="email" placeholder="Email" value={email} onChange={(e: any) => setEmail(e.target.value)} isDark={isDark} disabled={isLoading || isGoogleLoading}/>
+              <FormInput icon={Lock} type={showPassword ? "text" : "password"} placeholder="Password" value={password} onChange={(e: any) => setPassword(e.target.value)} showPasswordToggle onPasswordToggle={() => setShowPassword(!showPassword)} showPassword={showPassword} isDark={isDark} disabled={isLoading || isGoogleLoading}/>
+              <FormInput icon={Lock} type={showPassword ? "text" : "password"} placeholder="Confirm Password" value={confirmPassword} onChange={(e: any) => setConfirmPassword(e.target.value)} isDark={isDark} disabled={isLoading || isGoogleLoading}/>
               <Button 
                 onClick={handleSignUp}
                 className={cn("w-full h-12 text-base", isDark ? "bg-cyan-400 hover:bg-cyan-500 text-black" : "bg-cyan-600 hover:bg-cyan-700 text-white")}
@@ -208,14 +208,14 @@ export default function LoginPage() {
             <span className={cn("w-full border-t", isDark ? "border-white/20" : "border-gray-300")} />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className={cn("px-2", isDark ? "bg-[#1a1f2e] text-gray-400" : "bg-gray-100 text-gray-500")}>Or continue with</span>
+            <span className={cn("px-2", isDark ? "bg-[#1a1f2e]" : "bg-gray-100 text-gray-500")}>Or continue with</span>
           </div>
         </div>
 
         <Button
           onClick={handleGoogleSignIn}
           className={cn(
-            "w-full h-12 text-base",
+            "w-full h-12 text-base gap-2",
             isDark 
               ? "bg-black/20 hover:bg-black/40 text-white border border-white/20"
               : "bg-white hover:bg-gray-50 text-gray-700 border border-gray-300"
@@ -239,3 +239,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    

@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -170,7 +170,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   };
 
 
-  const renderReply = (reply: Reply) => {
+  const renderReply = useCallback((reply: Reply) => {
     const isReplyLiked = likedReplies[reply.id];
     return (
     <div key={reply.id} className="flex gap-3">
@@ -207,7 +207,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             </div>
         </div>
     </div>
-  )};
+  )}, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id]);
 
   return (
     <div className="flex gap-3">
@@ -285,3 +285,5 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     </div>
   )
 }
+
+    
