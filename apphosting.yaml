@@ -5,3 +5,20 @@ runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
   maxInstances: 1
+cors:
+  - origin:
+      - '*'
+    methods:
+      - GET
+      - POST
+      - HEAD
+    headers:
+      - content-type
+      - x-firebase-storage-upload
+      - x-goog-resumable
+      - x-goog-upload-command
+      - x-goog-upload-header-content-length
+      - x-goog-upload-header-content-type
+      - x-goog-upload-offset
+      - x-goog-upload-protocol
+    maxAge: 3600
