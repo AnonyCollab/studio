@@ -26,6 +26,11 @@ export default function App() {
     setSelectedDM(null);
     setCurrentView(view);
   };
+  
+  const handleSelectDM = (id: string) => {
+    setSelectedDM(id);
+    setCurrentView('dm');
+  };
 
   return (
     <div
@@ -66,10 +71,7 @@ export default function App() {
           <DirectMessagesSidebar
             activeView={currentView}
             selectedDM={selectedDM}
-            onSelectDM={(id) => {
-              setSelectedDM(id);
-              setCurrentView('dm');
-            }}
+            onSelectDM={handleSelectDM}
             onSelectHomeView={handleSelectHomeView}
             theme={theme}
           />
@@ -89,7 +91,7 @@ export default function App() {
         <div className="flex-1 flex min-w-0">
           <div className="flex-1 flex flex-col min-w-0">
             {currentView === 'friends' && selectedServer === 'home' ? (
-              <FriendsPage theme={theme} />
+              <FriendsPage theme={theme} onSelectDM={handleSelectDM} />
             ) : currentView === 'groups' && selectedServer === 'home' ? (
                <GroupList theme={theme} onSelectGroup={(id) => {
                 setSelectedDM(id);

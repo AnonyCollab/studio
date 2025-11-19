@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { UserProfileTrigger, UserProfile } from './ProfileCard';
 import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase';
 
 interface FriendData {
   id: string;
@@ -33,9 +35,10 @@ interface PendingRequest {
 
 interface FriendsPageProps {
   theme: 'light' | 'dark';
+  onSelectDM: (id: string) => void;
 }
 
-export function FriendsPage({ theme }: FriendsPageProps) {
+export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   const { user } = useUser();
   const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
@@ -163,34 +166,62 @@ export function FriendsPage({ theme }: FriendsPageProps) {
 
   const handlePendingRequest = async (requestId: string, action: 'accept' | 'decline') => {
     if (!firestore || !user) return;
-
+  
     const requestRef = doc(firestore, 'friendRequests', requestId);
-
+  
     if (action === 'accept') {
       try {
         const requestDoc = await getDoc(requestRef);
         if (!requestDoc.exists()) throw new Error("Request not found");
         const { senderId, receiverId } = requestDoc.data();
-
-        // 1. Update the friend request status
-        await updateDoc(requestRef, { status: 'accepted' });
-
-        // 2. Add each user to the other's friend list
+  
+        // Update friend request status to 'accepted'
+        await updateDoc(requestRef, { status: 'accepted' }).catch((error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: requestRef.path,
+            operation: 'update',
+            requestResourceData: { status: 'accepted' },
+          }));
+          throw error; // Propagate error to be caught by outer catch
+        });
+  
+        // Add each user to the other's friend list
         const senderRef = doc(firestore, 'users', senderId);
         const receiverRef = doc(firestore, 'users', receiverId);
         
-        await updateDoc(receiverRef, { friends: arrayUnion(senderId) });
-        await updateDoc(senderRef, { friends: arrayUnion(receiverId) });
+        await updateDoc(receiverRef, { friends: arrayUnion(senderId) }).catch((error) => {
+           errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: receiverRef.path,
+            operation: 'update',
+            requestResourceData: { friends: arrayUnion(senderId) },
+          }));
+           throw error;
+        });
 
+        await updateDoc(senderRef, { friends: arrayUnion(receiverId) }).catch((error) => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+              path: senderRef.path,
+              operation: 'update',
+              requestResourceData: { friends: arrayUnion(receiverId) },
+            }));
+            throw error;
+        });
+  
         toast({ title: 'Friend Added', description: 'You are now friends.' });
-
+  
       } catch (error) {
         console.error("Error accepting friend request: ", error);
         toast({ title: 'Error', description: 'Failed to accept friend request.', variant: 'destructive' });
       }
     } else { // Decline or Cancel
       try {
-        await deleteDoc(requestRef);
+        await deleteDoc(requestRef).catch((error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: requestRef.path,
+            operation: 'delete',
+          }));
+          throw error;
+        });
         toast({ title: 'Request Removed', description: 'The friend request has been removed.' });
       } catch (error) {
         console.error("Error removing friend request: ", error);
@@ -289,7 +320,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                     Online — {onlineFriends.length}
                   </p>
                   {onlineFriends.map((friend) => (
-                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} />
+                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} onMessageClick={() => onSelectDM(friend.id)} />
                   ))}
                 </div>
               </ScrollArea>
@@ -326,7 +357,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
                     All Friends — {allFriends.length}
                   </p>
                   {allFriends.map((friend) => (
-                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} />
+                    <FriendItem key={friend.id} friend={friend} isDark={isDark} theme={theme} onMessageClick={() => onSelectDM(friend.id)} />
                   ))}
                 </div>
               </ScrollArea>
@@ -405,7 +436,7 @@ export function FriendsPage({ theme }: FriendsPageProps) {
   );
 }
 
-function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; theme: 'light' | 'dark' }) {
+function FriendItem({ friend, isDark, theme, onMessageClick }: { friend: any; isDark: boolean; theme: 'light' | 'dark'; onMessageClick: () => void }) {
   const statusColor = {
     online: 'bg-emerald-500',
     game: 'bg-purple-500',
@@ -439,7 +470,9 @@ function FriendItem({ friend, isDark, theme }: { friend: any; isDark: boolean; t
         <p className={`text-sm truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{friend.status}</p>
       </div>
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button className={`p-2 rounded-lg transition-colors ${
+        <button
+          onClick={onMessageClick}
+          className={`p-2 rounded-lg transition-colors ${
           isDark 
             ? 'bg-[#131823] border border-white/10 hover:bg-white/20' 
             : 'bg-gray-100 border border-gray-200 hover:bg-gray-200'
@@ -502,3 +535,4 @@ function PendingFriendItem({ friend, isDark, onAction }: { friend: PendingReques
     </div>
   );
 }
+
