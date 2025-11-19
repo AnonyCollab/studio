@@ -61,52 +61,52 @@ export default function App() {
 
       {/* Main app layout */}
       <div className="relative h-full flex">
-        {/* Combined Server and Channel/DM sidebars */}
-        <div className={cn(
-          "flex flex-shrink-0 transition-all duration-300 h-full",
-          showSidebarContainer ? "w-full md:w-[25rem]" : "w-0"
-        )}>
-          {/* Server list */}
-          <div className={cn("transition-all duration-300 h-full", showSidebarContainer && selectedServer === 'home' ? 'w-20' : 'w-0 md:w-20' )}>
-            <ServerList 
-              selectedServer={selectedServer}
-              onSelectServer={(id) => {
-                setSelectedServer(id);
-                if (id === 'home') {
-                  setCurrentView('friends');
-                  setSelectedChannel(null);
-                  setSelectedDM(null);
-                } else {
-                  setCurrentView('chat');
-                  setSelectedChannel('general'); // Select 'general' by default
-                  setSelectedDM(null);
-                }
-              }}
-              theme={theme}
-            />
-          </div>
+        
+        {/* Sidebar Container - Hidden on mobile when a chat is active */}
+        {showSidebarContainer && (
+            <div className="flex flex-shrink-0 w-full md:w-[25rem] h-full">
+              {/* Server list */}
+              <div className="w-20 h-full">
+                <ServerList 
+                  selectedServer={selectedServer}
+                  onSelectServer={(id) => {
+                    setSelectedServer(id);
+                    if (id === 'home') {
+                      setCurrentView('friends');
+                      setSelectedChannel(null);
+                      setSelectedDM(null);
+                    } else {
+                      setCurrentView('chat');
+                      setSelectedChannel('general'); // Select 'general' by default
+                      setSelectedDM(null);
+                    }
+                  }}
+                  theme={theme}
+                />
+              </div>
 
-          {/* Left Sidebars Container */}
-          <div className={cn("transition-all duration-300 w-full md:w-80 h-full", showSidebarContainer ? 'block' : 'hidden')} style={{ height: '-webkit-fill-available' as any }}>
-            {selectedServer === 'home' && (
-              <DirectMessagesSidebar
-                activeView={currentView}
-                selectedDM={selectedDM}
-                onSelectDM={handleSelectDM}
-                onSelectHomeView={handleSelectHomeView}
-                theme={theme}
-              />
-            )}
-            {currentView === 'chat' && selectedServer !== 'home' && (
-              <ChannelSidebar 
-                serverId={selectedServer}
-                selectedChannel={selectedChannel}
-                onSelectChannel={setSelectedChannel}
-                theme={theme}
-              />
-            )}
-          </div>
-        </div>
+              {/* Left Sidebars Container */}
+              <div className="w-full md:w-80 h-full" style={{ height: '-webkit-fill-available' as any }}>
+                {selectedServer === 'home' && (
+                  <DirectMessagesSidebar
+                    activeView={currentView}
+                    selectedDM={selectedDM}
+                    onSelectDM={handleSelectDM}
+                    onSelectHomeView={handleSelectHomeView}
+                    theme={theme}
+                  />
+                )}
+                {currentView === 'chat' && selectedServer !== 'home' && (
+                  <ChannelSidebar 
+                    serverId={selectedServer}
+                    selectedChannel={selectedChannel}
+                    onSelectChannel={setSelectedChannel}
+                    theme={theme}
+                  />
+                )}
+              </div>
+            </div>
+        )}
 
         {/* Main Content Area */}
         <div className={cn("flex-1 flex min-w-0 transition-all duration-300", !showMainContent ? 'hidden' : 'flex')}>
@@ -128,9 +128,9 @@ export default function App() {
         </div>
 
         {/* User info panel - at bottom left covering server list and sidebar */}
-        <div className={cn(showSidebarContainer ? 'block' : 'hidden')}>
+        {showSidebarContainer && (
             <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
-        </div>
+        )}
       </div>
     </div>
   );
