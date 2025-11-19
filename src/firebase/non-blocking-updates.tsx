@@ -15,6 +15,7 @@ import {
   Firestore,
   SetOptions,
   serverTimestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import {FirestorePermissionError} from '@/firebase/errors';
@@ -126,30 +127,45 @@ export function addPost(firestore: Firestore, postData: any, user: User | null) 
 /**
  * Adds a new comment to a post's 'comments' subcollection in Firestore.
  */
-export async function addComment(firestore: Firestore, postId: string, commentText: string, user: User) {
-  const commentsCollection = collection(firestore, 'posts', postId, 'comments');
-  
-  const authorData = {
-    name: user.displayName || 'Anonymous User',
-    avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-    uid: user.uid,
-  };
+export function addComment(firestore: Firestore, postId: string, commentText: string, user: User) {
+    const commentsCollection = collection(firestore, 'posts', postId, 'comments');
+    const postRef = doc(firestore, 'posts', postId);
 
-  const postRef = doc(firestore, 'posts', postId);
+    const authorData = {
+        name: user.displayName || 'Anonymous User',
+        avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+        uid: user.uid,
+    };
 
-  // First, add the comment
-  await addDocumentNonBlocking(commentsCollection, {
-    author: authorData,
-    content: commentText,
-    likes: 0,
-    createdAt: serverTimestamp(),
-  });
+    const commentData = {
+        author: authorData,
+        content: commentText,
+        likes: 0,
+        createdAt: serverTimestamp(),
+    };
 
-  // Then, increment the comment count on the post
-  return updateDocumentNonBlocking(postRef, {
-    comments: increment(1)
-  });
+    const batch = writeBatch(firestore);
+    
+    // Add new comment
+    const newCommentRef = doc(commentsCollection); // Create a new doc ref for the comment
+    batch.set(newCommentRef, commentData);
+    
+    // Update comment count on post
+    batch.update(postRef, { comments: increment(1) });
+    
+    // Non-blocking commit
+    batch.commit().catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: `batch write to ${postRef.path} and ${newCommentRef.path}`,
+            operation: 'write',
+            requestResourceData: { postUpdate: { comments: 'increment' }, newComment: commentData },
+          })
+        );
+    });
 }
+
 
 /**
  * Adds a new reply to a comment's 'replies' subcollection in Firestore.

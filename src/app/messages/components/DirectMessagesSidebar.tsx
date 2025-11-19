@@ -1,58 +1,29 @@
 
-import { MessageSquare, Users, ChevronDown, Plus, Search } from 'lucide-react';
+'use client';
+
+import { MessageSquare, Users, ChevronDown, Plus, Search, Users2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
-import { Users2 } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, getDoc } from 'firebase/firestore';
+import { formatDistanceToNow } from 'date-fns';
 
-const recentDMs = [
-  {
-    id: 'dm1',
-    user: 'Alex Johnson',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-    lastMessage: 'Hey, are you free tonight?',
-    timestamp: '2m ago',
-    unread: 2,
-    online: true,
-  },
-  {
-    id: 'dm2',
-    user: 'Sarah Chen',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-    lastMessage: 'Thanks for the help!',
-    timestamp: '1h ago',
-    unread: 0,
-    online: true,
-  },
-  {
-    id: 'dm3',
-    user: 'Mike Williams',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',
-    lastMessage: 'See you tomorrow',
-    timestamp: '3h ago',
-    unread: 0,
-    online: false,
-  },
-  {
-    id: 'dm4',
-    user: 'Emma Davis',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
-    lastMessage: 'That sounds great!',
-    timestamp: '1d ago',
-    unread: 0,
-    online: false,
-  },
-  {
-    id: 'dm5',
-    user: 'James Brown',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=James',
-    lastMessage: 'Let me know when you\'re ready',
-    timestamp: '2d ago',
-    unread: 0,
-    online: true,
-  },
-];
+interface DMConversation {
+  id: string;
+  otherUser: {
+    id: string;
+    displayName: string;
+    photoURL: string;
+    online: boolean; // Assuming we add this later
+  };
+  lastMessage: {
+    text: string;
+    timestamp: string;
+  };
+  unread: number; // Assuming we add this later
+}
 
 interface DirectMessagesSidebarProps {
   selectedDM: string | null;
@@ -65,10 +36,63 @@ interface DirectMessagesSidebarProps {
 export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView, activeView, theme }: DirectMessagesSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const isDark = theme === 'dark';
+  const { user: currentUser } = useUser();
+  const firestore = useFirestore();
 
-  const filteredDMs = recentDMs.filter(dm =>
-    dm.user.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const [dmConversations, setDmConversations] = useState<DMConversation[]>([]);
+
+  const dmsQuery = useMemoFirebase(() => {
+    if (!firestore || !currentUser) return null;
+    return query(collection(firestore, 'dms'), where('participants', 'array-contains', currentUser.uid));
+  }, [firestore, currentUser]);
+
+  const { data: dmsData } = useCollection(dmsQuery);
+
+  useEffect(() => {
+    if (!dmsData || !firestore || !currentUser) return;
+
+    const fetchConversations = async () => {
+      const conversations: DMConversation[] = await Promise.all(
+        dmsData.map(async (dm) => {
+          const otherUserId = dm.participants.find((p: string) => p !== currentUser.uid);
+          if (!otherUserId) return null;
+
+          const userDocRef = doc(firestore, 'users', otherUserId);
+          const userDocSnap = await getDoc(userDocRef);
+          
+          if (!userDocSnap.exists()) return null;
+
+          const otherUserData = userDocSnap.data().profile;
+
+          return {
+            id: dm.id,
+            otherUser: {
+              id: otherUserId,
+              displayName: otherUserData.displayName || 'Unknown User',
+              photoURL: otherUserData.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${otherUserId}`,
+              online: true, // Placeholder for online status
+            },
+            lastMessage: {
+              text: dm.lastMessage?.text || 'No messages yet',
+              timestamp: dm.lastMessage?.timestamp 
+                ? formatDistanceToNow(new Date(dm.lastMessage.timestamp.seconds * 1000), { addSuffix: true })
+                : '',
+            },
+            unread: 0, // Placeholder for unread count
+          };
+        })
+      );
+      setDmConversations(conversations.filter(Boolean) as DMConversation[]);
+    };
+
+    fetchConversations();
+  }, [dmsData, firestore, currentUser]);
+
+  const filteredDMs = useMemo(() => {
+    return dmConversations.filter(dm =>
+        dm.otherUser.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [dmConversations, searchQuery]);
 
   return (
     <div className={`w-80 flex-shrink-0 flex flex-col ${isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'}`}>
@@ -168,10 +192,10 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
               >
                 <div className="relative flex-shrink-0">
                   <Avatar className={`w-8 h-8 ${isDark ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                    <AvatarImage src={dm.avatar} />
-                    <AvatarFallback>{dm.user[0]}</AvatarFallback>
+                    <AvatarImage src={dm.otherUser.photoURL} />
+                    <AvatarFallback>{dm.otherUser.displayName[0]}</AvatarFallback>
                   </Avatar>
-                  {dm.online && (
+                  {dm.otherUser.online && (
                     <div className={`absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full ${
                       isDark ? 'border-2 border-[#0a0e1a]' : 'border-2 border-white'
                     }`} />
@@ -184,15 +208,15 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
                         ? isDark ? 'text-white' : 'text-gray-900'
                         : isDark ? 'text-[#e5e7eb]' : 'text-gray-900'
                     }`}>
-                      {dm.user}
+                      {dm.otherUser.displayName}
                     </span>
                     <span className={`text-xs flex-shrink-0 ${isDark ? 'text-[#6b7280]' : 'text-gray-500'}`}>
-                      {dm.timestamp}
+                      {dm.lastMessage.timestamp}
                     </span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <p className={`text-xs truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>
-                      {dm.lastMessage}
+                      {dm.lastMessage.text}
                     </p>
                     {dm.unread > 0 && (
                       <span className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-xs ${
