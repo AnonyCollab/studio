@@ -318,7 +318,7 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
       </ScrollArea>
 
       {/* Message input */}
-      <div className="p-4 flex-shrink-0">
+      <div className={`p-4 flex-shrink-0 border-t ${isDarkTheme ? 'border-white/10 bg-[#0a0e1a]' : 'border-gray-200 bg-gray-50'}`}>
         <div className={`rounded-lg p-3 flex items-end gap-2 ${
           isDarkTheme 
             ? 'bg-white/5 border border-white/10 focus-within:bg-white/10 focus-within:border-[#22d3ee]/50' 
