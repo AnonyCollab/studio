@@ -1,23 +1,27 @@
 
 'use client';
 import { useEffect } from 'react';
-import App from '@/app/landing/app';
-import { useTheme } from '@/context/ThemeContext';
+import { useUser } from '@/firebase/provider';
+import { useRouter } from 'next/navigation';
+import { Loader } from 'lucide-react';
 
 export default function Home() {
-  const { theme } = useTheme();
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
 
   useEffect(() => {
-    document.body.classList.add('landing-page-body');
-    return () => {
-      document.body.classList.remove('landing-page-body');
-    };
-  }, []);
+    if (!isUserLoading) {
+      if (user) {
+        router.replace('/posts');
+      } else {
+        router.replace('/login');
+      }
+    }
+  }, [user, isUserLoading, router]);
 
-  // Force re-render on theme change to apply correct body styles
-  useEffect(() => {
-    // This is a bit of a trick to ensure styles re-apply on theme change
-  }, [theme]);
-
-  return <App />;
+  return (
+    <div className="flex h-screen w-screen items-center justify-center bg-[#0a0e1a]">
+      <Loader className="h-8 w-8 animate-spin text-cyan-400" />
+    </div>
+  );
 }

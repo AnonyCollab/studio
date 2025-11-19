@@ -23,7 +23,7 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "firebase/
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 import { z } from 'zod';
-import { useFirebaseApp, useFirestore } from "@/firebase";
+import { useFirebaseApp, useFirestore, useUser } from "@/firebase";
 import { usePosts } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { addPost } from "@/firebase/non-blocking-updates";
@@ -58,6 +58,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const { toast } = useToast();
   const firebaseApp = useFirebaseApp();
   const firestore = useFirestore();
+  const { user } = useUser();
   const { handleCloseDetail } = usePosts();
   const storage = getStorage(firebaseApp);
 
@@ -140,20 +141,19 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
 
   const onSubmit = async (data: CreatePostInput) => {
     if (!firestore) return;
+    if (!user) {
+        toast({
+            variant: "destructive",
+            title: "Not Authenticated",
+            description: "You must be logged in to create a post.",
+        });
+        return;
+    }
     try {
       await addPost(firestore, {
         ...data,
         tags: data.tags.split(',').map(tag => tag.trim()),
-        author: { // Mock author, replace with real user data
-          name: "Anonymous User",
-          avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${Date.now()}`,
-        },
-        likes: 0,
-        comments: 0,
-        reposts: 0,
-        shares: 0,
-        timestamp: new Date().toISOString(),
-      });
+      }, user);
       toast({
         title: "Post Created!",
         description: "Your post has been successfully created.",
