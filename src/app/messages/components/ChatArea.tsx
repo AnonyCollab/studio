@@ -9,7 +9,7 @@ import { UserProfileTrigger } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, addDoc, doc, onSnapshot } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, updateMetadata } from "firebase/storage";
 import { formatDistanceToNow } from 'date-fns';
 import { PostShareCard } from './PostShareCard';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -132,10 +132,11 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     if (!file || !channelId || !currentUser) return;
 
     const storage = getStorage();
-    // Path: /dms/{dmId}/{userId}/{fileName}
     const filePath = `dms/${channelId}/${currentUser.uid}/${file.name}`;
     const fileStorageRef = storageRef(storage, filePath);
-    const uploadTask = uploadBytesResumable(fileStorageRef, file);
+    
+    // Upload with a simple content type to avoid preflight
+    const uploadTask = uploadBytesResumable(fileStorageRef, file, { contentType: 'text/plain' });
 
     uploadTask.on('state_changed', 
       (snapshot) => {
@@ -144,8 +145,12 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
       (error) => {
         console.error("Upload failed:", error);
       }, 
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+      async () => {
+        try {
+          // After upload, update the metadata to the correct content type
+          await updateMetadata(uploadTask.snapshot.ref, { contentType: file.type });
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
           const fileMessage = {
             senderId: currentUser.uid,
             type: 'file' as const,
@@ -163,7 +168,9 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
           } else {
             await addDoc(collection(firestore, 'servers', channelId, 'messages'), fileMessage);
           }
-        });
+        } catch (error) {
+            console.error("Failed to finalize upload:", error);
+        }
       }
     );
   };
