@@ -1,7 +1,9 @@
 
 'use client';
 
-import { createContext, useContext, useState, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useState, useMemo, ReactNode, useEffect } from 'react';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, DocumentReference, DocumentData } from 'firebase/firestore';
 
 interface Post {
   id: string;
@@ -40,24 +42,39 @@ interface PostContextType {
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
 export function PostProvider({ children }: { children: ReactNode }) {
-  const [selectedPost, setSelectedPost] = useState<Post | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const firestore = useFirestore();
 
-  const isDetailOpen = selectedPost !== null || showCreatePost;
+  const postRef = useMemoFirebase<DocumentReference<DocumentData> | null>(() => {
+    if (!firestore || !selectedPostId) return null;
+    return doc(firestore, 'posts', selectedPostId);
+  }, [firestore, selectedPostId]);
+  
+  const { data: selectedPost } = useDoc<Post>(postRef);
+
+  const handleSetSelectedPost = (post: Post | null) => {
+    setSelectedPostId(post ? post.id : null);
+    if(post) {
+      setShowCreatePost(false);
+    }
+  };
+
+  const isDetailOpen = selectedPostId !== null || showCreatePost;
 
   const handleCloseDetail = () => {
-    setSelectedPost(null);
+    setSelectedPostId(null);
     setShowCreatePost(false);
   };
 
   const handleOpenCreatePost = () => {
-    setSelectedPost(null);
+    setSelectedPostId(null);
     setShowCreatePost(true);
   };
 
   const value = useMemo(() => ({
     selectedPost,
-    setSelectedPost,
+    setSelectedPost: handleSetSelectedPost,
     showCreatePost,
     setShowCreatePost,
     isDetailOpen,

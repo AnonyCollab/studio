@@ -10,6 +10,7 @@ import { useState, TouchEvent } from "react";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePosts } from "@/context/PostContext";
 
 
 interface PostCardProps {
@@ -55,13 +56,18 @@ const badgeColorsLight = [
 export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
   const isDark = theme === "dark";
   const isMobile = useIsMobile();
+  const { selectedPost } = usePosts();
+
+  // Use the real-time selectedPost data if this card is the one being viewed
+  const displayPost = selectedPost?.id === post.id ? selectedPost : post;
+  
   const currentBadgeColors = isDark ? badgeColors : badgeColorsLight;
   const [isBookmarked, setIsBookmarked] = useState(false);
   
   const summaries = [
-    { label: "Problem", text: post.problemSummary, value: "problem" },
-    { label: "Tried", text: post.whatIveTriedSummary, value: "tried" },
-    { label: "Outcome", text: post.expectedOutcomeSummary, value: "outcome" },
+    { label: "Problem", text: displayPost.problemSummary, value: "problem" },
+    { label: "Tried", text: displayPost.whatIveTriedSummary, value: "tried" },
+    { label: "Outcome", text: displayPost.expectedOutcomeSummary, value: "outcome" },
   ].filter(s => s.text);
   
   const summaryValues = summaries.map(s => s.value);
@@ -137,18 +143,18 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
       <div className="pt-4 pb-2 px-4 md:px-6">
         {/* 1. Profile Info */}
         <div className="flex items-center gap-3">
-          <UserStatsHoverCard author={post.author} theme={theme} />
+          <UserStatsHoverCard author={displayPost.author} theme={theme} />
           <div className="flex flex-col">
-            <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-800"}`}>{post.author.name}</span>
-            <span className="text-xs text-gray-500">Posted: {post.timestamp}</span>
+            <span className={`text-sm font-medium ${isDark ? "text-gray-300" : "text-gray-800"}`}>{displayPost.author.name}</span>
+            <span className="text-xs text-gray-500">Posted: {displayPost.timestamp}</span>
           </div>
         </div>
 
         {/* 2. Tags */}
         <div className="flex flex-wrap gap-1.5 mt-4">
-          {post.tags.length > 0 && post.tags.map((tag, index) => (
+          {displayPost.tags.length > 0 && displayPost.tags.map((tag, index) => (
             <Badge 
-              key={`${post.id}-${tag}`} 
+              key={`${displayPost.id}-${tag}`} 
               variant="outline" 
               className={`text-xs ${currentBadgeColors[index % currentBadgeColors.length]} border`}
             >
@@ -158,7 +164,7 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
         </div>
 
         {/* 3. Title */}
-        <h3 className={`line-clamp-3 text-lg font-medium mt-4 ${isDark ? "text-white" : "text-gray-900"}`}>{post.title}</h3>
+        <h3 className={`line-clamp-3 text-lg font-medium mt-4 ${isDark ? "text-white" : "text-gray-900"}`}>{displayPost.title}</h3>
 
         {/* Summaries Tabs */}
         {summaries.length > 0 && (
@@ -191,21 +197,21 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
                     onClick={(e) => e.stopPropagation()}
                 >
                     <Heart className="w-5 h-5" />
-                    <span>{post.likes}</span>
+                    <span>{displayPost.likes}</span>
                 </button>
                 <button 
                     className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <MessageCircle className="w-5 h-5" />
-                    <span>{post.comments}</span>
+                    <span>{displayPost.comments}</span>
                 </button>
                 <button 
                     className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`}
                     onClick={(e) => e.stopPropagation()}
                 >
                     <Repeat2 className="w-5 h-5" />
-                    <span>{post.reposts}</span>
+                    <span>{displayPost.reposts}</span>
                 </button>
             </div>
             <div className="flex items-center gap-2">
@@ -214,7 +220,7 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
                     <Share2 className="w-5 h-5" />
                   </button>
                 </SharePopover>
-                <SaveToCollectionDialog postTitle={post.title} onSaveToggle={setIsBookmarked} theme={theme}>
+                <SaveToCollectionDialog postTitle={displayPost.title} onSaveToggle={setIsBookmarked} theme={theme}>
                     <button className={`transition-colors ${
                         isBookmarked
                           ? isDark ? 'text-cyan-400' : 'text-cyan-600'

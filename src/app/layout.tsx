@@ -35,18 +35,16 @@ function AppContent({ children }: { children: ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
       </head>
       <body className={bodyClassName}>
-        <FirebaseClientProvider>
-          <div className="relative isolate min-h-screen">
-            {!isLandingPage && (
-              <Suspense fallback={null}>
-                <AnimatedBackground theme={theme} />
-              </Suspense>
-            )}
-            <TopNav theme={theme} onToggleTheme={toggleTheme} />
-            <main>{children}</main>
-          </div>
-          <Toaster />
-        </FirebaseClientProvider>
+        <div className="relative isolate min-h-screen">
+          {!isLandingPage && (
+            <Suspense fallback={null}>
+              <AnimatedBackground theme={theme} />
+            </Suspense>
+          )}
+          <TopNav theme={theme} onToggleTheme={toggleTheme} />
+          <main>{children}</main>
+        </div>
+        <Toaster />
       </body>
     </html>
   );
@@ -60,9 +58,11 @@ export default function RootLayout({
 }>) {
   return (
     <ThemeProvider>
-      <PostProvider>
-        <AppContent>{children}</AppContent>
-      </PostProvider>
+      <FirebaseClientProvider>
+        <PostProvider>
+          <AppContent>{children}</AppContent>
+        </PostProvider>
+      </FirebaseClientProvider>
     </ThemeProvider>
   );
 }
