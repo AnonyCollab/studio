@@ -3,7 +3,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId } from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch, serverTimestamp, getDocs, limit, FieldPath, documentId, onSnapshot, getDoc, arrayUnion, deleteDoc, addDoc } from 'firebase/firestore';
 import { Users, UserPlus, MessageCircle, MoreVertical, Check, X, Search } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
