@@ -1,3 +1,4 @@
+
 export const mockGroups = [
     {
       id: 'group1',

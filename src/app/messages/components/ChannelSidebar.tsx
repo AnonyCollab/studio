@@ -1,3 +1,4 @@
+
 import { Hash, Volume2, ChevronDown, ChevronRight, Lock, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';

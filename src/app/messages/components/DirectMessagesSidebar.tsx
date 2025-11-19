@@ -1,3 +1,4 @@
+
 import { MessageSquare, Users, ChevronDown, Plus, Search } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';

@@ -1,3 +1,4 @@
+
 import { Crown, ShieldCheck, Shield, Zap } from 'lucide-react';
 import { UserProfile } from '../components/ProfileCard';
 
