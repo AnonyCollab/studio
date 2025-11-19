@@ -94,7 +94,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Advanced financial analytics platform with real-time market data, portfolio tracking, risk assessment, and automated reporting capabilities.",
       image:
-        "https://images.unsplash.com/photo-1738996747326-65b5d7d7fe9b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwYW5hbHl0aWNzfGVufDF8fHx8MTc2MjYzODAyNnww&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1738996747326-65b5d7d7fe9b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwYW5hbHl0aWNzfGVufDF8fHx8MTc2MjYzODAyNnww&ixlib-rb-4.1.0&q=80&w=1080",
       sector: "Finance",
       owner: {
         name: "Jessica Taylor",
@@ -114,7 +114,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Community-driven development tools suite including code editors, debuggers, and performance analyzers. Free and open-source for all developers.",
       image:
-        "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MjYyNTEyMXww&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MjYyNTEyMXww&ixlib-rb-4.1.0&q=80&w=1080",
       sector: "Open Source",
       owner: {
         name: "David Park",
@@ -132,7 +132,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Vast collection of royalty-free design assets, templates, and resources for creative professionals. Includes fonts, icons, illustrations, and mockups.",
       image:
-        "https://images.unsplash.com/photo-1611241893603-3c359704e0ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMGRlc2lnbnxlbnwxfHx8fDE3NjI2Mjc5NTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1611241893603-3c359704e0ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMGRlc2lnbnxlbnwxfHx8fDE3NjI2Mjc5NTR8MA&ixlib-rb-4.1.0&q=80&w=1080",
       sector: "Design",
       owner: {
         name: "Emma Wilson",
@@ -150,7 +150,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Global initiative connecting environmental activists, researchers, and organizations to collaborate on climate solutions and sustainability projects.",
       image:
-        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib-rb-4.1.0&q=80&w=1080",
       sector: "Environment",
       owner: {
         name: "Alex Rivera",
@@ -170,7 +170,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Private strategic planning platform for C-level executives. Includes confidential document sharing, voting systems, and secure communication channels.",
       image:
-        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib-rb-4.1.0&q=80&w=1080",
       sector: "Business",
       owner: {
         name: "Robert Greene",
@@ -188,7 +188,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Exclusive academic research collaboration space for peer-reviewed studies, data sharing, and grant applications in molecular biology.",
       image:
-        "https://images.unsplash.com/photo-1666886573215-b59d8ad9970c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGhjYXJlJTIwbWVkaWNhbHxlbnwxfHx8fDE3NjI2MjA5NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1666886573215-b59d8ad9970c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGhjYXJlJTIwbWVkaWNhbHxlbnwxfHx8fDE3NjI2MjA5NDV8MA&ixlib-rb-4.1.0&q=80&w=1080",
       sector: "Research",
       owner: {
         name: "Dr. Lisa Thompson",
@@ -393,13 +393,16 @@ export default function App() {
         <div className="max-w-[1800px] mx-auto px-6 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
              {/* Side Navigation - Takes 3 columns on large screens */}
-             <div className="lg:col-span-3">
-                  <div className="sticky top-24 hidden lg:block h-[calc(100vh-7rem)]">
+             <div className="hidden lg:block lg:col-span-3">
+                  <div 
+                    className="sticky top-24"
+                    style={{ height: 'calc(100vh - 7rem)' }}
+                  >
                     <div className="flex flex-col h-full">
                         <SideNavigation
-                        theme={theme}
-                        activeSection={activeSection}
-                        onSectionChange={setActiveSection}
+                          theme={theme}
+                          activeSection={activeSection}
+                          onSectionChange={setActiveSection}
                         />
                         <StarredProjectsList theme={theme} />
                     </div>
