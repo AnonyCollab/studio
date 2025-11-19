@@ -10,11 +10,15 @@ import { mockUsers } from '../data/mockUsers';
 import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, serverTimestamp, addDoc, doc, onSnapshot } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
+import { PostShareCard } from './PostShareCard';
+
 
 interface Message {
     id: string;
     senderId: string;
     text: string;
+    type: 'text' | 'postShare';
+    postId?: string;
     createdAt: {
       seconds: number;
       nanoseconds: number;
@@ -93,6 +97,7 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
 
     const messageData = {
         senderId: currentUser.uid,
+        type: 'text',
         text: message,
         createdAt: serverTimestamp(),
     };
@@ -219,7 +224,11 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
                         </span>
                       </div>
                   )}
-                  <p className={`mt-0.5 ${isDarkTheme ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{msg.text}</p>
+                  {msg.type === 'postShare' && msg.postId ? (
+                    <PostShareCard postId={msg.postId} theme={theme} />
+                  ) : (
+                    <p className={`mt-0.5 ${isDarkTheme ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{msg.text}</p>
+                  )}
                 </div>
               </div>
             );
@@ -287,3 +296,5 @@ export function ChatArea({ channelId, isDM, theme }: ChatAreaProps) {
     </div>
   );
 }
+
+    

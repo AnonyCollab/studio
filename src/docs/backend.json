@@ -264,14 +264,33 @@
     },
     "Message": {
       "title": "Message",
-      "description": "Represents a single message within a conversation.",
+      "description": "Represents a single message within a conversation. It can be a standard text message or a special type, like a shared post.",
       "type": "object",
       "properties": {
-        "senderId": { "type": "string" },
-        "text": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
+        "senderId": {
+          "type": "string",
+          "description": "The UID of the user who sent the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating when the message was sent."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "postShare"],
+          "description": "The type of the message. Defaults to 'text'."
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the message. Required for 'text' type messages."
+        },
+        "postId": {
+          "type": "string",
+          "description": "The ID of the shared post. Required for 'postShare' type messages."
+        }
       },
-      "required": ["senderId", "text", "createdAt"]
+      "required": ["senderId", "createdAt", "type"]
     }
   },
   "auth": {
@@ -358,3 +377,5 @@
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
+
+    

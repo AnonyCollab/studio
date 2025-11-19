@@ -117,11 +117,12 @@ export function SharePopover({ children, postId }: SharePopoverProps) {
   const handleSend = async (conversationId: string) => {
     if (!firestore || !currentUser) return;
     
-    const messageText = `Check out this post: ${shareUrl}`;
     const messageData = {
-        senderId: currentUser.uid,
-        text: messageText,
-        createdAt: serverTimestamp(),
+      senderId: currentUser.uid,
+      type: 'postShare',
+      postId: postId,
+      text: `Shared a post: ${shareUrl}`, // Fallback text
+      createdAt: serverTimestamp(),
     };
     
     await addDoc(collection(firestore, 'dms', conversationId, 'messages'), messageData);
@@ -204,3 +205,5 @@ export function SharePopover({ children, postId }: SharePopoverProps) {
     </Popover>
   );
 }
+
+    
