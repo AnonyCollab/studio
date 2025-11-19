@@ -12,6 +12,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { CommentItem } from "./CommentItem";
 import { useFirestore, useUser } from "@/firebase";
 import { addComment } from "@/firebase/non-blocking-updates";
+import { MentionPopover } from "./MentionPopover";
+import { mockUsers } from "@/app/messages/data/mockUsers";
 
 interface Author {
   name: string;
@@ -40,6 +42,9 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
   const firestore = useFirestore();
   const { user } = useUser();
 
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
+
   useEffect(() => {
     if (!firestore || !postId) return;
 
@@ -63,6 +68,42 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
     return () => unsubscribe();
   }, [firestore, postId]);
 
+  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setNewComment(text);
+
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w+)$/);
+
+    if (mentionMatch) {
+      setMentionQuery(mentionMatch[1]);
+      setMentionTarget(e.target);
+    } else {
+      setMentionQuery(null);
+      setMentionTarget(null);
+    }
+  };
+
+  const handleMentionSelect = (username: string) => {
+    if (!mentionTarget) return;
+
+    const text = newComment;
+    const cursorPos = mentionTarget.selectionStart;
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const textAfterCursor = text.substring(cursorPos);
+
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    if (mentionMatch) {
+        const startIndex = mentionMatch.index || 0;
+        const newText = `${text.substring(0, startIndex)}@${username} ${textAfterCursor}`;
+        setNewComment(newText);
+    }
+
+    setMentionQuery(null);
+    setMentionTarget(null);
+    mentionTarget.focus();
+  };
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,23 +150,31 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
 
       {/* Add Comment Form - Sticky at bottom */}
       <div className={`sticky bottom-0 p-6 border-t ${isDark ? 'bg-[#0a0e1a] border-white/10' : 'bg-gray-50 border-gray-200'}`}>
-        <form onSubmit={handleSubmitComment} className="relative">
-          <Textarea
-            placeholder="Add a comment... (@mention someone)"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            className={`pr-12 resize-none ${isDark ? "bg-[#131823] border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
-            rows={2}
-          />
-          <Button
-            type="submit"
-            disabled={!newComment.trim()}
-            size="icon"
-            className={`absolute right-2 bottom-2 h-8 w-8 ${isDark ? 'bg-cyan-400 hover:bg-cyan-500 text-gray-900' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
-          >
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
+        <MentionPopover
+            query={mentionQuery}
+            onSelect={handleMentionSelect}
+            target={mentionTarget}
+            users={Object.values(mockUsers)}
+            theme={theme}
+        >
+            <form onSubmit={handleSubmitComment} className="relative">
+            <Textarea
+                placeholder="Add a comment... (@mention someone)"
+                value={newComment}
+                onChange={handleCommentChange}
+                className={`pr-12 resize-none ${isDark ? "bg-[#131823] border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
+                rows={2}
+            />
+            <Button
+                type="submit"
+                disabled={!newComment.trim()}
+                size="icon"
+                className={`absolute right-2 bottom-2 h-8 w-8 ${isDark ? 'bg-cyan-400 hover:bg-cyan-500 text-gray-900' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
+            >
+                <Send className="w-4 h-4" />
+            </Button>
+            </form>
+        </MentionPopover>
       </div>
     </div>
   );

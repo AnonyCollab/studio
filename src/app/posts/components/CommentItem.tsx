@@ -13,6 +13,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { useFirestore, useUser } from "@/firebase";
 import { addReply, toggleLikeComment, toggleLikeReply } from "@/firebase/non-blocking-updates";
+import { MentionPopover } from "./MentionPopover";
+import { mockUsers } from "@/app/messages/data/mockUsers";
 
 interface Author {
   name: string;
@@ -43,6 +45,20 @@ interface CommentItemProps {
   theme?: "light" | "dark";
 }
 
+const renderContentWithMentions = (content: string, isDark: boolean) => {
+    const parts = content.split(/(@\w+)/g);
+    return parts.map((part, index) => {
+      if (part.startsWith('@')) {
+        return (
+          <span key={index} className={isDark ? "text-cyan-400 font-semibold" : "text-cyan-600 font-semibold"}>
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+};
+
 export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProps) {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -54,6 +70,9 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const { user } = useUser();
   const { toast } = useToast();
   const isDark = theme === "dark";
+
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
 
   useEffect(() => {
     if (!firestore || !postId || !comment.id) return;
@@ -114,6 +133,43 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     setVisibleReplies(prev => ({ ...prev, [commentId]: !prev[commentId] }));
   };
 
+  const handleReplyChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const text = e.target.value;
+    setReplyContent(text);
+
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w+)$/);
+
+    if (mentionMatch) {
+      setMentionQuery(mentionMatch[1]);
+      setMentionTarget(e.target);
+    } else {
+      setMentionQuery(null);
+      setMentionTarget(null);
+    }
+  };
+
+  const handleMentionSelect = (username: string) => {
+    if (!mentionTarget) return;
+
+    const text = replyContent;
+    const cursorPos = mentionTarget.selectionStart;
+    const textBeforeCursor = text.substring(0, cursorPos);
+    const textAfterCursor = text.substring(cursorPos);
+
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+    if (mentionMatch) {
+        const startIndex = mentionMatch.index || 0;
+        const newText = `${text.substring(0, startIndex)}@${username} ${textAfterCursor}`;
+        setReplyContent(newText);
+    }
+
+    setMentionQuery(null);
+    setMentionTarget(null);
+  };
+
+
   const renderReply = (reply: Reply) => {
     const isReplyLiked = likedReplies[reply.id];
     return (
@@ -128,7 +184,9 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                     <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{reply.author.name}</p>
                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{reply.timestamp}</span>
                 </div>
-                <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{reply.content}</p>
+                <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                    {renderContentWithMentions(reply.content, isDark)}
+                </p>
             </div>
              <div className="flex items-center gap-4 mt-1.5 px-3">
                 <button 
@@ -140,7 +198,10 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                     <Heart className={cn("w-3.5 h-3.5", isReplyLiked && "fill-current")} />
                     <span>{reply.likes}</span>
                 </button>
-                <button className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
+                <button 
+                  onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)} 
+                  className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}
+                >
                     Reply
                 </button>
             </div>
@@ -160,7 +221,9 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                 <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{comment.author.name}</p>
                 <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{comment.timestamp}</span>
             </div>
-            <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>{comment.content}</p>
+            <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                {renderContentWithMentions(comment.content, isDark)}
+            </p>
             </div>
             <div className="flex items-center gap-4 mt-2 px-3">
             <button 
@@ -184,24 +247,32 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             
             {/* Reply Form */}
             {replyingTo === comment.id && (
+            <MentionPopover
+                query={mentionQuery}
+                onSelect={handleMentionSelect}
+                target={mentionTarget}
+                users={Object.values(mockUsers)}
+                theme={theme}
+            >
                 <div className="relative mt-3 ml-4">
-                <Textarea
-                    placeholder={`Replying to ${comment.author.name}...`}
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
-                    rows={1}
-                />
-                <Button
-                    type="button"
-                    onClick={() => handleSubmitReply(comment.id)}
-                    disabled={!replyContent.trim()}
-                    size="icon"
-                    className={`absolute right-1.5 bottom-1.5 h-7 w-7 ${isDark ? 'bg-cyan-400 hover:bg-cyan-500 text-gray-900' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
-                >
-                    <Send className="w-3.5 h-3.5" />
-                </Button>
-            </div>
+                    <Textarea
+                        placeholder={`Replying to ${comment.author.name}...`}
+                        value={replyContent}
+                        onChange={handleReplyChange}
+                        className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
+                        rows={1}
+                    />
+                    <Button
+                        type="button"
+                        onClick={() => handleSubmitReply(comment.id)}
+                        disabled={!replyContent.trim()}
+                        size="icon"
+                        className={`absolute right-1.5 bottom-1.5 h-7 w-7 ${isDark ? 'bg-cyan-400 hover:bg-cyan-500 text-gray-900' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
+                    >
+                        <Send className="w-3.5 h-3.5" />
+                    </Button>
+                </div>
+            </MentionPopover>
             )}
 
             {/* Replies Section */}
