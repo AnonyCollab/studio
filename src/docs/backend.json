@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Post": {
@@ -222,7 +223,7 @@
     },
     "DirectMessage": {
       "title": "Direct Message Conversation",
-      "description": "Represents a direct message conversation between users.",
+      "description": "Represents a direct message conversation between users, which can be a 1-on-1 or a group chat.",
       "type": "object",
       "properties": {
         "participants": {
@@ -232,6 +233,19 @@
           },
           "description": "An array of UIDs of the participants in the DM."
         },
+        "isGroup": {
+          "type": "boolean",
+          "description": "If true, this is a group chat."
+        },
+        "groupName": {
+          "type": "string",
+          "description": "The name of the group, if applicable."
+        },
+        "groupAvatar": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL for the group's avatar, if applicable."
+        },
         "lastMessage": {
           "type": "object",
           "properties": {
@@ -239,9 +253,14 @@
             "senderId": { "type": "string" },
             "timestamp": { "type": "object" }
           }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp for when the conversation was created."
         }
       },
-      "required": ["participants"]
+      "required": ["participants", "createdAt"]
     },
     "Message": {
       "title": "Message",
