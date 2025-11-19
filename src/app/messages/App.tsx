@@ -42,7 +42,7 @@ export default function App() {
     }
   }
 
-  const showSidebarContainer = !isMobile || (selectedServer === 'home' && !selectedDM && currentView !== 'dm');
+  const showSidebarContainer = !isMobile || (selectedServer === 'home' && !selectedDM);
   const showMainContent = !isMobile || !!selectedDM || (currentView === 'chat' && selectedServer !== 'home');
 
   return (
@@ -64,10 +64,10 @@ export default function App() {
         {/* Combined Server and Channel/DM sidebars */}
         <div className={cn(
           "flex flex-shrink-0 transition-all duration-300 h-full",
-          showSidebarContainer ? "w-[25rem]" : "w-0"
+          showSidebarContainer ? "w-full md:w-[25rem]" : "w-0"
         )}>
           {/* Server list */}
-          <div className={cn("transition-all duration-300 w-20 h-full")}>
+          <div className={cn("transition-all duration-300 h-full", showSidebarContainer && selectedServer === 'home' ? 'w-20' : 'w-0 md:w-20' )}>
             <ServerList 
               selectedServer={selectedServer}
               onSelectServer={(id) => {
@@ -87,7 +87,7 @@ export default function App() {
           </div>
 
           {/* Left Sidebars Container */}
-          <div className={cn("transition-all duration-300 w-80 h-full")} style={{ height: '-webkit-fill-available' as any }}>
+          <div className={cn("transition-all duration-300 w-full md:w-80 h-full", showSidebarContainer ? 'block' : 'hidden')} style={{ height: '-webkit-fill-available' as any }}>
             {selectedServer === 'home' && (
               <DirectMessagesSidebar
                 activeView={currentView}
@@ -109,7 +109,7 @@ export default function App() {
         </div>
 
         {/* Main Content Area */}
-        <div className={cn("flex-1 flex min-w-0 transition-all duration-300", isMobile && !showMainContent ? 'hidden' : 'flex')}>
+        <div className={cn("flex-1 flex min-w-0 transition-all duration-300", !showMainContent ? 'hidden' : 'flex')}>
           <div className="flex-1 flex flex-col min-w-0">
             {currentView === 'friends' && selectedServer === 'home' ? (
               <FriendsPage theme={theme} onSelectDM={handleSelectDM} />
