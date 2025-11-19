@@ -23,10 +23,29 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
   
-    // Users can be read by anyone, but only the user themselves can write to their document.
+    // Helper function to check for an accepted friend request
+    function acceptedFriendRequestExists(user1, user2) {
+      return exists(/databases/$(database)/documents/friendRequests/$(user1)_$(user2)) &&
+             get(/databases/$(database)/documents/friendRequests/$(user1)_$(user2)).data.status == 'accepted' ||
+             exists(/databases/$(database)/documents/friendRequests/$(user2)_$(user1)) &&
+             get(/databases/$(database)/documents/friendRequests/$(user2)_$(user1)).data.status == 'accepted';
+    }
+
+    // Users can be read by anyone. Writes are restricted.
     match /users/{userId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+      
+      // Allow a user to update their own document.
+      // Also, allow another user to update the `friends` list if an accepted friend request exists.
+      allow write: if request.auth != null && (
+        request.auth.uid == userId ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends']) &&
+          request.resource.data.friends.hasAll(resource.data.friends) &&
+          request.resource.data.friends.size() == resource.data.friends.size() + 1 &&
+          acceptedFriendRequestExists(request.auth.uid, userId)
+        )
+      );
     }
     
     // Friend requests can be created by the sender, read by sender/receiver, and updated by the receiver.
@@ -34,7 +53,7 @@ service cloud.firestore {
       allow read: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
       allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
       allow update: if request.auth != null && request.auth.uid == resource.data.receiverId;
-      allow delete: if false; // Or based on your app's logic
+      allow delete: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
     }
 
     /**
@@ -74,5 +93,3 @@ service cloud.firestore {
     }
   }
 }
-
-    
