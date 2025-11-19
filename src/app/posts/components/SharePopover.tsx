@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useUser, useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { collection, query, where, doc, getDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -26,9 +26,10 @@ interface Conversation {
 
 interface SharePopoverProps {
   children: ReactNode;
+  postId: string;
 }
 
-export function SharePopover({ children }: SharePopoverProps) {
+export function SharePopover({ children, postId }: SharePopoverProps) {
   const { toast } = useToast();
   const [hasCopied, setHasCopied] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -38,6 +39,14 @@ export function SharePopover({ children }: SharePopoverProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [sentTo, setSentTo] = useState<string[]>([]);
   
+  const shareUrl = useMemo(() => {
+    if (typeof window === 'undefined') return '';
+    const url = new URL(window.location.origin);
+    url.pathname = '/posts';
+    url.searchParams.set('postId', postId);
+    return url.toString();
+  }, [postId]);
+
   const dmsQuery = useMemoFirebase(() => {
     if (!firestore || !currentUser) return null;
     return query(collection(firestore, 'dms'), where('participants', 'array-contains', currentUser.uid));
@@ -85,10 +94,8 @@ export function SharePopover({ children }: SharePopoverProps) {
   }, [dmsData, firestore, currentUser]);
 
   const copyToClipboard = async () => {
-    if (typeof window === 'undefined') return;
-
     try {
-      await navigator.clipboard.writeText(window.location.href);
+      await navigator.clipboard.writeText(shareUrl);
       setHasCopied(true);
       toast({
         title: "Link Copied!",
@@ -110,7 +117,7 @@ export function SharePopover({ children }: SharePopoverProps) {
   const handleSend = async (conversationId: string) => {
     if (!firestore || !currentUser) return;
     
-    const messageText = `Check out this post: ${window.location.href}`;
+    const messageText = `Check out this post: ${shareUrl}`;
     const messageData = {
         senderId: currentUser.uid,
         text: messageText,
@@ -146,7 +153,7 @@ export function SharePopover({ children }: SharePopoverProps) {
           </div>
           <div className="flex items-center space-x-2 px-4 pb-4">
             <Input
-              value={typeof window !== 'undefined' ? window.location.href : ''}
+              value={shareUrl}
               readOnly
               className="h-9"
             />

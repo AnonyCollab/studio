@@ -11,8 +11,11 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useTheme } from "@/context/ThemeContext";
 import { usePosts } from "@/context/PostContext";
 import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, getDoc, doc } from "firebase/firestore";
 import type { Timestamp } from "firebase/firestore";
+import { useSearchParams } from "next/navigation";
+import React from 'react';
+
 
 interface Post {
   id: string;
@@ -252,8 +255,7 @@ const ClientOnlyMasonry = ({ children, ...props }: any) => {
   return isClient ? <ResponsiveMasonry {...props}>{children}</ResponsiveMasonry> : null;
 }
 
-
-export default function PostsPage() {
+function PostsPageContent() {
   const { 
     selectedPost, 
     setSelectedPost, 
@@ -266,6 +268,7 @@ export default function PostsPage() {
   const { theme } = useTheme();
   const isMobile = useIsMobile();
   const firestore = useFirestore();
+  const searchParams = useSearchParams();
 
   const postsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -292,6 +295,19 @@ export default function PostsPage() {
       return dateB - dateA;
     });
   }, [firestorePosts]);
+
+  useEffect(() => {
+    const postIdFromUrl = searchParams.get('postId');
+    if (postIdFromUrl && firestore) {
+      const postRef = doc(firestore, 'posts', postIdFromUrl);
+      getDoc(postRef).then(docSnap => {
+        if (docSnap.exists()) {
+          setSelectedPost({ id: docSnap.id, ...docSnap.data() } as Post);
+        }
+      });
+    }
+  }, [searchParams, firestore, setSelectedPost]);
+
 
   return (
     <div className="min-h-screen">
@@ -383,4 +399,10 @@ export default function PostsPage() {
   );
 }
 
-    
+export default function PostsPage() {
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <PostsPageContent />
+    </React.Suspense>
+  );
+}

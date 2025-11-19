@@ -243,7 +243,7 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
                 <MessageCircle className="w-5 h-5" />
                 <span>{commentCount} <span className="hidden sm:inline">Comments</span></span>
             </button>
-            <SharePopover>
+            <SharePopover postId={post.id}>
                 <button className={`flex items-center gap-2 ml-auto transition-colors ${isDark ? 'text-gray-400 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}>
                 <Share2 className="w-5 h-5" />
                 </button>

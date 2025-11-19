@@ -215,7 +215,7 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
                 </button>
             </div>
             <div className="flex items-center gap-2">
-                <SharePopover>
+                <SharePopover postId={displayPost.id}>
                   <button className={`flex items-center gap-1.5 transition-colors ${isDark ? 'hover:text-cyan-400' : 'hover:text-cyan-600'}`} onClick={(e) => e.stopPropagation()}>
                     <Share2 className="w-5 h-5" />
                   </button>
