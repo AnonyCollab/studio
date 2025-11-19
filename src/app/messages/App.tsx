@@ -62,55 +62,55 @@ export default function App() {
 
       {/* Main app layout */}
       <div className="relative h-full flex">
-        {/* Server list - conditionally rendered on mobile */}
+        {/* Combined Server and Channel/DM sidebars */}
         <div className={cn(
-          "transition-all duration-300",
-          isMobile && selectedDM ? 'w-0 hidden' : 'w-20'
+          "flex flex-shrink-0 transition-all duration-300",
+          isMobile && !!selectedDM ? "w-0" : "w-[25rem]"
         )}>
-          <ServerList 
-            selectedServer={selectedServer}
-            onSelectServer={(id) => {
-              setSelectedServer(id);
-              if (id === 'home') {
-                setCurrentView('friends');
-                setSelectedChannel(null);
-                setSelectedDM(null);
-              } else {
-                setCurrentView('chat');
-                setSelectedChannel('general'); // Select 'general' by default
-                setSelectedDM(null);
-              }
-            }}
-            theme={theme}
-          />
-        </div>
+          {/* Server list */}
+          <div className={cn("transition-all duration-300 w-20")}>
+            <ServerList 
+              selectedServer={selectedServer}
+              onSelectServer={(id) => {
+                setSelectedServer(id);
+                if (id === 'home') {
+                  setCurrentView('friends');
+                  setSelectedChannel(null);
+                  setSelectedDM(null);
+                } else {
+                  setCurrentView('chat');
+                  setSelectedChannel('general'); // Select 'general' by default
+                  setSelectedDM(null);
+                }
+              }}
+              theme={theme}
+            />
+          </div>
 
-        {/* Left Sidebars */}
-        <div className={cn(
-          "flex-shrink-0 transition-all duration-300",
-          isMobile && selectedDM ? 'w-0 hidden' : 'w-80'
-        )}>
-          {selectedServer === 'home' && (
-            <DirectMessagesSidebar
-              activeView={currentView}
-              selectedDM={selectedDM}
-              onSelectDM={handleSelectDM}
-              onSelectHomeView={handleSelectHomeView}
-              theme={theme}
-            />
-          )}
-          {currentView === 'chat' && selectedServer !== 'home' && (
-            <ChannelSidebar 
-              serverId={selectedServer}
-              selectedChannel={selectedChannel}
-              onSelectChannel={setSelectedChannel}
-              theme={theme}
-            />
-          )}
+          {/* Left Sidebars Container */}
+          <div className={cn("transition-all duration-300 w-80")}>
+            {selectedServer === 'home' && (
+              <DirectMessagesSidebar
+                activeView={currentView}
+                selectedDM={selectedDM}
+                onSelectDM={handleSelectDM}
+                onSelectHomeView={handleSelectHomeView}
+                theme={theme}
+              />
+            )}
+            {currentView === 'chat' && selectedServer !== 'home' && (
+              <ChannelSidebar 
+                serverId={selectedServer}
+                selectedChannel={selectedChannel}
+                onSelectChannel={setSelectedChannel}
+                theme={theme}
+              />
+            )}
+          </div>
         </div>
 
         {/* Main Content Area */}
-        <div className={cn("flex-1 flex min-w-0 transition-all duration-300", isMobile && !selectedDM && selectedServer === 'home' ? 'hidden' : 'flex')}>
+        <div className={cn("flex-1 flex min-w-0 transition-all duration-300", isMobile && !showMainContent ? 'hidden' : 'flex')}>
           <div className="flex-1 flex flex-col min-w-0">
             {currentView === 'friends' && selectedServer === 'home' ? (
               <FriendsPage theme={theme} onSelectDM={handleSelectDM} />
@@ -129,7 +129,7 @@ export default function App() {
         </div>
 
         {/* User info panel - at bottom left covering server list and sidebar */}
-         <div className={cn(isMobile && selectedDM ? 'hidden' : 'block')}>
+        <div className={cn(isMobile && selectedDM ? 'hidden' : 'block')}>
             <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
         </div>
       </div>
