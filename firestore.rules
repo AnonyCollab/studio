@@ -90,34 +90,40 @@ service cloud.firestore {
      * @description Allows anyone to read and write posts.
      * @path /posts/{postId}
      * @allow (get, list) - Any user can read a post.
-     * @allow (create, update, delete) - Any user can create, update, or delete a post.
+     * @allow (create, update) - Any user can create or update a post.
+     * @allow (delete) - Only the author of a post can delete it.
      * @deny none
-     * @principle Public read, public write
+     * @principle Public read, selective write
      */
     match /posts/{postId} {
-      allow get, list, create, update, delete: if true;
+      allow get, list, create, update: if true;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
 
       /**
        * @description Allows anyone to read and write comments associated with a specific post.
        * @path /posts/{postId}/comments/{commentId}
        * @allow (get, list) - Any user can read a comment.
-       * @allow (create, update, delete) - Any user can create, update, or delete a comment.
+       * @allow (create, update) - Any user can create or update a comment.
+       * @allow (delete) - Only the author of a comment can delete it.
        * @deny none
-       * @principle Public read, public write, path-based consistency for commentId
+       * @principle Public read, selective write
        */
       match /comments/{commentId} {
-        allow get, list, create, update, delete: if true;
+        allow get, list, create, update: if true;
+        allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
 
         /**
          * @description Allows anyone to read and write replies associated with a specific comment.
          * @path /posts/{postId}/comments/{commentId}/replies/{replyId}
          * @allow (get, list) - Any user can read a reply.
-         * @allow (create, update, delete) - Any user can create, update, or delete a reply.
+         * @allow (create, update) - Any user can create, update, or delete a reply.
+         * @allow (delete) - Only the author of a reply can delete it.
          * @deny none
-         * @principle Public read, public write
+         * @principle Public read, selective write
          */
         match /replies/{replyId} {
-          allow get, list, create, update, delete: if true;
+          allow get, list, create, update: if true;
+          allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
         }
       }
     }
