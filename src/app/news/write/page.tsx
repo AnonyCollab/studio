@@ -28,10 +28,10 @@ export default function WritePage() {
     }, []);
 
   return (
-    <div className={`min-h-screen flex flex-col ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen flex flex-col items-center w-full ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
       {/* Header */}
-      <header className={`sticky top-0 z-40 h-16 flex-shrink-0 border-b ${isDark ? 'bg-background/80 backdrop-blur-sm border-white/10' : 'bg-white/80 backdrop-blur-sm border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
+      <header className={`sticky top-[3.5rem] z-40 h-16 flex-shrink-0 w-full max-w-4xl ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
+        <div className="h-full flex items-center justify-between px-4">
             <div className="flex items-center gap-2">
                 <Link href="/news" passHref>
                     <Button variant="ghost" size="icon" className={isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}>

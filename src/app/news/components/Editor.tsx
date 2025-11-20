@@ -26,7 +26,7 @@ const provider = new YPartyKitProvider(
 const lightTheme = {
   ...lightDefaultTheme,
   colors: {
-    ...lightDefaultTheme.colors,
+    ...lightDefaultTheme.colors!,
     editor: {
       ...lightDefaultTheme.colors!.editor,
       background: "hsl(var(--background))",
