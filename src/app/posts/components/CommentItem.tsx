@@ -6,19 +6,21 @@ import { useState, useEffect, useCallback } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, Send } from "lucide-react";
+import { Heart, Send, MoreHorizontal, Trash2 } from "lucide-react";
 import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { useFirestore, useUser } from "@/firebase";
-import { addReply, toggleLikeComment, toggleLikeReply } from "@/firebase/non-blocking-updates";
+import { addReply, toggleLikeComment, toggleLikeReply, deleteComment, deleteReply } from "@/firebase/non-blocking-updates";
 import { MentionPopover } from "./MentionPopover";
 import { mockUsers } from "@/app/messages/data/mockUsers";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Author {
   name: string;
   avatar: string;
+  uid: string;
 }
 
 interface Reply {
@@ -172,8 +174,10 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
 
   const renderReply = useCallback((reply: Reply) => {
     const isReplyLiked = likedReplies[reply.id];
+    const isAuthor = user && user.uid === reply.author.uid;
+
     return (
-    <div key={reply.id} className="flex gap-3">
+    <div key={reply.id} className="flex gap-3 group/reply">
         <Avatar className="w-8 h-8 flex-shrink-0">
             <AvatarImage src={reply.author.avatar} />
             <AvatarFallback>{reply.author.name[0]}</AvatarFallback>
@@ -182,7 +186,24 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             <div className={`rounded-lg p-2.5 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
                 <div className="flex items-center justify-between mb-1">
                     <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{reply.author.name}</p>
-                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{reply.timestamp}</span>
+                    <div className="flex items-center gap-1">
+                      <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{reply.timestamp}</span>
+                      {isAuthor && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className={cn('p-1 rounded-full opacity-0 group-hover/reply:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-200')}>
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className={cn(isDark ? 'bg-[#1a1f2e] border-white/10 text-white' : '')}>
+                                <DropdownMenuItem onClick={() => firestore && deleteReply(firestore, postId, comment.id, reply.id)} className={cn("text-red-500", isDark ? 'focus:bg-red-500/10 focus:text-red-400' : 'focus:bg-red-50')}>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Reply
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
                 </div>
                 <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     {renderContentWithMentions(reply.content, isDark)}
@@ -207,10 +228,10 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             </div>
         </div>
     </div>
-  )}, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id]);
+  )}, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id, user, firestore, postId]);
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 group/comment">
         <Avatar className="w-9 h-9 flex-shrink-0">
             <AvatarImage src={comment.author.avatar} />
             <AvatarFallback>{comment.author.name[0]}</AvatarFallback>
@@ -219,7 +240,24 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             <div className={`rounded-lg p-3 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
             <div className="flex items-center justify-between mb-2">
                 <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{comment.author.name}</p>
-                <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{comment.timestamp}</span>
+                 <div className="flex items-center gap-1">
+                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{comment.timestamp}</span>
+                    {user && user.uid === comment.author.uid && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className={cn('p-1 rounded-full opacity-0 group-hover/comment:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-200')}>
+                                    <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className={cn(isDark ? 'bg-[#1a1f2e] border-white/10 text-white' : '')}>
+                                <DropdownMenuItem onClick={() => firestore && deleteComment(firestore, postId, comment.id)} className={cn("text-red-500", isDark ? 'focus:bg-red-500/10 focus:text-red-400' : 'focus:bg-red-50')}>
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Comment
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
+                </div>
             </div>
             <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {renderContentWithMentions(comment.content, isDark)}
@@ -285,5 +323,3 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     </div>
   )
 }
-
-    

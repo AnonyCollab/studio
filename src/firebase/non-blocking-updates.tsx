@@ -219,3 +219,41 @@ export function toggleLikeReply(firestore: Firestore, postId: string, commentId:
         likes: likeIncrement
     });
 }
+
+/**
+ * Deletes a post from Firestore.
+ */
+export function deletePost(firestore: Firestore, postId: string) {
+    const postRef = doc(firestore, 'posts', postId);
+    return deleteDocumentNonBlocking(postRef);
+}
+
+/**
+ * Deletes a comment from Firestore and decrements the post's comment count.
+ */
+export function deleteComment(firestore: Firestore, postId: string, commentId: string) {
+    const commentRef = doc(firestore, 'posts', postId, 'comments', commentId);
+    const postRef = doc(firestore, 'posts', postId);
+
+    const batch = writeBatch(firestore);
+    batch.delete(commentRef);
+    batch.update(postRef, { comments: increment(-1) });
+
+    batch.commit().catch(error => {
+        errorEmitter.emit(
+          'permission-error',
+          new FirestorePermissionError({
+            path: `batch delete on ${commentRef.path} and update on ${postRef.path}`,
+            operation: 'write',
+          })
+        );
+    });
+}
+
+/**
+ * Deletes a reply from Firestore.
+ */
+export function deleteReply(firestore: Firestore, postId: string, commentId: string, replyId: string) {
+    const replyRef = doc(firestore, 'posts', postId, 'comments', commentId, 'replies', replyId);
+    return deleteDocumentNonBlocking(replyRef);
+}
