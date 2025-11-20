@@ -16,7 +16,6 @@ import dynamic from 'next/dynamic';
 import "@blocknote/core/fonts/inter.css";
 import { useMemo } from 'react';
 import "@blocknote/mantine/style.css";
-import "@blocknote/react/style.css";
 
 
 // Lazily load the editor component
