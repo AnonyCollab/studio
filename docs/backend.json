@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Post": {
@@ -219,6 +220,130 @@
         "status",
         "createdAt"
       ]
+    },
+    "DirectMessage": {
+      "title": "Direct Message Conversation",
+      "description": "Represents a direct message conversation between users, which can be a 1-on-1 or a group chat.",
+      "type": "object",
+      "properties": {
+        "participants": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of UIDs of the participants in the DM."
+        },
+        "isGroup": {
+          "type": "boolean",
+          "description": "If true, this is a group chat."
+        },
+        "groupName": {
+          "type": "string",
+          "description": "The name of the group, if applicable."
+        },
+        "groupAvatar": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL for the group's avatar, if applicable."
+        },
+        "lastMessage": {
+          "type": "object",
+          "properties": {
+            "text": { "type": "string" },
+            "senderId": { "type": "string" },
+            "timestamp": { "type": "object" }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp for when the conversation was created."
+        }
+      },
+      "required": ["participants", "createdAt"]
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Represents a single message within a conversation. It can be a standard text message or a special type, like a shared post or file.",
+      "type": "object",
+      "properties": {
+        "senderId": {
+          "type": "string",
+          "description": "The UID of the user who sent the message."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating when the message was sent."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["text", "postShare", "file"],
+          "description": "The type of the message. Defaults to 'text'."
+        },
+        "text": {
+          "type": "string",
+          "description": "The text content of the message. Required for 'text' type messages."
+        },
+        "postId": {
+          "type": "string",
+          "description": "The ID of the shared post. Required for 'postShare' type messages."
+        },
+        "fileInfo": {
+          "type": "object",
+          "description": "Metadata for a shared file. Required for 'file' type messages.",
+          "properties": {
+            "name": { "type": "string" },
+            "size": { "type": "number" },
+            "type": { "type": "string" },
+            "url": { "type": "string", "format": "uri" }
+          },
+           "required": ["name", "size", "type", "url"]
+        }
+      },
+      "required": ["senderId", "createdAt", "type"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Represents a news article written by a user.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the article."
+        },
+        "content": {
+          "type": "string",
+          "description": "The full content of the article, typically in a JSON format from a rich text editor."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who wrote the article."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "The display name of the author at the time of publishing."
+        },
+        "authorImage": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the author's avatar at the time of publishing."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating when the article was created."
+        },
+        "category": {
+            "type": "string",
+            "description": "The category of the article (e.g., Technology, Design)."
+        },
+        "readTime": {
+            "type": "string",
+            "description": "An estimated read time for the article (e.g., '6 min read')."
+        }
+      },
+      "required": ["title", "content", "authorId", "authorName", "authorImage", "createdAt"]
     }
   },
   "auth": {
@@ -247,6 +372,22 @@
             "$ref": "#/backend/entities/FriendRequest"
           },
           "description": "Stores friend requests between users."
+        }
+      },
+      {
+        "path": "/dms/{dmId}",
+        "definition": {
+          "entityName": "DirectMessage",
+          "schema": { "$ref": "#/backend/entities/DirectMessage" },
+          "description": "Stores metadata for a direct message conversation."
+        }
+      },
+      {
+        "path": "/dms/{dmId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores messages within a specific direct message conversation."
         }
       },
       {
@@ -284,9 +425,16 @@
             }
           ]
         }
+      },
+      {
+        "path": "/news/{articleId}",
+        "definition": {
+          "entityName": "Article",
+          "schema": { "$ref": "#/backend/entities/Article" },
+          "description": "Stores news articles."
+        }
       }
     ],
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
-    
