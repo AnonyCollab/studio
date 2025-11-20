@@ -1,4 +1,6 @@
 
+'use client';
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Bookmark, Minus, MoreHorizontal } from "lucide-react";
@@ -10,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import type { Article } from '../data';
+import { SaveToCollectionDialog } from "@/app/posts/components/SaveToCollectionDialog";
 
 interface ArticleCardProps {
   article: Article;
@@ -23,8 +26,10 @@ export function ArticleCard({
   theme,
   onClick,
 }: ArticleCardProps) {
-  const { title, description, author, authorImage, date, readTime, image, category, featured } = article;
+  const { title, description, authorName, authorImage, date, readTime, image, category, featured } = article;
   const isDark = theme === "dark";
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
 
   if (featured) {
     return (
@@ -53,11 +58,11 @@ export function ArticleCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
-                  <AvatarImage src={authorImage} alt={typeof author === 'string' ? author : author.name} />
-                  <AvatarFallback>{(typeof author === 'string' ? author : author.name)[0]}</AvatarFallback>
+                  <AvatarImage src={authorImage} alt={authorName} />
+                  <AvatarFallback>{authorName[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{typeof author === 'string' ? author : author.name}</p>
+                  <p className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{authorName}</p>
                   <p className={isDark ? "text-[#6b7280]" : "text-gray-500"}>
                     {date} · {readTime}
                   </p>
@@ -74,15 +79,23 @@ export function ArticleCard({
                 >
                   <Minus className="w-5 h-5" />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={`h-8 w-8 ${
-                    isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
-                  }`}
-                >
-                  <Bookmark className="w-5 h-5" />
-                </Button>
+                <SaveToCollectionDialog postTitle={title} onSaveToggle={setIsBookmarked} theme={theme}>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={`h-8 w-8 ${
+                      isBookmarked
+                        ? isDark
+                          ? "text-cyan-400"
+                          : "text-cyan-600"
+                        : isDark
+                        ? "hover:bg-white/5 hover:text-cyan-400"
+                        : "hover:bg-gray-100 hover:text-cyan-600"
+                    }`}
+                  >
+                    <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+                  </Button>
+                </SaveToCollectionDialog>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -184,15 +197,23 @@ export function ArticleCard({
               >
                 <Minus className="w-5 h-5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={`h-8 w-8 ${
-                  isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
-                }`}
-              >
-                <Bookmark className="w-5 h-5" />
-              </Button>
+              <SaveToCollectionDialog postTitle={title} onSaveToggle={setIsBookmarked} theme={theme}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={`h-8 w-8 ${
+                    isBookmarked
+                      ? isDark
+                        ? "text-cyan-400"
+                        : "text-cyan-600"
+                      : isDark
+                      ? "hover:bg-white/5 hover:text-cyan-400"
+                      : "hover:bg-gray-100 hover:text-cyan-600"
+                  }`}
+                >
+                  <Bookmark className={`w-5 h-5 ${isBookmarked ? 'fill-current' : ''}`} />
+                </Button>
+              </SaveToCollectionDialog>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
