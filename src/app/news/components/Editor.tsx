@@ -1,3 +1,4 @@
+
 "use client"; // this registers <Editor> as a Client Component
 import "@blocknote/core/fonts/inter.css";
 import { useCreateBlockNote } from "@blocknote/react";
@@ -11,6 +12,7 @@ import "@blocknote/mantine/style.css";
 import * as Y from "yjs";
 import YPartyKitProvider from "y-partykit/provider";
 import { useTheme } from "@/context/ThemeContext";
+import { Block } from "@blocknote/core";
 
 // Yjs document
 const doc = new Y.Doc();
@@ -21,6 +23,12 @@ const provider = new YPartyKitProvider(
   "news-feed-collaboration-room",
   doc
 );
+
+interface EditorProps {
+    onChange?: (value: string) => void;
+    initialContent?: string;
+    editable?: boolean;
+}
 
 // Custom theme for dark mode to match app background
 const darkTheme = {
@@ -41,10 +49,22 @@ const customTheme = {
 
 
 // Our <Editor> component we can reuse later
-export default function Editor() {
+export default function Editor({ onChange, initialContent, editable = true }: EditorProps) {
   const { theme } = useTheme();
+
+  const initialBlocks: Block[] | undefined = useMemo(() => {
+    if(!initialContent) return undefined;
+    try {
+        return JSON.parse(initialContent) as Block[];
+    } catch(e) {
+        console.error("Failed to parse initial content for editor");
+        return undefined;
+    }
+  }, [initialContent])
+
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
+    initialContent: initialBlocks,
     collaboration: {
       provider,
       fragment: doc.getXmlFragment("document-store"),
@@ -57,5 +77,14 @@ export default function Editor() {
   });
 
   // Renders the editor instance using a React component.
-  return <BlockNoteView editor={editor} theme={customTheme} />;
+  return <BlockNoteView 
+    editor={editor} 
+    theme={customTheme}
+    editable={editable}
+    onChange={() => {
+        if(onChange) {
+            onChange(JSON.stringify(editor.document, null, 2));
+        }
+    }}
+  />;
 }
