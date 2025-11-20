@@ -2,7 +2,6 @@
 'use client';
 
 import { useTheme } from '@/context/ThemeContext';
-import { Article } from '../data';
 import { notFound, useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -10,12 +9,28 @@ import dynamic from 'next/dynamic';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, Bookmark, Clapperboard, Clock, Copy, Linkedin, MessageCircle, Send, Twitter } from 'lucide-react';
+import { ArrowLeft, Bookmark, Clapperboard, Copy, Linkedin, MessageCircle, Send, Twitter } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, Timestamp } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { Loader } from 'lucide-react';
+
+
+// This needs to be defined to be used with the useDoc hook generic
+interface Article {
+    id: string;
+    title: string;
+    description: string;
+    authorName: string;
+    authorImage: string;
+    date: string;
+    readTime: string;
+    image: string;
+    category: string;
+    content: string; 
+    createdAt?: Timestamp | string;
+}
 
 
 const Editor = dynamic(() => import("../components/Editor"), { 
