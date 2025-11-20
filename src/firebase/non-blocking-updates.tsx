@@ -257,3 +257,27 @@ export function deleteReply(firestore: Firestore, postId: string, commentId: str
     const replyRef = doc(firestore, 'posts', postId, 'comments', commentId, 'replies', replyId);
     return deleteDocumentNonBlocking(replyRef);
 }
+
+
+/**
+ * Publishes a new article to the 'articles' collection.
+ */
+export function publishArticle(firestore: Firestore, article: { title: string; content: string }, user: User) {
+  const articlesCollection = collection(firestore, 'articles');
+  
+  const articleData = {
+    title: article.title,
+    content: article.content,
+    authorId: user.uid,
+    authorName: user.displayName || 'Anonymous User',
+    authorImage: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+    createdAt: serverTimestamp(),
+    // These are placeholders, a real implementation might calculate them
+    category: 'Technology',
+    readTime: `${Math.ceil(JSON.stringify(article.content).length / 1500)} min read`,
+  };
+
+  return addDocumentNonBlocking(articlesCollection, articleData);
+}
+
+    

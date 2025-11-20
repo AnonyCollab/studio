@@ -53,11 +53,11 @@ export function ArticleCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
-                  <AvatarImage src={authorImage} alt={author} />
-                  <AvatarFallback>{author[0]}</AvatarFallback>
+                  <AvatarImage src={authorImage} alt={author as string} />
+                  <AvatarFallback>{(author as string)[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{author}</p>
+                  <p className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{author as string}</p>
                   <p className={isDark ? "text-[#6b7280]" : "text-gray-500"}>
                     {date} · {readTime}
                   </p>
@@ -146,10 +146,10 @@ export function ArticleCard({
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-3">
             <Avatar className="w-6 h-6">
-              <AvatarImage src={authorImage} alt={author} />
-              <AvatarFallback>{author[0]}</AvatarFallback>
+              <AvatarImage src={article.authorImage} alt={article.authorName} />
+              <AvatarFallback>{article.authorName[0]}</AvatarFallback>
             </Avatar>
-            <span className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{author}</span>
+            <span className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{article.authorName}</span>
           </div>
           
           <h3 className={`text-xl font-bold mb-2 group-hover:opacity-80 transition-opacity ${
@@ -235,3 +235,5 @@ export function ArticleCard({
     </article>
   );
 }
+
+    

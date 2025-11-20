@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ArrowLeft, MoreHorizontal, Settings, HelpCircle } from 'lucide-react';
@@ -12,9 +13,13 @@ import {
 import Link from 'next/link';
 import { useTheme } from '@/context/ThemeContext';
 import dynamic from 'next/dynamic';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import "@blocknote/mantine/style.css";
-
+import { Input } from '@/components/ui/input';
+import { useFirestore, useUser } from '@/firebase';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import { publishArticle } from '@/firebase/non-blocking-updates';
 
 // Lazily load the editor component
 const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
@@ -22,9 +27,44 @@ const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
 export default function WritePage() {
     const { theme } = useTheme();
     const isDark = theme === 'dark';
+    const [title, setTitle] = useState('');
+    const [content, setContent] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const firestore = useFirestore();
+    const { user } = useUser();
+    const { toast } = useToast();
+    const router = useRouter();
+
+
+    const handlePublish = async () => {
+        if (!title.trim()) {
+            toast({ variant: 'destructive', title: 'Title is required' });
+            return;
+        }
+        if (!content.trim()) {
+            toast({ variant: 'destructive', title: 'Content cannot be empty' });
+            return;
+        }
+        if (!user || !firestore) {
+            toast({ variant: 'destructive', title: 'You must be logged in to publish' });
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await publishArticle(firestore, { title, content }, user);
+            toast({ title: 'Success!', description: 'Your article has been published.' });
+            router.push('/news');
+        } catch (error) {
+            console.error("Publishing error: ", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to publish article.' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const editorComponent = useMemo(() => {
-        return <Editor />;
+        return <Editor onChange={setContent} editable={true}/>;
     }, []);
 
   return (
@@ -43,8 +83,8 @@ export default function WritePage() {
                 <Button variant="ghost" className={isDark ? "text-gray-300 hover:text-white" : "text-gray-700 hover:text-gray-900"}>
                     Save draft
                 </Button>
-                <Button className={isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}>
-                    Publish
+                <Button onClick={handlePublish} disabled={isSubmitting} className={isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}>
+                    {isSubmitting ? 'Publishing...' : 'Publish'}
                 </Button>
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -73,9 +113,17 @@ export default function WritePage() {
       
        <main className="flex-1 flex flex-col items-center w-full pt-6">
         <div className="w-full max-w-4xl px-4">
+          <Input 
+            placeholder="Article Title..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={`text-3xl md:text-4xl font-bold border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-0 h-auto mb-8 bg-transparent ${isDark ? 'text-white placeholder:text-gray-600' : 'text-gray-900 placeholder:text-gray-400'}`}
+          />
           {editorComponent}
         </div>
       </main>
     </div>
   );
 }
+
+    

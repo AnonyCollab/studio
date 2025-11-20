@@ -2,7 +2,7 @@
 'use client';
 
 import { useTheme } from '@/context/ThemeContext';
-import { mockArticles, Article } from '../data';
+import { Article } from '../data';
 import { notFound, useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -12,29 +12,56 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, Bookmark, Clapperboard, Clock, Copy, Linkedin, MessageCircle, Send, Twitter } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { doc, Timestamp } from 'firebase/firestore';
+import { format } from 'date-fns';
+import { Loader } from 'lucide-react';
+
 
 const Editor = dynamic(() => import("../components/Editor"), { 
     ssr: false,
     loading: () => <div className="h-64 w-full bg-muted/50 animate-pulse rounded-lg" />
 });
 
-export default function ArticlePage({ params }: { params: { articleId: string } }) {
+export default function ArticlePage() {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const routeParams = useParams();
-  const articleId = routeParams.articleId as string;
+  const params = useParams();
+  const articleId = params.articleId as string;
+  const firestore = useFirestore();
 
-  const article: Article | undefined = useMemo(() => {
-    return mockArticles.find(a => a.id === articleId);
-  }, [articleId]);
+  const articleRef = useMemoFirebase(() => {
+    if (!firestore || !articleId) return null;
+    return doc(firestore, 'articles', articleId);
+  }, [firestore, articleId]);
+
+  const { data: articleData, isLoading } = useDoc<Article>(articleRef);
+  
+  const article = useMemo(() => {
+    if (!articleData) return null;
+    return {
+        ...articleData,
+        date: articleData.createdAt ? format(new Date((articleData.createdAt as Timestamp).seconds * 1000), 'MMM dd, yyyy') : 'N/A',
+        image: `https://picsum.photos/seed/${articleData.id}/1200/600`, // Placeholder image
+    };
+  }, [articleData]);
+
+  const editorComponent = useMemo(() => {
+      if (!article?.content) return <div className="h-64 w-full bg-muted/50 animate-pulse rounded-lg" />;
+      return <Editor initialContent={article.content} editable={false} />;
+  }, [article?.content]);
+
+  if (isLoading) {
+    return (
+        <div className="flex h-[calc(100vh-3.5rem)] items-center justify-center">
+            <Loader className="w-8 h-8 animate-spin" />
+        </div>
+    )
+  }
 
   if (!article) {
     notFound();
   }
-
-  const editorComponent = useMemo(() => {
-      return <Editor initialContent={article.content} editable={false} />;
-  }, [article.content]);
 
   return (
     <div className={`min-h-screen ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
@@ -65,11 +92,11 @@ export default function ArticlePage({ params }: { params: { articleId: string } 
                     <h1 className={`text-3xl md:text-5xl font-bold leading-tight mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>{article.title}</h1>
                     <div className="flex items-center justify-center gap-4">
                         <Avatar className="w-12 h-12">
-                            <AvatarImage src={article.authorImage} alt={article.author} />
-                            <AvatarFallback>{article.author[0]}</AvatarFallback>
+                            <AvatarImage src={article.authorImage} alt={article.authorName} />
+                            <AvatarFallback>{article.authorName[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                            <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{article.author}</p>
+                            <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{article.authorName}</p>
                             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{article.date} · {article.readTime}</p>
                         </div>
                     </div>
@@ -112,3 +139,5 @@ export default function ArticlePage({ params }: { params: { articleId: string } 
     </div>
   );
 }
+
+    

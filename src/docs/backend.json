@@ -302,6 +302,48 @@
         }
       },
       "required": ["senderId", "createdAt", "type"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Represents a news article written by a user.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "The title of the article."
+        },
+        "content": {
+          "type": "string",
+          "description": "The full content of the article, typically in a JSON format from a rich text editor."
+        },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who wrote the article."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "The display name of the author at the time of publishing."
+        },
+        "authorImage": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL of the author's avatar at the time of publishing."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp indicating when the article was created."
+        },
+        "category": {
+            "type": "string",
+            "description": "The category of the article (e.g., Technology, Design)."
+        },
+        "readTime": {
+            "type": "string",
+            "description": "An estimated read time for the article (e.g., '6 min read')."
+        }
+      },
+      "required": ["title", "content", "authorId", "authorName", "authorImage", "createdAt"]
     }
   },
   "auth": {
@@ -383,8 +425,18 @@
             }
           ]
         }
+      },
+      {
+        "path": "/articles/{articleId}",
+        "definition": {
+          "entityName": "Article",
+          "schema": { "$ref": "#/backend/entities/Article" },
+          "description": "Stores news articles."
+        }
       }
     ],
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
+
+    

@@ -5,13 +5,35 @@ import { useTheme } from '@/context/ThemeContext';
 import { ArticleCard } from './components/ArticleCard';
 import { CategoryNav } from './components/CategoryNav';
 import { TrendingTopics } from './components/TrendingTopics';
-import { mockArticles } from './data';
+import { mockArticles, Article } from './data';
 import { useRouter } from 'next/navigation';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
+import { useMemo } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function NewsPage() {
   const { theme } = useTheme();
-  const isDark = theme === 'dark';
   const router = useRouter();
+  const firestore = useFirestore();
+
+  const articlesQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'articles'), orderBy('createdAt', 'desc'));
+  }, [firestore]);
+
+  const { data: articlesData, isLoading } = useCollection<Omit<Article, 'id'>>(articlesQuery);
+
+  const articles = useMemo(() => {
+    if (!articlesData) return [];
+    return articlesData.map(article => ({
+      ...article,
+      date: article.createdAt ? formatDistanceToNow(new Date((article.createdAt as Timestamp).seconds * 1000)) + ' ago' : 'Just now',
+      description: '...', // Placeholder as it is not in the DB model
+      featured: false, // Placeholder
+      image: `https://picsum.photos/seed/${article.id}/1080/600`, // Placeholder image
+    }));
+  }, [articlesData]);
 
   return (
     <div className="min-h-screen">
@@ -21,10 +43,11 @@ export default function NewsPage() {
           <main className="lg:col-span-8">
             <CategoryNav theme={theme} />
             <div>
-              {mockArticles.map((article) => (
+              {isLoading && <p>Loading articles...</p>}
+              {articles.map((article) => (
                 <ArticleCard 
                   key={article.id} 
-                  article={article} 
+                  article={{...article, author: { name: article.authorName, image: article.authorImage}}} 
                   theme={theme}
                   onClick={() => router.push(`/news/${article.id}`)}
                 />
@@ -41,3 +64,5 @@ export default function NewsPage() {
     </div>
   );
 }
+
+    
