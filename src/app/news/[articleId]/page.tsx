@@ -21,11 +21,10 @@ const Editor = dynamic(() => import("../components/Editor"), {
 export default function ArticlePage({ params }: { params: { articleId: string } }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
-  const { articleId } = params;
 
   const article: Article | undefined = useMemo(() => {
-    return mockArticles.find(a => a.id === articleId);
-  }, [articleId]);
+    return mockArticles.find(a => a.id === params.articleId);
+  }, [params.articleId]);
 
   if (!article) {
     notFound();
