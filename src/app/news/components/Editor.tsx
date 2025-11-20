@@ -1,7 +1,8 @@
 
 'use client';
 import { useMemo } from 'react';
-import { useCreateBlockNote, BlockNoteView } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote/react";
+import { BlockNoteView } from "@blocknote/mantine";
 import { Block, BlockNoteEditor } from '@blocknote/core';
 
 interface EditorProps {
