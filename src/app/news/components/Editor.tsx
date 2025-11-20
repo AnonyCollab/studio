@@ -11,15 +11,19 @@ interface EditorProps {
 }
 
 export default function Editor({ initialContent, onChange, theme }: EditorProps) {
-  const editor: BlockNoteEditor = useCreateBlockNote({
+  const editor: BlockNoteEditor | null = useCreateBlockNote({
     initialContent: initialContent ? initialContent : undefined,
   });
 
   const handleEditorChange = () => {
-    if (onChange) {
+    if (onChange && editor) {
       onChange(editor.document);
     }
   };
+
+  if (!editor) {
+    return <div>Loading Editor...</div>;
+  }
 
   return (
     <div className="prose prose-lg dark:prose-invert max-w-full">
