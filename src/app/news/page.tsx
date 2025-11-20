@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { ArticleCard } from './components/ArticleCard';
 import { CategoryNav } from './components/CategoryNav';
 import { TrendingTopics } from './components/TrendingTopics';
-import { mockArticles, Article } from './data';
+import { Article } from './data';
 import { useRouter } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -26,8 +26,10 @@ export default function NewsPage() {
 
   const articles = useMemo(() => {
     if (!articlesData) return [];
+    // Correctly map the document id to the article object
     return articlesData.map(article => ({
       ...article,
+      id: article.id, // Ensure the ID from the collection is included
       date: article.createdAt ? formatDistanceToNow(new Date((article.createdAt as Timestamp).seconds * 1000)) + ' ago' : 'Just now',
       description: '...', // Placeholder as it is not in the DB model
       featured: false, // Placeholder
