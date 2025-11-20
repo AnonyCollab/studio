@@ -14,8 +14,10 @@ import Link from 'next/link';
 import { useTheme } from '@/context/ThemeContext';
 import dynamic from 'next/dynamic';
 import "@blocknote/core/fonts/inter.css";
-import "@blocknote/react/style.css";
 import { useMemo } from 'react';
+import "@blocknote/mantine/style.css";
+import "@blocknote/react/style.css";
+
 
 // Lazily load the editor component
 const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
@@ -24,6 +26,7 @@ export default function WritePage() {
     const { theme } = useTheme();
 
     const editorComponent = useMemo(() => {
+        // @ts-ignore
         return <Editor theme={theme} />;
     }, [theme]);
 
