@@ -22,14 +22,13 @@ export default function NewsPage() {
     return query(collection(firestore, 'news'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
-  const { data: articlesData, isLoading } = useCollection<Omit<Article, 'id'>>(articlesQuery);
+  const { data: articlesData, isLoading } = useCollection<Article>(articlesQuery);
 
   const articles = useMemo(() => {
     if (!articlesData) return [];
-    // Correctly map the document id to the article object
+    // The `useCollection` hook already provides the `id` on each document.
     return articlesData.map(article => ({
       ...article,
-      id: article.id, // Ensure the ID from the collection is included
       date: article.createdAt ? formatDistanceToNow(new Date((article.createdAt as Timestamp).seconds * 1000)) + ' ago' : 'Just now',
       description: '...', // Placeholder as it is not in the DB model
       featured: false, // Placeholder
