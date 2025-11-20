@@ -3,11 +3,12 @@
 
 import { useState } from "react";
 import Link from 'next/link';
-import { Search, Plus, Bell, SlidersHorizontal, Shield, Home, Compass, Newspaper, MessageSquare } from "lucide-react";
+import { Search, Plus, Bell, SlidersHorizontal, Shield, Home, Compass, Newspaper, MessageSquare, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { usePosts } from "@/context/PostContext";
+import { usePathname, useRouter } from "next/navigation";
 
 interface TopNavProps {
   onToggleFilter?: () => void;
@@ -17,8 +18,19 @@ interface TopNavProps {
 
 export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme }: TopNavProps) {
   const isDark = theme === "dark";
-  const [isSearchActive, setIsSearchActive] = useState(false);
   const { handleOpenCreatePost } = usePosts();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const isNewsPage = pathname.startsWith('/news');
+
+  const handleCreateClick = () => {
+    if (isNewsPage) {
+      router.push('/news/write');
+    } else {
+      handleOpenCreatePost();
+    }
+  };
   
   return (
     <nav style={{ '--header-height': '3.5rem' } as React.CSSProperties} className={`sticky top-0 z-50 h-[var(--header-height)] flex items-center ${isDark ? "bg-background/80 backdrop-blur-sm border-b border-white/10" : "bg-background/80 backdrop-blur-sm border-b border-gray-200"}`}>
@@ -81,14 +93,14 @@ export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme }: TopNav
             <SlidersHorizontal className="w-5 h-5" />
           </Button>
 
-          {/* Create Post Button */}
+          {/* Create Button */}
           <Button 
             className={`gap-2 ${isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}`}
-            onClick={handleOpenCreatePost}
+            onClick={handleCreateClick}
             size="sm"
           >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Create</span>
+            {isNewsPage ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            <span className="hidden sm:inline">{isNewsPage ? 'Write' : 'Create'}</span>
           </Button>
 
           {/* Notifications */}
