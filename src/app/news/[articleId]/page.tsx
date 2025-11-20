@@ -32,7 +32,7 @@ export default function ArticlePage() {
 
   const articleRef = useMemoFirebase(() => {
     if (!firestore || !articleId) return null;
-    return doc(firestore, 'articles', articleId);
+    return doc(firestore, 'news', articleId);
   }, [firestore, articleId]);
 
   const { data: articleData, isLoading } = useDoc<Article>(articleRef);

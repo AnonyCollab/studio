@@ -19,7 +19,7 @@ export default function NewsPage() {
 
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'articles'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'news'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
   const { data: articlesData, isLoading } = useCollection<Omit<Article, 'id'>>(articlesQuery);
