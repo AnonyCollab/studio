@@ -13,6 +13,7 @@ import * as Y from "yjs";
 import YPartyKitProvider from "y-partykit/provider";
 import { useTheme } from "@/context/ThemeContext";
 import { Block } from "@blocknote/core";
+import { useMemo } from "react";
 
 // Yjs document
 const doc = new Y.Doc();
