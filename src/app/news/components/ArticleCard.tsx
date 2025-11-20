@@ -53,11 +53,11 @@ export function ArticleCard({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar className="w-10 h-10">
-                  <AvatarImage src={authorImage} alt={author as string} />
-                  <AvatarFallback>{(author as string)[0]}</AvatarFallback>
+                  <AvatarImage src={authorImage} alt={typeof author === 'string' ? author : author.name} />
+                  <AvatarFallback>{(typeof author === 'string' ? author : author.name)[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{author as string}</p>
+                  <p className={isDark ? "text-[#e5e7eb]" : "text-gray-900"}>{typeof author === 'string' ? author : author.name}</p>
                   <p className={isDark ? "text-[#6b7280]" : "text-gray-500"}>
                     {date} · {readTime}
                   </p>
@@ -235,5 +235,3 @@ export function ArticleCard({
     </article>
   );
 }
-
-    
