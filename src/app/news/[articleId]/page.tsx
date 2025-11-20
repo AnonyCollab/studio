@@ -6,7 +6,7 @@ import { notFound, useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import dynamic from 'next/dynamic';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowLeft, Bookmark, Clapperboard, Copy, Linkedin, MessageCircle, Send, Twitter } from 'lucide-react';
@@ -44,6 +44,12 @@ export default function ArticlePage() {
   const params = useParams();
   const articleId = params.articleId as string;
   const firestore = useFirestore();
+
+  useEffect(() => {
+    if (articleId) {
+      console.log(`Opening news article with ID: ${articleId}`);
+    }
+  }, [articleId]);
 
   const articleRef = useMemoFirebase(() => {
     if (!firestore || !articleId) return null;
