@@ -29,7 +29,7 @@ const lightTheme = {
     ...lightDefaultTheme.colors,
     editor: {
       ...lightDefaultTheme.colors!.editor,
-      background: "#f9fafb", // bg-gray-50
+      background: "hsl(var(--background))",
     },
   },
 } satisfies Theme;
@@ -40,7 +40,7 @@ const darkTheme = {
     ...darkDefaultTheme.colors,
     editor: {
       ...darkDefaultTheme.colors!.editor,
-      background: "#0a0e1a", // bg-background from globals.css dark theme
+      background: "hsl(var(--background))",
     },
   },
 } satisfies Theme;
@@ -49,6 +49,7 @@ const customTheme = {
   light: lightTheme,
   dark: darkTheme,
 };
+
 
 // Our <Editor> component we can reuse later
 export default function Editor() {
