@@ -5,6 +5,7 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import * as Y from "yjs";
 import YPartyKitProvider from "y-partykit/provider";
+import { useTheme } from "@/context/ThemeContext";
 
 // Yjs document
 const doc = new Y.Doc();
@@ -18,6 +19,7 @@ const provider = new YPartyKitProvider(
 
 // Our <Editor> component we can reuse later
 export default function Editor() {
+  const { theme } = useTheme();
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
     collaboration: {
@@ -32,5 +34,5 @@ export default function Editor() {
   });
 
   // Renders the editor instance using a React component.
-  return <BlockNoteView editor={editor} theme={"light"} />;
+  return <BlockNoteView editor={editor} theme={theme} />;
 }
