@@ -3,7 +3,7 @@
 
 import { useTheme } from '@/context/ThemeContext';
 import { mockArticles, Article } from '../data';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import dynamic from 'next/dynamic';
@@ -21,10 +21,12 @@ const Editor = dynamic(() => import("../components/Editor"), {
 export default function ArticlePage({ params }: { params: { articleId: string } }) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  const routeParams = useParams();
+  const articleId = routeParams.articleId as string;
 
   const article: Article | undefined = useMemo(() => {
-    return mockArticles.find(a => a.id === params.articleId);
-  }, [params.articleId]);
+    return mockArticles.find(a => a.id === articleId);
+  }, [articleId]);
 
   if (!article) {
     notFound();
