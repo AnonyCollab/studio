@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { ArticleCard } from './components/ArticleCard';
 import { CategoryNav } from './components/CategoryNav';
 import { TrendingTopics } from './components/TrendingTopics';
-import { Article } from './data';
+import type { Article } from './data';
 import { useRouter } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
@@ -26,15 +26,17 @@ export default function NewsPage() {
 
   const articles = useMemo(() => {
     if (!articlesData) return [];
-    // The `useCollection` hook already provides the `id` on each document.
     return articlesData.map(article => ({
       ...article,
+      id: article.id, // ensure id is present
       date: article.createdAt ? formatDistanceToNow(new Date((article.createdAt as Timestamp).seconds * 1000)) + ' ago' : 'Just now',
       description: '...', // Placeholder as it is not in the DB model
-      featured: false, // Placeholder
       image: `https://picsum.photos/seed/${article.id}/1080/600`, // Placeholder image
     }));
   }, [articlesData]);
+
+  const featuredArticle = articles.length > 0 ? articles[0] : null;
+  const regularArticles = articles.length > 1 ? articles.slice(1) : [];
 
   return (
     <div className="min-h-screen">
@@ -45,10 +47,18 @@ export default function NewsPage() {
             <CategoryNav theme={theme} />
             <div>
               {isLoading && <p>Loading articles...</p>}
-              {articles.map((article) => (
+              {featuredArticle && (
+                <ArticleCard 
+                  key={featuredArticle.id} 
+                  article={{...featuredArticle, author: { name: featuredArticle.authorName, image: featuredArticle.authorImage}, featured: true }} 
+                  theme={theme}
+                  onClick={() => router.push(`/news/${featuredArticle.id}`)}
+                />
+              )}
+              {regularArticles.map((article) => (
                 <ArticleCard 
                   key={article.id} 
-                  article={{...article, author: { name: article.authorName, image: article.authorImage}}} 
+                  article={{...article, author: { name: article.authorName, image: article.authorImage}, featured: false}} 
                   theme={theme}
                   onClick={() => router.push(`/news/${article.id}`)}
                 />
