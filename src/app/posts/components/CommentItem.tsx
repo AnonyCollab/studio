@@ -15,7 +15,17 @@ import { useFirestore, useUser } from "@/firebase";
 import { addReply, toggleLikeComment, toggleLikeReply, deleteComment, deleteReply } from "@/firebase/non-blocking-updates";
 import { MentionPopover } from "./MentionPopover";
 import { mockUsers } from "@/app/messages/data/mockUsers";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Author {
   name: string;
@@ -72,6 +82,9 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const { user } = useUser();
   const { toast } = useToast();
   const isDark = theme === "dark";
+  const [isCommentDeleteDialogOpen, setIsCommentDeleteDialogOpen] = useState(false);
+  const [isReplyDeleteDialogOpen, setIsReplyDeleteDialogOpen] = useState<string | null>(null);
+
 
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
@@ -189,19 +202,25 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                     <div className="flex items-center gap-1">
                       <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{reply.timestamp}</span>
                       {isAuthor && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className={cn('p-1 rounded-full opacity-0 group-hover/reply:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-200')}>
-                                    <MoreHorizontal className="w-4 h-4" />
+                         <AlertDialog open={isReplyDeleteDialogOpen === reply.id} onOpenChange={(open) => setIsReplyDeleteDialogOpen(open ? reply.id : null)}>
+                            <AlertDialogTrigger asChild>
+                                <button className={cn('p-1 rounded-full opacity-0 group-hover/reply:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-500')}>
+                                    <Trash2 className="w-3.5 h-3.5" />
                                 </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className={cn(isDark ? 'bg-[#1a1f2e] border-white/10 text-white' : '')}>
-                                <DropdownMenuItem onClick={() => firestore && deleteReply(firestore, postId, comment.id, reply.id)} className={cn("text-red-500", isDark ? 'focus:bg-red-500/10 focus:text-red-400' : 'focus:bg-red-50')}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Reply
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className={cn(isDark ? 'bg-[#1a1f2e] border-white/10' : '')}>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Reply?</AlertDialogTitle>
+                                    <AlertDialogDescription className={cn(isDark ? 'text-gray-400' : '')}>
+                                        Are you sure you want to permanently delete this reply? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className={cn(isDark ? 'bg-transparent text-white hover:bg-white/10' : '')}>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => firestore && deleteReply(firestore, postId, comment.id, reply.id)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                 </div>
@@ -228,7 +247,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
             </div>
         </div>
     </div>
-  )}, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id, user, firestore, postId]);
+  )}, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id, user, firestore, postId, isReplyDeleteDialogOpen]);
 
   return (
     <div className="flex gap-3 group/comment">
@@ -243,19 +262,25 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                  <div className="flex items-center gap-1">
                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{comment.timestamp}</span>
                     {user && user.uid === comment.author.uid && (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <button className={cn('p-1 rounded-full opacity-0 group-hover/comment:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:bg-white/10' : 'text-gray-500 hover:bg-gray-200')}>
-                                    <MoreHorizontal className="w-4 h-4" />
+                        <AlertDialog open={isCommentDeleteDialogOpen} onOpenChange={setIsCommentDeleteDialogOpen}>
+                            <AlertDialogTrigger asChild>
+                                <button className={cn('p-1 rounded-full opacity-0 group-hover/comment:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-500')}>
+                                    <Trash2 className="w-3.5 h-3.5" />
                                 </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className={cn(isDark ? 'bg-[#1a1f2e] border-white/10 text-white' : '')}>
-                                <DropdownMenuItem onClick={() => firestore && deleteComment(firestore, postId, comment.id)} className={cn("text-red-500", isDark ? 'focus:bg-red-500/10 focus:text-red-400' : 'focus:bg-red-50')}>
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Comment
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className={cn(isDark ? 'bg-[#1a1f2e] border-white/10' : '')}>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
+                                    <AlertDialogDescription className={cn(isDark ? 'text-gray-400' : '')}>
+                                        Are you sure you want to permanently delete this comment? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className={cn(isDark ? 'bg-transparent text-white hover:bg-white/10' : '')}>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => firestore && deleteComment(firestore, postId, comment.id)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     )}
                 </div>
             </div>

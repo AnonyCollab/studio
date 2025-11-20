@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect } from "react";
-import { X, Bookmark, Heart, Repeat2, MessageCircle, Share2, Info } from "lucide-react";
+import { X, Bookmark, Heart, Repeat2, MessageCircle, Share2, Info, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -18,9 +18,21 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel"
-import { useFirestore } from "@/firebase";
-import { toggleLikePost } from "@/firebase/non-blocking-updates";
+import { useFirestore, useUser } from "@/firebase";
+import { toggleLikePost, deletePost } from "@/firebase/non-blocking-updates";
 import { collection, query, onSnapshot } from "firebase/firestore";
+import { usePosts } from "@/context/PostContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface PostDetailProps {
   post: {
@@ -28,6 +40,7 @@ interface PostDetailProps {
     author: {
       name: string;
       avatar: string;
+      uid: string;
     };
     imageUrl?: string;
     title: string;
@@ -73,6 +86,9 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
   const isDark = theme === "dark";
   const currentBadgeColors = isDark ? badgeColors : badgeColorsLight;
   const firestore = useFirestore();
+  const { user: currentUser } = useUser();
+  const { handleCloseDetail } = usePosts();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!firestore || !post.id) return;
@@ -94,6 +110,14 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
       toggleLikePost(firestore, post.id, isLiked);
     }
   };
+
+  const handleDeletePost = () => {
+      if (firestore) {
+          deletePost(firestore, post.id);
+          handleCloseDetail();
+      }
+      setIsDeleteDialogOpen(false);
+  }
 
   const Callout = ({ text, theme }: { text?: string, theme: "light" | "dark" }) => {
     if (!text) return null;
@@ -118,6 +142,31 @@ export function PostDetail({ post, onClose, theme = "dark" }: PostDetailProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {currentUser && currentUser.uid === post.author.uid && (
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogTrigger asChild>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className={isDark ? "text-red-500 hover:text-red-400 hover:bg-red-500/10" : "text-red-600 hover:text-red-700 hover:bg-red-100"}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className={cn(isDark ? 'bg-[#1a1f2e] border-white/10' : '')}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription className={cn(isDark ? 'text-gray-400' : '')}>
+                            This action cannot be undone. This will permanently delete your post.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className={cn(isDark ? 'bg-transparent text-white hover:bg-white/10' : '')}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDeletePost} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+          )}
           <SaveToCollectionDialog postTitle={post.title} onSaveToggle={setIsBookmarked} theme={theme}>
              <Button
                 variant="ghost"

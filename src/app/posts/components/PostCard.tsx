@@ -1,7 +1,7 @@
 
 'use client';
 
-import { Heart, MessageCircle, Repeat2, Share2, Bookmark, MoreHorizontal, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, Repeat2, Share2, Bookmark, MoreHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserStatsHoverCard } from "./UserStatsHoverCard";
 import { SharePopover } from "./SharePopover";
@@ -11,11 +11,6 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { usePosts } from "@/context/PostContext";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useUser } from "@/firebase";
-import { deletePost } from "@/firebase/non-blocking-updates";
-import { useFirestore } from "@/firebase/provider";
-
 
 interface PostCardProps {
   post: {
@@ -61,9 +56,7 @@ const badgeColorsLight = [
 export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
   const isDark = theme === "dark";
   const isMobile = useIsMobile();
-  const { selectedPost, handleCloseDetail } = usePosts();
-  const { user: currentUser } = useUser();
-  const firestore = useFirestore();
+  const { selectedPost } = usePosts();
 
   // Use the real-time selectedPost data if this card is the one being viewed
   const displayPost = selectedPost?.id === post.id ? selectedPost : post;
@@ -131,17 +124,6 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
     onClick();
   }
 
-  const handleDelete = (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (firestore) {
-          deletePost(firestore, post.id);
-          if (selectedPost?.id === post.id) {
-              handleCloseDetail();
-          }
-      }
-  };
-
-
   return (
     <div
       onClick={handleCardClick}
@@ -167,21 +149,9 @@ export function PostCard({ post, onClick, theme = "dark" }: PostCardProps) {
                 <span className="text-xs text-gray-500">Posted: {displayPost.timestamp}</span>
             </div>
             </div>
-            {currentUser && currentUser.uid === displayPost.author.uid && (
-                 <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button onClick={(e) => e.stopPropagation()} className={`p-1 rounded-full transition-colors ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-                            <MoreHorizontal className="w-5 h-5" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent onClick={(e) => e.stopPropagation()} align="end" className={cn(isDark ? 'bg-[#1a1f2e] border-white/10 text-white' : '')}>
-                        <DropdownMenuItem onClick={handleDelete} className={cn("text-red-500", isDark ? 'focus:bg-red-500/10 focus:text-red-400' : 'focus:bg-red-50')}>
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Delete Post
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            )}
+            <button onClick={(e) => e.stopPropagation()} className={`p-1 rounded-full transition-colors ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                <MoreHorizontal className="w-5 h-5" />
+            </button>
         </div>
 
         {/* 2. Tags */}
