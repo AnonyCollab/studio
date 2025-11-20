@@ -1,38 +1,36 @@
-'use client';
-import { useMemo } from 'react';
+"use client"; // this registers <Editor> as a Client Component
+import "@blocknote/core/fonts/inter.css";
 import { useCreateBlockNote } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
-import { Block, BlockNoteEditor } from '@blocknote/core';
+import "@blocknote/mantine/style.css";
+import * as Y from "yjs";
+import YPartyKitProvider from "y-partykit/provider";
 
-interface EditorProps {
-  initialContent?: Block[];
-  onChange?: (content: Block[]) => void;
-  theme: "light" | "dark";
-}
+// Yjs document
+const doc = new Y.Doc();
 
-export default function Editor({ initialContent, onChange, theme }: EditorProps) {
-  const editor: BlockNoteEditor | null = useCreateBlockNote({
-    initialContent: initialContent ? initialContent : undefined,
+// PartyKit provider
+const provider = new YPartyKitProvider(
+  "blocknote-dev.yousefed.partykit.dev",
+  "news-feed-collaboration-room",
+  doc
+);
+
+// Our <Editor> component we can reuse later
+export default function Editor() {
+  // Creates a new editor instance.
+  const editor = useCreateBlockNote({
+    collaboration: {
+      provider,
+      fragment: doc.getXmlFragment("document-store"),
+      user: {
+        name: "My Username",
+        color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+      },
+      showCursorLabels: "activity",
+    },
   });
 
-  const handleEditorChange = () => {
-    if (onChange && editor) {
-      onChange(editor.document);
-    }
-  };
-
-  if (!editor) {
-    return <div>Loading Editor...</div>;
-  }
-
-  return (
-    <div className="prose prose-lg dark:prose-invert max-w-full">
-        <BlockNoteView
-            editor={editor}
-            theme={theme}
-            onChange={handleEditorChange}
-            className="bg-transparent"
-        />
-    </div>
-  );
+  // Renders the editor instance using a React component.
+  return <BlockNoteView editor={editor} theme={"light"} />;
 }

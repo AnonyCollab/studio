@@ -66,8 +66,9 @@
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.168.0",
     "vaul": "^0.9.1",
-    "y-websocket": "^2.0.3",
-    "yjs": "^13.6.18",
+    "y-partykit": "latest",
+    "y-webrtc": "latest",
+    "yjs": "latest",
     "zod": "^3.24.2"
   },
   "devDependencies": {
