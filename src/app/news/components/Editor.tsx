@@ -22,18 +22,7 @@ const provider = new YPartyKitProvider(
   doc
 );
 
-// Custom theme to match app background
-const lightTheme = {
-  ...lightDefaultTheme,
-  colors: {
-    ...lightDefaultTheme.colors!,
-    editor: {
-      ...lightDefaultTheme.colors!.editor,
-      background: "hsl(var(--background))",
-    },
-  },
-} satisfies Theme;
-
+// Custom theme for dark mode to match app background
 const darkTheme = {
   ...darkDefaultTheme,
   colors: {
@@ -46,7 +35,7 @@ const darkTheme = {
 } satisfies Theme;
 
 const customTheme = {
-  light: lightTheme,
+  light: lightDefaultTheme,
   dark: darkTheme,
 };
 
