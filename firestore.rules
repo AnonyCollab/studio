@@ -61,10 +61,10 @@ service cloud.firestore {
     
     // Rules for Direct Messages
     match /dms/{dmId} {
-        // Allow read/list if user is a participant. For new DMs, allow if user's ID is in the dmId.
+        // Allow read/get if user is a participant OR if it's a new 1-on-1 chat being created.
         allow get: if request.auth != null && (request.auth.uid in resource.data.participants || dmId.matches(request.auth.uid));
         
-        // Allow a user to list DMs if the query explicitly filters for their UID.
+        // Allow a user to list DMs only if their query filters for their own UID.
         allow list: if request.auth != null && request.query.where.get("participants").get("array-contains") == request.auth.uid;
         
         // Allow create if the user is including themselves in the participants list of the new document.
