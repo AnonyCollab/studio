@@ -54,6 +54,25 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
     const fetchConversations = async () => {
       const conversations: DMConversation[] = await Promise.all(
         dmsData.map(async (dm) => {
+          if (dm.isGroup) {
+            return {
+              id: dm.id,
+              otherUser: { // For groups, 'otherUser' represents the group itself
+                id: dm.id,
+                displayName: dm.groupName,
+                photoURL: dm.groupAvatar,
+                online: false, 
+              },
+              lastMessage: {
+                text: dm.lastMessage?.text || 'No messages yet',
+                timestamp: dm.lastMessage?.timestamp 
+                  ? formatDistanceToNow(new Date(dm.lastMessage.timestamp.seconds * 1000), { addSuffix: true })
+                  : '',
+              },
+              unread: 0, 
+            };
+          }
+
           const otherUserId = dm.participants.find((p: string) => p !== currentUser.uid);
           if (!otherUserId) return null;
 
