@@ -3,7 +3,7 @@
 
 import { useState } from "react";
 import Link from 'next/link';
-import { Search, Plus, Bell, SlidersHorizontal, Shield, Home, Compass, Newspaper, MessageSquare, Edit } from "lucide-react";
+import { Search, Plus, Bell, SlidersHorizontal, Handshake, Home, Compass, Newspaper, MessageSquare, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
@@ -43,7 +43,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme, onCreate
         {/* Logo and Desktop Nav */}
         <div className="flex items-center gap-8">
            <Link href="/posts" className="flex items-center gap-2 flex-shrink-0">
-            <Shield className={`w-5 h-5 ${isDark ? "text-cyan-400" : "text-cyan-600"}`} />
+            <Handshake className={`w-5 h-5 ${isDark ? "text-cyan-400" : "text-cyan-600"}`} />
             <span className={`hidden sm:inline tracking-tight ${isDark ? "text-white" : "text-gray-900"}`}>AnonyCollab</span>
           </Link>
           <div className="hidden md:flex items-center gap-1">

@@ -1,8 +1,10 @@
 
+'use client';
+
 import React, { useRef, useEffect } from 'react';
 import { 
     Layout, BarChart3, Layers, Calendar, Users, FolderHeart, MessageSquare, Info, Palette, 
-    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper
+    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper, Handshake
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -119,7 +121,7 @@ export const Header: React.FC<HeaderProps> = ({
                             <DropdownMenuTrigger asChild>
                                 <button className="flex items-center gap-3 group">
                                      <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20">
-                                        <Shield size={18} />
+                                        <Handshake size={18} />
                                     </div>
                                     <span className={`font-bold text-lg tracking-tight ${textClass}`}>AnonyCollab</span>
                                     <ChevronDown className={`w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-colors`} />

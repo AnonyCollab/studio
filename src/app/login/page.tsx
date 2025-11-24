@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Shield, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { Handshake, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { useAuth, useFirestore } from '@/firebase/provider';
 import { 
   createUserWithEmailAndPassword, 
@@ -185,7 +185,7 @@ export default function LoginPage() {
       )}>
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-3 mb-2">
-            <Shield className={cn("w-8 h-8", isDark ? "text-cyan-400" : "text-cyan-600")} />
+            <Handshake className={cn("w-8 h-8", isDark ? "text-cyan-400" : "text-cyan-600")} />
             <h1 className={cn("text-3xl", isDark ? "text-white" : "text-gray-900")}>AnonyCollab</h1>
           </div>
           <p className={isDark ? "text-gray-400" : "text-gray-600"}>Securely collaborate, anonymously.</p>
@@ -266,5 +266,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    
