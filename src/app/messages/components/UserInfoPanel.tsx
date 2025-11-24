@@ -12,7 +12,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ProfileCard } from './ProfileCard';
-import { mockUsers } from '../data/mockUsers';
 import { useUser } from '@/firebase';
 import type { Theme } from '@/context/ThemeContext';
 
@@ -26,13 +25,27 @@ export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
   const [isDeafened, setIsDeafened] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const isDark = theme === 'dark';
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   
-  const currentUser = {
-    ...mockUsers.currentUser,
-    username: user?.displayName || mockUsers.currentUser.username,
-    displayName: user?.displayName || mockUsers.currentUser.displayName,
-    avatar: user?.photoURL || mockUsers.currentUser.avatar
+  if (isUserLoading || !user) {
+    // Render a skeleton or loading state while user data is being fetched
+    return (
+      <div className={`absolute bottom-0 left-0 w-[25rem] h-16 z-10 flex-shrink-0 ${
+        isDark ? 'bg-[#131823] border-t border-r border-white/10' : 'bg-white border-t border-r border-gray-200'
+      }`}>
+        {/* You can put a skeleton loader here */}
+      </div>
+    );
+  }
+
+  // Use live user data directly
+  const currentUserForCard = {
+    id: user.uid,
+    username: user.displayName || 'user',
+    displayName: user.displayName || 'User',
+    avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+    status: 'online' as const,
+    joinDate: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'N/A',
   };
 
 
@@ -48,15 +61,15 @@ export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
           >
             <div className="relative">
               <Avatar className={`w-10 h-10 ${isDark ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                <AvatarImage src={currentUser.avatar} />
-                <AvatarFallback>{currentUser.username[0]}</AvatarFallback>
+                <AvatarImage src={user.photoURL || undefined} />
+                <AvatarFallback>{(user.displayName || 'U').charAt(0)}</AvatarFallback>
               </Avatar>
               <div className={`absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full ${
                 isDark ? 'border-2 border-[#131823]' : 'border-2 border-white'
               }`} />
             </div>
             <div className="min-w-0 flex-1">
-              <p className={`text-sm truncate ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{currentUser.displayName}</p>
+              <p className={`text-sm truncate ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{user.displayName}</p>
               <p className={`text-xs truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>Online</p>
             </div>
           </div>
@@ -142,7 +155,7 @@ export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
     </div>
 
     <ProfileCard 
-      user={currentUser}
+      user={currentUserForCard}
       open={profileOpen}
       onOpenChange={setProfileOpen}
       theme={theme}
