@@ -14,18 +14,22 @@ interface TopNavProps {
   onToggleFilter?: () => void;
   theme?: "light" | "dark";
   onToggleTheme?: () => void;
+  onCreateProject?: () => void;
 }
 
-export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme }: TopNavProps) {
+export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme, onCreateProject }: TopNavProps) {
   const isDark = theme === "dark";
   const { handleOpenCreatePost } = usePosts();
   const pathname = usePathname();
   const router = useRouter();
 
   const isNewsPage = pathname.startsWith('/news');
+  const isDiscoverPage = pathname.startsWith('/discover');
 
   const handleCreateClick = () => {
-    if (isNewsPage) {
+    if (isDiscoverPage && onCreateProject) {
+        onCreateProject();
+    } else if (isNewsPage) {
       router.push('/news/write');
     } else {
       handleOpenCreatePost();
@@ -100,7 +104,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme }: TopNav
             size="sm"
           >
             {isNewsPage ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            <span className="hidden sm:inline">{isNewsPage ? 'Write' : 'Create'}</span>
+            <span className="hidden sm:inline">{isDiscoverPage ? 'New Project' : isNewsPage ? 'Write' : 'Create'}</span>
           </Button>
 
           {/* Notifications */}

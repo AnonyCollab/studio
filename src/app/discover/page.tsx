@@ -380,12 +380,6 @@ export default function App() {
                     Explore featured projects and collaborate with teams worldwide
                   </p>
                 </div>
-                <Link href="/discover/new-project">
-                  <Button className={`gap-2 ${isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}`}>
-                    <Plus className="h-4 w-4" />
-                    New Project
-                  </Button>
-                </Link>
               </div>
 
               {activeSection === 'overview' && <StatsBar theme={theme} /> }

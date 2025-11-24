@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect, type ReactNode, Suspense, lazy } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import './globals.css';
 import './landing/index.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -9,21 +9,30 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { TopNav } from './header/components/TopNav';
 import { BottomNav } from './header/components/BottomNav';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { PostProvider } from '@/context/PostContext';
+import { PostProvider, usePosts } from '@/context/PostContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { v4 as uuidv4 } from 'uuid';
 
 const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackground'));
 
 function AppContent({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme();
+  const { handleOpenCreatePost } = usePosts();
   const pathname = usePathname();
+  const router = useRouter();
+  
   const [bodyClassName, setBodyClassName] = useState('font-body antialiased');
   const isLandingPage = pathname === '/';
-  const isMessagesPage = pathname.startsWith('/messages');
+  const isDiscoverPage = pathname.startsWith('/discover');
   const isMobile = useIsMobile();
 
-  const showBottomNav = isMobile && !isLandingPage && !isMessagesPage;
+  const showBottomNav = isMobile && !isLandingPage && !pathname.startsWith('/messages');
+
+  const handleCreateNewProject = () => {
+    const newProjectId = uuidv4();
+    router.push(`/discover/${newProjectId}`);
+  };
 
   useEffect(() => {
     setBodyClassName(cn(
@@ -48,7 +57,11 @@ function AppContent({ children }: { children: ReactNode }) {
               <AnimatedBackground theme={theme} />
             </Suspense>
           )}
-          <TopNav theme={theme} onToggleTheme={toggleTheme} />
+          <TopNav 
+            theme={theme} 
+            onToggleTheme={toggleTheme} 
+            onCreateProject={isDiscoverPage ? handleCreateNewProject : undefined}
+          />
           <main>{children}</main>
           {showBottomNav && <BottomNav theme={theme} />}
         </div>
