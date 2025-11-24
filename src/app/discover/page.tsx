@@ -11,6 +11,8 @@ import { StarredProjectsList } from "./components/StarredProjectsList";
 import { ProjectGrid } from "./components/ProjectGrid";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { useTheme } from "@/context/ThemeContext";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const mockProjects: Record<string, Project[]> = {
   my: [
@@ -170,7 +172,7 @@ const mockProjects: Record<string, Project[]> = {
       description:
         "Private strategic planning platform for C-level executives. Includes confidential document sharing, voting systems, and secure communication channels.",
       image:
-        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib-rb-4.1.0&q=80&w=1080",
+        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       sector: "Business",
       owner: {
         name: "Robert Greene",
@@ -273,84 +275,36 @@ export default function App() {
   const renderContent = () => {
     if (activeSection === "overview") {
       return (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-fr">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 auto-rows-fr">
           {/* Large Hero Card - spans 2x2 */}
-          <FeaturedProjectCard
-            title={featuredProjects[0].title}
-            description={featuredProjects[0].description}
-            image={featuredProjects[0].image}
-            sector={featuredProjects[0].sector}
-            owner={featuredProjects[0].owner}
-            totalMembers={featuredProjects[0].totalMembers}
-            tags={featuredProjects[0].tags}
-            theme={theme}
-            size="large"
-          />
-
-          {/* Small Card */}
-          <FeaturedProjectCard
-            title={featuredProjects[1].title}
-            description={featuredProjects[1].description}
-            image={featuredProjects[1].image}
-            sector={featuredProjects[1].sector}
-            owner={featuredProjects[1].owner}
-            totalMembers={featuredProjects[1].totalMembers}
-            tags={featuredProjects[1].tags}
-            theme={theme}
-            size="small"
-          />
-
-          {/* Small Card */}
-          <FeaturedProjectCard
-            title={featuredProjects[2].title}
-            description={featuredProjects[2].description}
-            image={featuredProjects[2].image}
-            sector={featuredProjects[2].sector}
-            owner={featuredProjects[2].owner}
-            totalMembers={featuredProjects[2].totalMembers}
-            tags={featuredProjects[2].tags}
-            theme={theme}
-            size="small"
-          />
-
-          {/* Small Card */}
-          <FeaturedProjectCard
-            title={featuredProjects[3].title}
-            description={featuredProjects[3].description}
-            image={featuredProjects[3].image}
-            sector={featuredProjects[3].sector}
-            owner={featuredProjects[3].owner}
-            totalMembers={featuredProjects[3].totalMembers}
-            tags={featuredProjects[3].tags}
-            theme={theme}
-            size="small"
-          />
-
-          {/* Small Card */}
-          <FeaturedProjectCard
-            title={featuredProjects[4].title}
-            description={featuredProjects[4].description}
-            image={featuredProjects[4].image}
-            sector={featuredProjects[4].sector}
-            owner={featuredProjects[4].owner}
-            totalMembers={featuredProjects[4].totalMembers}
-            tags={featuredProjects[4].tags}
-            theme={theme}
-            size="small"
-          />
-
-          {/* Small Card */}
-          <FeaturedProjectCard
-            title={featuredProjects[5].title}
-            description={featuredProjects[5].description}
-            image={featuredProjects[5].image}
-            sector={featuredProjects[5].sector}
-            owner={featuredProjects[5].owner}
-            totalMembers={featuredProjects[5].totalMembers}
-            tags={featuredProjects[5].tags}
-            theme={theme}
-            size="small"
-          />
+          <Link href={`/discover/${featuredProjects[0].id}`}>
+            <FeaturedProjectCard
+              title={featuredProjects[0].title}
+              description={featuredProjects[0].description}
+              image={featuredProjects[0].image}
+              sector={featuredProjects[0].sector}
+              owner={featuredProjects[0].owner}
+              totalMembers={featuredProjects[0].totalMembers}
+              tags={featuredProjects[0].tags}
+              theme={theme}
+              size="large"
+            />
+          </Link>
+          {featuredProjects.slice(1).map((project) => (
+             <Link key={project.id} href={`/discover/${project.id}`}>
+                <FeaturedProjectCard
+                    title={project.title}
+                    description={project.description}
+                    image={project.image}
+                    sector={project.sector}
+                    owner={project.owner}
+                    totalMembers={project.totalMembers}
+                    tags={project.tags}
+                    theme={theme}
+                    size="small"
+                />
+            </Link>
+          ))}
         </div>
       );
     }
@@ -429,6 +383,12 @@ export default function App() {
                     Explore featured projects and collaborate with teams worldwide
                   </p>
                 </div>
+                <Link href="/discover/new-project">
+                  <Button className={`gap-2 ${isDark ? "bg-cyan-400 hover:bg-cyan-500 text-gray-900" : "bg-cyan-600 hover:bg-cyan-700 text-white"}`}>
+                    <Plus className="h-4 w-4" />
+                    New Project
+                  </Button>
+                </Link>
               </div>
 
               {activeSection === 'overview' && <StatsBar theme={theme} /> }
