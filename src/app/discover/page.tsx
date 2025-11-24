@@ -1,7 +1,7 @@
 
 'use client';
-import { useState, useEffect } from "react";
-import { Project, ProjectCard } from "./components/ProjectCard";
+import { useState, useEffect, useMemo } from "react";
+import { Project as ProjectType } from "./components/ProjectCard";
 import { Plus, Search, Menu, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SideNavigation } from "./components/SideNavigation";
@@ -13,200 +13,13 @@ import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { v4 as uuidv4 } from "uuid";
 import { usePosts } from "@/context/PostContext";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, doc, setDoc } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
+import { TopNav } from "../header/components/TopNav";
 
-
-const initialProjects: Record<string, Project[]> = {
-  my: [
-    {
-      id: "1",
-      title: "AnonyCollab Platform",
-      description:
-        "A revolutionary anonymous collaboration platform enabling teams to work together without revealing identities. Features real-time messaging, project management, and secure file sharing.",
-      image:
-        "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MjYyNTEyMXww&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Technology",
-      owner: {
-        name: "Sarah Anderson",
-        avatar: "",
-        initials: "SA",
-      },
-      totalMembers: 12,
-      createdDate: "Oct 15, 2024",
-      lastEditDate: "Nov 8, 2025",
-      tags: ["SaaS", "Collaboration", "React", "Node.js"],
-    },
-    {
-      id: "2",
-      title: "HealthTrack Dashboard",
-      description:
-        "Comprehensive healthcare monitoring system for patient data management, appointment scheduling, and medical record digitization with HIPAA compliance.",
-      image:
-        "https://images.unsplash.com/photo-1666886573215-b59d8ad9970c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGhjYXJlJTIwbWVkaWNhbHxlbnwxfHx8fDE3NjI2MjA5NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Healthcare",
-      owner: {
-        name: "Sarah Anderson",
-        avatar: "",
-        initials: "SA",
-      },
-      totalMembers: 8,
-      createdDate: "Sep 22, 2024",
-      lastEditDate: "Nov 7, 2025",
-      tags: ["Healthcare", "Dashboard", "Analytics"],
-    },
-    {
-      id: "3",
-      title: "EduLearn Platform",
-      description:
-        "Interactive e-learning platform with video courses, quizzes, progress tracking, and AI-powered personalized learning paths for students of all ages.",
-      image:
-        "https://images.unsplash.com/photo-1759678444893-9c1762e022fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlZHVjYXRpb24lMjBsZWFybmluZ3xlbnwxfHx8fDE3NjI1ODk5ODF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Education",
-      owner: {
-        name: "Sarah Anderson",
-        avatar: "",
-        initials: "SA",
-      },
-      totalMembers: 15,
-      createdDate: "Aug 10, 2024",
-      lastEditDate: "Nov 6, 2025",
-      tags: ["EdTech", "AI", "Video", "Learning"],
-    },
-  ],
-  team: [
-    {
-      id: "4",
-      title: "Marketing Campaign Hub",
-      description:
-        "Centralized marketing campaign management tool with social media scheduling, analytics, content calendar, and team collaboration features.",
-      image:
-        "https://images.unsplash.com/photo-1611241893603-3c359704e0ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMGRlc2lnbnxlbnwxfHx8fDE3NjI2Mjc5NTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Marketing",
-      owner: {
-        name: "Michael Chen",
-        avatar: "",
-        initials: "MC",
-      },
-      totalMembers: 10,
-      createdDate: "Jul 5, 2024",
-      lastEditDate: "Nov 8, 2025",
-      tags: ["Marketing", "Social Media", "Analytics"],
-    },
-    {
-      id: "5",
-      title: "FinanceFlow Analytics",
-      description:
-        "Advanced financial analytics platform with real-time market data, portfolio tracking, risk assessment, and automated reporting capabilities.",
-      image:
-        "https://images.unsplash.com/photo-1738996747326-65b5d7d7fe9b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmaW5hbmNlJTIwYW5hbHl0aWNzfGVufDF8fHx8MTc2MjYzODAyNnww&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Finance",
-      owner: {
-        name: "Jessica Taylor",
-        avatar: "",
-        initials: "JT",
-      },
-      totalMembers: 6,
-      createdDate: "Jun 18, 2024",
-      lastEditDate: "Nov 7, 2025",
-      tags: ["Finance", "Data", "Reports"],
-    },
-  ],
-  public: [
-    {
-      id: "6",
-      title: "OpenSource DevTools",
-      description:
-        "Community-driven development tools suite including code editors, debuggers, and performance analyzers. Free and open-source for all developers.",
-      image:
-        "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MjYyNTEyMXww&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Open Source",
-      owner: {
-        name: "David Park",
-        avatar: "",
-        initials: "DP",
-      },
-      totalMembers: 142,
-      createdDate: "Jan 12, 2024",
-      lastEditDate: "Nov 8, 2025",
-      tags: ["OpenSource", "DevTools", "Community"],
-    },
-    {
-      id: "7",
-      title: "Creative Commons Library",
-      description:
-        "Vast collection of royalty-free design assets, templates, and resources for creative professionals. Includes fonts, icons, illustrations, and mockups.",
-      image:
-        "https://images.unsplash.com/photo-1611241893603-3c359704e0ee?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjcmVhdGl2ZSUyMGRlc2lnbnxlbnwxfHx8fDE3NjI2Mjc5NTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Design",
-      owner: {
-        name: "Emma Wilson",
-        avatar: "",
-        initials: "EW",
-      },
-      totalMembers: 89,
-      createdDate: "Feb 28, 2024",
-      lastEditDate: "Nov 5, 2025",
-      tags: ["Design", "Assets", "Creative"],
-    },
-    {
-      id: "8",
-      title: "Climate Action Network",
-      description:
-        "Global initiative connecting environmental activists, researchers, and organizations to collaborate on climate solutions and sustainability projects.",
-      image:
-        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Environment",
-      owner: {
-        name: "Alex Rivera",
-        avatar: "",
-        initials: "AR",
-      },
-      totalMembers: 234,
-      createdDate: "Mar 15, 2024",
-      lastEditDate: "Nov 8, 2025",
-      tags: ["Environment", "Climate", "Sustainability", "NGO"],
-    },
-  ],
-  invite: [
-    {
-      id: "9",
-      title: "Executive Strategy Board",
-      description:
-        "Private strategic planning platform for C-level executives. Includes confidential document sharing, voting systems, and secure communication channels.",
-      image:
-        "https://images.unsplash.com/photo-1709715357520-5e1047a2b691?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidXNpbmVzcyUyMG1lZXRpbmd8ZW58MXx8fHwxNzYyNjE4Mzc4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Business",
-      owner: {
-        name: "Robert Greene",
-        avatar: "",
-        initials: "RG",
-      },
-      totalMembers: 5,
-      createdDate: "May 8, 2024",
-      lastEditDate: "Nov 7, 2025",
-      tags: ["Strategy", "Executive", "Private"],
-    },
-    {
-      id: "10",
-      title: "Research Consortium",
-      description:
-        "Exclusive academic research collaboration space for peer-reviewed studies, data sharing, and grant applications in molecular biology.",
-      image:
-        "https://images.unsplash.com/photo-1666886573215-b59d8ad9970c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoZWFsdGhjYXJlJTIwbWVkaWNhbHxlbnwxfHx8fDE3NjI2MjA5NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      sector: "Research",
-      owner: {
-        name: "Dr. Lisa Thompson",
-        avatar: "",
-        initials: "LT",
-      },
-      totalMembers: 18,
-      createdDate: "Apr 20, 2024",
-      lastEditDate: "Nov 6, 2025",
-      tags: ["Research", "Academic", "Science"],
-    },
-  ],
-};
 
 const sectionTitles: Record<string, string> = {
   overview: "Discover Projects",
@@ -220,20 +33,24 @@ const sectionTitles: Record<string, string> = {
 };
 
 export default function App() {
-  const { theme } = useTheme();
-  const [mockProjects, setMockProjects] = useState(initialProjects);
+  const { theme, toggleTheme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isDark = theme === "dark";
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
 
-  // Get all projects and sort by last edit date for "most recent"
-  const allProjects = [
-    ...mockProjects.my,
-    ...mockProjects.team,
-    ...mockProjects.public,
-    ...mockProjects.invite,
-  ];
+  const projectsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return collection(firestore, 'projects');
+  }, [firestore]);
+
+  const { data: allProjectsData } = useCollection<ProjectType>(projectsQuery);
+  const allProjects = allProjectsData || [];
+
+  const myProjects = useMemo(() => allProjects.filter(p => p.owner?.name === (user?.displayName || 'You')), [allProjects, user]);
 
   // Sort by last edit date (most recent first)
   const recentProjects = [...allProjects].sort((a, b) => {
@@ -248,24 +65,29 @@ export default function App() {
   const starredProjectIds = ["1", "3", "6"];
   const starredProjects = allProjects.filter((p) => starredProjectIds.includes(p.id));
 
-  // Featured grid: mix of recent and trending, ensuring no duplicates
-  const featuredProjects = Array.from(new Map([
-    ...recentProjects.slice(0, 3).map(p => [p.id, p]),
-    ...trendingProjects.slice(0, 3).map(p => [p.id, p]),
-  ]).values());
+  const featuredProjects = useMemo(() => {
+    const combined = [
+        ...recentProjects.slice(0, 3),
+        ...trendingProjects.slice(0, 3),
+    ];
+    const unique = Array.from(new Map(combined.map(p => [p.id, p])).values());
+    return unique.slice(0, 4); // Ensure we have at least 4 if possible, but no more
+  }, [recentProjects, trendingProjects]);
 
 
-  const getProjectsForSection = (section: string): Project[] => {
-    if (mockProjects[section]) {
-      return mockProjects[section];
-    }
+  const getProjectsForSection = (section: string): ProjectType[] => {
     switch (section) {
+      case "my":
+        return myProjects;
       case "trending":
         return trendingProjects;
       case "starred":
         return starredProjects;
       case "recent":
         return recentProjects;
+      case "public":
+        // For now, let's assume all are public
+        return allProjects;
       default:
         return [];
     }
@@ -273,20 +95,22 @@ export default function App() {
 
   const projectsToDisplay = getProjectsForSection(activeSection);
   
-  const { handleOpenCreatePost } = usePosts();
-
-  const handleCreateNewProject = () => {
+  const handleCreateNewProject = async () => {
+    if (!user || !firestore) {
+      // Handle not logged in case
+      return;
+    }
     const newProjectId = uuidv4();
-    const newProject: Project = {
+    const newProject: ProjectType = {
       id: newProjectId,
       title: "New Untitled Project",
       description: "A brand new project, ready for ideas.",
       image: `https://picsum.photos/seed/${newProjectId}/1080/600`,
       sector: "New",
       owner: {
-        name: "You",
-        avatar: "",
-        initials: "U",
+        name: user.displayName || "You",
+        avatar: user.photoURL || "",
+        initials: user.displayName ? user.displayName.charAt(0) : "U",
       },
       totalMembers: 1,
       createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
@@ -294,16 +118,16 @@ export default function App() {
       tags: ["new-project"],
     };
 
-    setMockProjects(prev => ({
-        ...prev,
-        my: [newProject, ...prev.my]
-    }));
-    setActiveSection('my');
+    const projectRef = doc(firestore, 'projects', newProjectId);
+    await setDoc(projectRef, newProject);
+
+    router.push(`/discover/${newProjectId}`);
   };
 
 
   const renderContent = () => {
     if (activeSection === "overview") {
+      if (featuredProjects.length === 0) return null;
       return (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 auto-rows-fr">
           {/* Large Hero Card - spans 2x2 */}
@@ -345,6 +169,7 @@ export default function App() {
     <div
       className="min-h-screen"
     >
+      <TopNav theme={theme} onToggleTheme={toggleTheme} onCreateProject={handleCreateNewProject} />
       {/* Mobile Navigation Drawer */}
       {sidebarOpen && (
         <div
@@ -448,3 +273,4 @@ export default function App() {
     </div>
   );
 }
+

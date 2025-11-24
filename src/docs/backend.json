@@ -108,6 +108,63 @@
         "createdAt"
       ]
     },
+    "Project": {
+      "title": "Project",
+      "description": "Represents a collaborative project in the Discover section.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the project."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the project."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the project."
+        },
+        "image": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the project's cover image."
+        },
+        "sector": {
+          "type": "string",
+          "description": "The industry sector the project belongs to."
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "avatar": { "type": "string", "format": "uri" },
+            "initials": { "type": "string" }
+          },
+          "required": ["name", "initials"]
+        },
+        "totalMembers": {
+          "type": "integer",
+          "description": "The total number of members in the project."
+        },
+        "createdDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date the project was created."
+        },
+        "lastEditDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date the project was last edited."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "A list of tags associated with the project."
+        }
+      },
+      "required": ["id", "title", "description", "owner", "createdDate", "lastEditDate"]
+    },
     "Comment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Comment",
@@ -407,6 +464,16 @@
         }
       },
       {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores individual projects for the Discover page."
+        }
+      },
+      {
         "path": "/posts/{postId}/comments/{commentId}",
         "definition": {
           "entityName": "Comment",
@@ -438,3 +505,4 @@
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
+
