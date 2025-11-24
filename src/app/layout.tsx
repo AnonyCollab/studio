@@ -25,6 +25,8 @@ function AppContent({ children }: { children: ReactNode }) {
   const [bodyClassName, setBodyClassName] = useState('font-body antialiased');
   const isLandingPage = pathname === '/';
   const isDiscoverPage = pathname.startsWith('/discover');
+  const isProjectDetailPage = isDiscoverPage && pathname.split('/').length > 2;
+
   const isMobile = useIsMobile();
 
   const showBottomNav = isMobile && !isLandingPage && !pathname.startsWith('/messages');
@@ -57,11 +59,13 @@ function AppContent({ children }: { children: ReactNode }) {
               <AnimatedBackground theme={theme} />
             </Suspense>
           )}
-          <TopNav 
-            theme={theme} 
-            onToggleTheme={toggleTheme} 
-            onCreateProject={isDiscoverPage ? handleCreateNewProject : undefined}
-          />
+          {!isProjectDetailPage && !isLandingPage && (
+            <TopNav 
+              theme={theme} 
+              onToggleTheme={toggleTheme} 
+              onCreateProject={isDiscoverPage ? handleCreateNewProject : undefined}
+            />
+          )}
           <main>{children}</main>
           {showBottomNav && <BottomNav theme={theme} />}
         </div>

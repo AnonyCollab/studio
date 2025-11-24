@@ -1,8 +1,21 @@
 
 import React, { useRef, useEffect } from 'react';
-import { Layout, BarChart3, Layers, Calendar, Users, FolderHeart, MessageSquare, Info, Palette, Check, CheckCircle2, Briefcase, X, User, Shield } from 'lucide-react';
+import { 
+    Layout, BarChart3, Layers, Calendar, Users, FolderHeart, MessageSquare, Info, Palette, 
+    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper
+} from 'lucide-react';
+import Link from 'next/link';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Page, Theme, BackgroundType, TaskNode, FilterOption, CurrentUser, UserRole } from '../types';
 import { StatusBadge, PriorityIcon } from './Plan';
+import { useUser } from '@/firebase';
+import { ProfileDropdown } from '@/components/layout/ProfileDropdown';
 
 interface HeaderProps {
     currentPage: Page;
@@ -36,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [isProfileOpen, setIsProfileOpen] = React.useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
+    const { user: authUser } = useUser();
     
     // Swipe Logic
     const touchStart = useRef<number | null>(null);
@@ -87,6 +101,13 @@ export const Header: React.FC<HeaderProps> = ({
     ];
 
     const roles: UserRole[] = ['Visitor', 'Member', 'Team Lead', 'Coordinator', 'Owner'];
+    
+    const mainNavLinks = [
+        { href: "/posts", icon: Home, label: "Home" },
+        { href: "/discover", icon: Compass, label: "Discover" },
+        { href: "/news", icon: Newspaper, label: "News" },
+        { href: "/messages", icon: MessageSquare, label: "Messages" },
+    ];
 
     return (
         <>
@@ -94,10 +115,27 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className={`absolute inset-0 backdrop-blur-md -z-10 ${bgClass}`} />
                 <div className="flex items-center gap-4 overflow-hidden w-auto relative z-[70]">
                     <div className="flex items-center gap-3 flex-shrink-0 mr-2">
-                        <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20">
-                            <Layers size={18} />
-                        </div>
-                        <span className={`font-bold text-lg tracking-tight ${textClass}`}>OmniCanvas</span>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button className="flex items-center gap-3 group">
+                                     <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg shadow-brand-500/20">
+                                        <Shield size={18} />
+                                    </div>
+                                    <span className={`font-bold text-lg tracking-tight ${textClass}`}>AnonyCollab</span>
+                                    <ChevronDown className={`w-4 h-4 text-slate-400 group-hover:text-slate-200 transition-colors`} />
+                                </button>
+                            </DropdownMenuTrigger>
+                             <DropdownMenuContent className={`w-56 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1e1e1e] border-gray-700'}`}>
+                                {mainNavLinks.map(link => (
+                                    <DropdownMenuItem key={link.href} asChild>
+                                        <Link href={link.href} className={`flex items-center gap-2 ${isLight ? 'text-slate-700 focus:bg-slate-100' : 'text-slate-200 focus:bg-white/10'}`}>
+                                            <link.icon size={16} />
+                                            {link.label}
+                                        </Link>
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                     <nav className="flex items-center gap-1 pr-4">
                         {navItems.map(item => (
@@ -108,60 +146,11 @@ export const Header: React.FC<HeaderProps> = ({
                     </nav>
                 </div>
                 <div className="flex items-center gap-3 pl-4 border-l flex-shrink-0 border-white/10 relative z-[70]">
-                    <button onClick={() => setPage('about')} className={`p-2 rounded-lg transition-colors ${currentPage === 'about' ? activeClass : `${textClass} ${hoverClass}`}`} title="About">
-                        <Info size={18} />
+                     <button className={`relative p-2 transition-colors rounded-full ${isLight ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 hover:text-white'}`}>
+                        <Bell className="w-5 h-5" />
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>
                     </button>
-                    <div className="relative" ref={profileRef}>
-                        <div onClick={() => setIsProfileOpen(!isProfileOpen)} className={`w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-purple-600 p-[2px] cursor-pointer hover:scale-105 transition-transform flex-shrink-0`}>
-                             <div className={`w-full h-full rounded-full flex items-center justify-center ${isLight ? 'bg-white' : 'bg-black'}`}>
-                                 <span className="text-[10px] font-bold text-brand-500">{currentUser?.initials || 'US'}</span>
-                             </div>
-                        </div>
-                        {isProfileOpen && (
-                            <div className={`absolute top-full right-0 mt-2 w-64 rounded-xl border shadow-2xl z-[100] overflow-hidden animate-in zoom-in-95 duration-200 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1e1e1e] border-gray-700'}`}>
-                                <div className="p-3 border-b border-white/5 bg-white/5">
-                                    <div className={`text-sm font-bold ${isLight ? 'text-slate-800' : 'text-white'}`}>{currentUser?.name}</div>
-                                    <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{currentUser?.role}</div>
-                                </div>
-                                <div className="p-2 space-y-1">
-                                    <button onClick={() => { setPage('profile'); setIsProfileOpen(false); }} className={`w-full text-left px-3 py-2 rounded-lg text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-700 hover:bg-slate-50' : 'text-slate-200 hover:bg-white/10'}`}>
-                                        <User size={16} /> My Profile
-                                    </button>
-                                    
-                                    <div className="px-3 py-2">
-                                        <div className={`text-xs font-bold uppercase mb-2 flex items-center gap-2 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-                                            <Shield size={12} /> Switch Role (Demo)
-                                        </div>
-                                        <div className="flex flex-col gap-1">
-                                            {roles.map(role => (
-                                                <button 
-                                                    key={role} 
-                                                    onClick={() => { 
-                                                        if(setCurrentUser && currentUser) setCurrentUser({...currentUser, role}); 
-                                                        setIsProfileOpen(false); 
-                                                    }} 
-                                                    className={`text-left px-2 py-1 rounded text-xs transition-colors ${currentUser?.role === role ? 'text-brand-500 font-bold bg-brand-500/10' : (isLight ? 'text-slate-500 hover:bg-slate-100' : 'text-slate-400 hover:bg-white/5')}`}
-                                                >
-                                                    {role}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    <div className="px-3 py-2 border-t border-white/5">
-                                        <div className={`text-xs font-bold uppercase mb-2 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}><Palette size={12} className="inline mr-1"/> Theme</div>
-                                        <div className="flex gap-2">
-                                            {['Light', 'Dark', 'Sephiroa', 'Green', 'Blue'].map(t => (
-                                                <button key={t} onClick={() => setTheme(t as Theme)} className={`w-6 h-6 rounded-full border flex items-center justify-center ${theme === t ? 'ring-2 ring-brand-500' : 'opacity-50'}`} style={{ backgroundColor: t === 'Light' ? '#ffffff' : t === 'Sephiroa' ? '#FDFCF0' : t === 'Green' ? '#F0F5F0' : t === 'Blue' ? '#020817' : '#09090b' }}>
-                                                    {theme === t && <Check size={16} className={t === 'Light' || t === 'Sephiroa' || t === 'Green' ? 'text-black' : 'text-white'} />}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    {authUser && <ProfileDropdown theme={theme} onToggleTheme={setBackground as any} />}
                 </div>
             </header>
 
