@@ -1,5 +1,9 @@
 
+'use client';
+
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 import { Theme, TaskNode, Assignee } from '../types';
 import { MOCK_POSTS, MOCK_ARTICLES, MOCK_ACTIVITY } from '../constants';
 import { MapPin, Link as LinkIcon, Building2, Users, CheckCircle2, Repeat2, MessageSquare, Heart, Share2, FileText, BookOpen, Activity, Briefcase, Calendar, ArrowLeft } from 'lucide-react';
@@ -14,9 +18,13 @@ interface ProfilePageProps {
 
 type Tab = 'Posts' | 'Articles' | 'Projects' | 'Activity';
 
+const getDmId = (uid1: string, uid2: string) => [uid1, uid2].sort().join('_');
+
 export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks, member, onBack }) => {
     const [activeTab, setActiveTab] = useState<Tab>('Projects');
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
+    const router = useRouter();
+    const { user: currentUser } = useUser();
 
     if (!member) {
         return (
@@ -25,6 +33,12 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks, member, 
             </div>
         );
     }
+
+    const handleMessageClick = () => {
+        if (!currentUser || !member) return;
+        const dmId = getDmId(currentUser.uid, member.id);
+        router.push(`/messages?dm=${dmId}`);
+    };
     
     // In a real app, this would be fetched based on member.id
     const profile = {
@@ -106,7 +120,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks, member, 
                                 <button className="px-6 py-2 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold shadow-lg shadow-brand-500/20 transition-all active:scale-95">
                                     Follow
                                 </button>
-                                <button className={`px-4 py-2 rounded-xl border font-bold transition-all ${isLight ? 'border-slate-200 hover:bg-slate-50 text-slate-700' : 'border-white/10 hover:bg-white/5 text-white'}`}>
+                                <button onClick={handleMessageClick} className={`px-4 py-2 rounded-xl border font-bold transition-all ${isLight ? 'border-slate-200 hover:bg-slate-50 text-slate-700' : 'border-white/10 hover:bg-white/5 text-white'}`}>
                                     Message
                                 </button>
                             </div>

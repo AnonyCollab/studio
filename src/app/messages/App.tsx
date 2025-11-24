@@ -1,6 +1,7 @@
 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ServerList } from './components/ServerList';
 import { ChannelSidebar } from './components/ChannelSidebar';
 import { ChatArea } from './components/ChatArea';
@@ -13,14 +14,26 @@ import { GroupList } from './components/GroupList';
 import { useTheme } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { Suspense } from 'react';
 
-export default function App() {
+
+function MessagesAppContent() {
   const [selectedServer, setSelectedServer] = useState('home');
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [selectedDM, setSelectedDM] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'chat' | 'friends' | 'dm' | 'groups'>('friends');
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const dmId = searchParams.get('dm');
+    if (dmId) {
+      setSelectedDM(dmId);
+      setCurrentView('dm');
+      setSelectedServer('home');
+    }
+  }, [searchParams]);
 
   const isDark = theme === 'dark';
   const isInGroup = selectedServer !== 'home' && currentView === 'chat';
@@ -134,4 +147,13 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+
+export default function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MessagesAppContent />
+    </Suspense>
+  )
 }
