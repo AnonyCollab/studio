@@ -1,7 +1,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
-import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { DepartmentSheet } from './DepartmentSheet';
 import { useStore } from '../store/useStore';
 import {
@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useToast } from '@/hooks/use-toast';
 
 const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member', 'Visitor'];
 
@@ -25,6 +26,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
     const { updateMember } = useStore();
+    const { toast } = useToast();
 
     const allMembers = initialMembers;
     const teams = allMembers.filter(m => m.type === 'team');
@@ -47,12 +49,12 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         };
     };
 
-    const canPromote = (memberRole: UserRole, targetRole: UserRole) => {
-        return ROLE_HIERARCHY.indexOf(memberRole) > ROLE_HIERARCHY.indexOf(targetRole);
-    };
-
-    const canDemote = (memberRole: UserRole, targetRole: UserRole) => {
-        return ROLE_HIERARCHY.indexOf(memberRole) < ROLE_HIERARCHY.indexOf(targetRole);
+    const handleAddFriend = (member: Assignee) => {
+        console.log(`Sending friend request to ${member.name}`);
+        toast({
+            title: "Friend Request Sent",
+            description: `A friend request has been sent to ${member.name}.`,
+        });
     };
 
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
@@ -128,6 +130,10 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                                 </DropdownMenuItem>
                                                             )}
                                                             <DropdownMenuItem><Mail className="mr-2 h-4 w-4" /> Message</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddFriend(member); }}>
+                                                                <UserPlus className="mr-2 h-4 w-4" />
+                                                                <span>Add Friend</span>
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>
