@@ -14,7 +14,6 @@ import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { v4 as uuidv4 } from "uuid";
-import { TopNav } from "../header/components/TopNav";
 import { usePosts } from "@/context/PostContext";
 
 
@@ -346,7 +345,6 @@ export default function App() {
     <div
       className="min-h-screen"
     >
-      <TopNav onCreateProject={handleCreateNewProject} />
       {/* Mobile Navigation Drawer */}
       {sidebarOpen && (
         <div
