@@ -8,21 +8,36 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { BottomNav } from './header/components/BottomNav';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
-import { PostProvider } from '@/context/PostContext';
+import { PostProvider, usePosts } from '@/context/PostContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { TopNav } from './header/components/TopNav';
 
 
 const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackground'));
 
 function AppContent({ children }: { children: ReactNode }) {
-  const { theme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
-  
+  const { handleOpenCreatePost } = usePosts();
+  const router = useRouter();
+
   const [bodyClassName, setBodyClassName] = useState('font-body antialiased');
   const isLandingPage = pathname === '/';
+  const isProjectPage = /^\/discover\//.test(pathname) && pathname.split('/').length > 2;
+  
+  const showHeader = !isLandingPage && !isProjectPage;
   
   const isMobile = useIsMobile();
+  const isDiscoverPage = pathname.startsWith('/discover');
+  
+  const handleCreateProject = () => {
+    // This is a placeholder. The actual creation logic lives in discover/page.tsx
+    // but the button click needs to be handled here.
+    // In a more robust setup, this would use a global state management solution.
+    // For now, we can use a custom event or a simple window object property.
+    window.dispatchEvent(new CustomEvent('create-new-project'));
+  };
 
   const showBottomNav = isMobile && !isLandingPage && !pathname.startsWith('/messages');
 
@@ -44,6 +59,7 @@ function AppContent({ children }: { children: ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
       </head>
       <body className={bodyClassName}>
+        {showHeader && <TopNav theme={theme} onToggleTheme={toggleTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
         <div className="relative isolate min-h-screen">
           {!isLandingPage && (
             <Suspense fallback={null}>
