@@ -1,4 +1,6 @@
 
+'use client';
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -115,7 +117,7 @@ export function ProfileCard({ user, open, onOpenChange, theme, isCurrentUser = f
               <div className="relative">
                 <Avatar className="w-20 h-20 border-4 border-[#131823]">
                   <AvatarImage src={user.avatar} />
-                  <AvatarFallback className="text-2xl">{user.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  <AvatarFallback className="text-2xl">{(user.username || user.displayName || '??').slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className={`absolute bottom-1 right-1 w-5 h-5 ${statusColors[user.status]} rounded-full border-4 ${
                   isDark ? 'border-[#131823]' : 'border-white'
