@@ -4,6 +4,8 @@ import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, 
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../constants';
 import { FileText } from 'lucide-react'; 
 import { User } from 'firebase/auth';
+import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection } from 'firebase/firestore';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -41,7 +43,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     tasks: [],
     cycles: INITIAL_CYCLES,
     posts: MOCK_POSTS,
-    members: MOCK_ASSIGNEES,
+    members: [], // Initialize as empty
     files: MOCK_FILES,
     selectedTaskId: null,
     selectedTaskIds: [],
@@ -150,6 +152,30 @@ const updateCascadingStatus = (tasks: TaskNode[], startTaskId: string): TaskNode
 
 export const useStore = (authUser: User | null) => {
     const [state, setState] = useState<AppState>(() => createInitialState(authUser));
+    const firestore = useFirestore();
+
+    // Fetch all users to populate the members list
+    const usersQuery = useMemoFirebase(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'users');
+    }, [firestore]);
+
+    const { data: usersData } = useCollection(usersQuery);
+
+    useEffect(() => {
+        if (usersData) {
+            const membersList: Assignee[] = usersData.map(user => ({
+                id: user.id,
+                name: user.profile.displayName,
+                initials: (user.profile.displayName || 'U').slice(0, 2).toUpperCase(),
+                color: 'bg-blue-500', // This could be randomized or based on user ID
+                type: 'user',
+                // This is a placeholder role. A real app would store this on the user document.
+                role: user.id === authUser?.uid ? 'Owner' : 'Member', 
+            }));
+            setState(prev => ({ ...prev, members: membersList }));
+        }
+    }, [usersData, authUser?.uid]);
 
     useEffect(() => {
         const savedState = localStorage.getItem(STORAGE_KEY);
@@ -162,7 +188,7 @@ export const useStore = (authUser: User | null) => {
                     currentUser: createDefaultUser(authUser),
                     tasks: parsed.tasks?.length ? parsed.tasks : [],
                     posts: parsed.posts?.length ? parsed.posts : MOCK_POSTS,
-                    members: parsed.members?.length ? parsed.members : MOCK_ASSIGNEES,
+                    // members will be overwritten by the user fetch effect
                     files: parsed.files?.length ? parsed.files : MOCK_FILES,
                 }));
             } catch (e) {
@@ -695,3 +721,4 @@ export const useStore = (authUser: User | null) => {
     updateMember
   };
 };
+
