@@ -136,29 +136,28 @@ const updateCascadingStatus = (tasks: TaskNode[], startTaskId: string): TaskNode
 };
 
 export const useStore = () => {
-  const [state, setState] = useState<AppState>(() => {
-      if (typeof window !== 'undefined') {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-              try {
-                  const parsed = JSON.parse(saved);
-                  return { 
-                      ...DEFAULT_STATE, 
-                      ...parsed,
-                      currentUser: parsed.currentUser || DEFAULT_STATE.currentUser,
-                      tasks: parsed.tasks?.length ? parsed.tasks : DEFAULT_STATE.tasks,
-                      posts: parsed.posts?.length ? parsed.posts : DEFAULT_STATE.posts,
-                      members: parsed.members?.length ? parsed.members : DEFAULT_STATE.members,
-                      files: parsed.files?.length ? parsed.files : DEFAULT_STATE.files,
-                  };
-              } catch (e) {
-                  console.error('Failed to parse local storage', e);
-                  return DEFAULT_STATE;
-              }
-          }
-      }
-      return DEFAULT_STATE;
-  });
+    const [state, setState] = useState<AppState>(DEFAULT_STATE);
+
+    useEffect(() => {
+        const savedState = localStorage.getItem(STORAGE_KEY);
+        if (savedState) {
+            try {
+                const parsed = JSON.parse(savedState);
+                setState(prev => ({
+                    ...prev,
+                    ...parsed,
+                    currentUser: parsed.currentUser || DEFAULT_STATE.currentUser,
+                    tasks: parsed.tasks?.length ? parsed.tasks : DEFAULT_STATE.tasks,
+                    posts: parsed.posts?.length ? parsed.posts : DEFAULT_STATE.posts,
+                    members: parsed.members?.length ? parsed.members : DEFAULT_STATE.members,
+                    files: parsed.files?.length ? parsed.files : DEFAULT_STATE.files,
+                }));
+            } catch (e) {
+                console.error('Failed to parse local storage', e);
+                setState(DEFAULT_STATE);
+            }
+        }
+    }, []);
 
   useEffect(() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
