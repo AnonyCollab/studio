@@ -19,7 +19,7 @@ export default function App() {
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
   const [selectedDM, setSelectedDM] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<'chat' | 'friends' | 'dm' | 'groups'>('friends');
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
 
   const isDark = theme === 'dark';
@@ -129,7 +129,7 @@ export default function App() {
 
         {/* User info panel - at bottom left covering server list and sidebar */}
         {showSidebarContainer && (
-            <UserInfoPanel theme={theme} onToggleTheme={toggleTheme} />
+            <UserInfoPanel theme={theme} onSetTheme={setTheme} />
         )}
       </div>
     </div>

@@ -14,13 +14,14 @@ import {
 import { ProfileCard } from './ProfileCard';
 import { mockUsers } from '../data/mockUsers';
 import { useUser } from '@/firebase';
+import type { Theme } from '@/context/ThemeContext';
 
 interface UserInfoPanelProps {
-  theme: 'light' | 'dark';
-  onToggleTheme: () => void;
+  theme: Theme;
+  onSetTheme: (theme: Theme) => void;
 }
 
-export function UserInfoPanel({ theme, onToggleTheme }: UserInfoPanelProps) {
+export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
   const [isMuted, setIsMuted] = useState(false);
   const [isDeafened, setIsDeafened] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -105,7 +106,7 @@ export function UserInfoPanel({ theme, onToggleTheme }: UserInfoPanelProps) {
               side="top"
             >
               <DropdownMenuItem 
-                onClick={onToggleTheme}
+                onClick={() => onSetTheme(isDark ? 'light' : 'dark')}
                 className={isDark ? 'focus:bg-white/10 focus:text-white' : 'focus:bg-gray-100'}
               >
                 {isDark ? (

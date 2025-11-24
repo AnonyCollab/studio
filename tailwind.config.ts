@@ -1,5 +1,7 @@
 import type {Config} from 'tailwindcss';
 
+// This is a configuration file for Tailwind CSS.
+// It defines the files to scan for CSS classes, the theme settings, and plugins.
 export default {
   darkMode: ['class'],
   content: [

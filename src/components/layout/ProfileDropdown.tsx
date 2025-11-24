@@ -9,6 +9,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -20,18 +24,20 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  Check,
+  Palette
 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { ThemeToggle } from '@/app/posts/components/ThemeToggle';
 import { Separator } from '@/components/ui/separator';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import type { Theme } from '@/context/ThemeContext';
 
 interface ProfileDropdownProps {
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
+  theme?: Theme;
+  onSetTheme?: (theme: Theme) => void;
 }
 
 const HamburgerIcon = ({ isOpen }: { isOpen: boolean }) => (
@@ -54,7 +60,16 @@ const HamburgerIcon = ({ isOpen }: { isOpen: boolean }) => (
   </div>
 );
 
-const DropdownContent = ({ theme, onToggleTheme, user }: ProfileDropdownProps & { user: any }) => {
+const themeOptions: { name: Theme; color: string; isLight: boolean }[] = [
+    { name: 'light', color: '#f8fafc', isLight: true },
+    { name: 'dark', color: '#09090b', isLight: false },
+    { name: 'Sephiroa', color: '#FDFCF0', isLight: true },
+    { name: 'Green', color: '#F0F5F0', isLight: true },
+    { name: 'Blue', color: '#020817', isLight: false },
+];
+
+
+const DropdownContent = ({ theme, onSetTheme, user }: ProfileDropdownProps & { user: any }) => {
   const isDark = theme === 'dark';
   const itemClass = isDark
     ? 'text-gray-300 focus:bg-white/5 focus:text-white'
@@ -89,13 +104,33 @@ const DropdownContent = ({ theme, onToggleTheme, user }: ProfileDropdownProps & 
         Saved Posts
       </DropdownMenuItem>
       <DropdownMenuSeparator className={separatorClass} />
-      {onToggleTheme && theme && (
-        <>
-          <div className="px-2 py-1">
-            <ThemeToggle theme={theme} onToggle={onToggleTheme} />
-          </div>
-          <DropdownMenuSeparator className={separatorClass} />
-        </>
+        {onSetTheme && theme && (
+          <>
+            <DropdownMenuSub>
+                <DropdownMenuSubTrigger className={itemClass}>
+                    <Palette />
+                    Theme
+                </DropdownMenuSubTrigger>
+                <DropdownMenuPortal>
+                    <DropdownMenuSubContent
+                         className={`w-40 ${
+                            isDark
+                            ? 'bg-popover border-white/10'
+                            : 'bg-popover border-gray-200'
+                        }`}
+                    >
+                        {themeOptions.map(t => (
+                            <DropdownMenuItem key={t.name} onClick={() => onSetTheme(t.name)} className={itemClass}>
+                                <div className="w-4 h-4 rounded-full border mr-2" style={{ backgroundColor: t.color, borderColor: t.isLight ? '#e2e8f0' : '#475569' }} />
+                                {t.name}
+                                {theme === t.name && <Check className="ml-auto h-4 w-4" />}
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuSubContent>
+                </DropdownMenuPortal>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator className={separatorClass} />
+          </>
       )}
       <DropdownMenuItem className={itemClass} onClick={handleLogout}>
         <LogOut />
@@ -108,7 +143,7 @@ const DropdownContent = ({ theme, onToggleTheme, user }: ProfileDropdownProps & 
 const MobileMenu = ({
   isOpen,
   theme,
-  onToggleTheme,
+  onSetTheme,
 }: { isOpen: boolean } & ProfileDropdownProps) => {
   const isDark = theme === 'dark';
   const itemClass = `flex items-center justify-between w-full p-4 text-lg ${
@@ -148,19 +183,16 @@ const MobileMenu = ({
             <ChevronRight />
           </button>
           <Separator className={separatorClass} />
-          {onToggleTheme && theme && (
-            <div className={itemClass}>
+           {onSetTheme && theme && (
+            <div className={`${itemClass} flex-col items-start gap-4`}>
               <span>Theme</span>
-              <button
-                onClick={onToggleTheme}
-                className="p-2 rounded-full bg-white/10"
-              >
-                {isDark ? (
-                  <Sun className="text-yellow-400" />
-                ) : (
-                  <Moon className="text-indigo-500" />
-                )}
-              </button>
+                <div className="flex flex-wrap gap-3">
+                    {themeOptions.map(t => (
+                        <button key={t.name} onClick={() => onSetTheme(t.name)} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${theme === t.name ? 'ring-2 ring-cyan-500 scale-110 border-cyan-500' : 'border-transparent opacity-70'}`} style={{ backgroundColor: t.color }}>
+                            {theme === t.name && <Check size={16} className={t.isLight ? 'text-black' : 'text-white'} />}
+                        </button>
+                    ))}
+                </div>
             </div>
           )}
           <Separator className={separatorClass} />
@@ -174,13 +206,15 @@ const MobileMenu = ({
   );
 };
 
-export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) {
+export function ProfileDropdown({ theme, onSetTheme: onSetThemeProp }: ProfileDropdownProps) {
   const { user } = useUser();
   const isMobile = useIsMobile();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const isDark = theme === 'dark';
   const userAvatar = user?.photoURL;
   const userInitials = user?.displayName ? user.displayName.charAt(0) : "U";
+  
+  const onSetTheme = onSetThemeProp;
 
   if (isMobile) {
     return (
@@ -203,7 +237,7 @@ export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) 
         <MobileMenu
           isOpen={isMobileMenuOpen}
           theme={theme}
-          onToggleTheme={onToggleTheme}
+          onSetTheme={onSetTheme}
         />
       </>
     );
@@ -227,7 +261,7 @@ export function ProfileDropdown({ theme, onToggleTheme }: ProfileDropdownProps) 
             : 'bg-popover border-gray-200'
         }`}
       >
-        <DropdownContent user={user} theme={theme} onToggleTheme={onToggleTheme} />
+        <DropdownContent user={user} theme={theme} onSetTheme={onSetTheme} />
       </DropdownMenuContent>
     </DropdownMenu>
   );

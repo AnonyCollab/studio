@@ -7,7 +7,7 @@ import './landing/index.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { BottomNav } from './header/components/BottomNav';
-import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { ThemeProvider, useTheme, type Theme } from '@/context/ThemeContext';
 import { PostProvider, usePosts } from '@/context/PostContext';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -17,7 +17,7 @@ import { TopNav } from './header/components/TopNav';
 const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackground'));
 
 function AppContent({ children }: { children: ReactNode }) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const { handleOpenCreatePost } = usePosts();
 
@@ -38,7 +38,7 @@ function AppContent({ children }: { children: ReactNode }) {
     window.dispatchEvent(new CustomEvent('create-new-project'));
   };
 
-  const showBottomNav = isMobile && !isLandingPage && !pathname.startsWith('/messages');
+  const showBottomNav = isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage;
 
 
   useEffect(() => {
@@ -58,7 +58,7 @@ function AppContent({ children }: { children: ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
       </head>
       <body className={bodyClassName}>
-        {showHeader && <TopNav theme={theme} onToggleTheme={toggleTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
+        {showHeader && <TopNav theme={theme} onSetTheme={setTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
         <div className="relative isolate min-h-screen">
           {!isLandingPage && (
             <Suspense fallback={null}>

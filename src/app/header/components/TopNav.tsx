@@ -9,15 +9,17 @@ import { Input } from "@/components/ui/input";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { usePosts } from "@/context/PostContext";
 import { usePathname, useRouter } from "next/navigation";
+import type { Theme } from "@/context/ThemeContext";
+
 
 interface TopNavProps {
   onToggleFilter?: () => void;
-  theme?: "light" | "dark";
-  onToggleTheme?: () => void;
+  theme?: Theme;
+  onSetTheme?: (theme: Theme) => void;
   onCreateProject?: () => void;
 }
 
-export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme, onCreateProject }: TopNavProps) {
+export function TopNav({ onToggleFilter, theme = "dark", onSetTheme, onCreateProject }: TopNavProps) {
   const isDark = theme === "dark";
   const { handleOpenCreatePost } = usePosts();
   const pathname = usePathname();
@@ -77,7 +79,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme, onCreate
               className={`pl-10 pr-4 h-9 ${
                 isDark 
                   ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:bg-white/10" 
-                  : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:bg-gray-200"
+                  : "bg-gray-100 border-gray-300 text-gray-900 placeholder:text-gray-500 focus:bg-gray-200"
               }`}
             />
           </div>
@@ -114,7 +116,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onToggleTheme, onCreate
           </button>
 
           {/* Profile Dropdown */}
-          <ProfileDropdown theme={theme} onToggleTheme={onToggleTheme} />
+          <ProfileDropdown theme={theme} onSetTheme={onSetTheme} />
         </div>
       </div>
     </nav>
