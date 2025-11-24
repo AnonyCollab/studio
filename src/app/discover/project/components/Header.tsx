@@ -4,7 +4,7 @@
 import React, { useRef, useEffect } from 'react';
 import { 
     Layout, BarChart3, Layers, Calendar, Users, FolderHeart, MessageSquare, Info, Palette, 
-    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper, Handshake
+    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper, Handshake, Dot, Grid
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -13,11 +13,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
+  DropdownMenuSubTrigger
 } from "@/components/ui/dropdown-menu";
 import { Page, Theme, BackgroundType, TaskNode, FilterOption, CurrentUser, UserRole } from '../types';
 import { StatusBadge, PriorityIcon } from './Plan';
 import { useUser } from '@/firebase';
-import { ProfileDropdown } from '@/components/layout/ProfileDropdown';
 
 interface HeaderProps {
     currentPage: Page;
@@ -41,6 +44,20 @@ interface HeaderProps {
 const Backdrop: React.FC<{ onClick: () => void }> = ({ onClick }) => (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[140] lg:hidden animate-in fade-in duration-300" onClick={onClick} />
 );
+
+const themeOptions: { name: Theme; color: string; isLight: boolean }[] = [
+    { name: 'Light', color: '#ffffff', isLight: true },
+    { name: 'Dark', color: '#09090b', isLight: false },
+    { name: 'Sephiroa', color: '#FDFCF0', isLight: true },
+    { name: 'Green', color: '#F0F5F0', isLight: true },
+    { name: 'Blue', color: '#020817', isLight: false },
+];
+
+const backgroundOptions: { name: BackgroundType, icon: React.ElementType }[] = [
+    { name: 'Dots', icon: Dot },
+    { name: 'Grid', icon: Grid },
+    { name: 'None', icon: X }
+]
 
 export const Header: React.FC<HeaderProps> = ({ 
     currentPage, setPage, theme, background, setTheme, setBackground,
@@ -111,6 +128,54 @@ export const Header: React.FC<HeaderProps> = ({
         { href: "/messages", icon: MessageSquare, label: "Messages" },
     ];
 
+    const ProfileContent = () => {
+        const itemClass = isLight ? 'text-slate-700 focus:bg-slate-100' : 'text-slate-200 focus:bg-white/10';
+        return (
+            <DropdownMenuContent className={`w-64 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1e1e1e] border-gray-700'}`}>
+                <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-3 p-2">
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm">{currentUser?.initials}</div>
+                        <div>
+                            <div className="font-bold text-sm">{currentUser?.name}</div>
+                            <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{currentUser?.role}</div>
+                        </div>
+                    </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className={isLight ? 'bg-slate-100' : 'bg-white/5'} />
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className={itemClass}><Palette size={16} className="mr-2"/> Theme</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent className={`w-40 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1e1e1e] border-gray-700'}`}>
+                            {themeOptions.map(t => (
+                                <DropdownMenuItem key={t.name} onClick={() => setTheme(t.name)} className={itemClass}>
+                                    <div className="w-4 h-4 rounded-full border mr-2" style={{ backgroundColor: t.color, borderColor: t.isLight ? '#e2e8f0' : '#475569' }} />
+                                    {t.name}
+                                    {theme === t.name && <Check className="ml-auto h-4 w-4" />}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className={itemClass}><Grid size={16} className="mr-2"/> Background</DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent className={`w-40 ${isLight ? 'bg-white border-slate-200' : 'bg-[#1e1e1e] border-gray-700'}`}>
+                             {backgroundOptions.map(b => (
+                                <DropdownMenuItem key={b.name} onClick={() => setBackground(b.name)} className={itemClass}>
+                                    <b.icon size={16} className="mr-2"/>
+                                    {b.name}
+                                    {background === b.name && <Check className="ml-auto h-4 w-4" />}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
+                <DropdownMenuSeparator className={isLight ? 'bg-slate-100' : 'bg-white/5'} />
+                <DropdownMenuItem className={`${itemClass} text-rose-500`}>Log Out</DropdownMenuItem>
+            </DropdownMenuContent>
+        )
+    }
+
     return (
         <>
             <header className={`hidden lg:flex h-16 border-b items-center justify-between px-6 z-[60] flex-shrink-0 relative ${containerClass}`}>
@@ -152,7 +217,14 @@ export const Header: React.FC<HeaderProps> = ({
                         <Bell className="w-5 h-5" />
                         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-background"></span>
                     </button>
-                    {authUser && <ProfileDropdown theme={theme} onToggleTheme={setBackground as any} />}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <button className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-blue-600 flex items-center justify-center font-bold text-white text-sm shadow-md ring-2 ring-offset-2 ring-offset-background ring-brand-500/50">
+                                {currentUser?.initials}
+                            </button>
+                        </DropdownMenuTrigger>
+                        <ProfileContent />
+                    </DropdownMenu>
                 </div>
             </header>
 
@@ -231,9 +303,9 @@ export const Header: React.FC<HeaderProps> = ({
                          <div>
                             <div className="text-sm font-bold mb-3 flex items-center gap-2"><Palette size={16} /> Theme</div>
                             <div className="flex flex-wrap gap-3">
-                                {['Light', 'Dark', 'Sephiroa', 'Green', 'Blue'].map(t => (
-                                    <button key={t} onClick={() => setTheme(t as Theme)} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${theme === t ? 'ring-2 ring-brand-500 scale-110 border-brand-500' : 'border-transparent opacity-70'}`} style={{ backgroundColor: t === 'Light' ? '#ffffff' : t === 'Sephiroa' ? '#FDFCF0' : t === 'Green' ? '#F0F5F0' : t === 'Blue' ? '#020817' : '#09090b' }}>
-                                        {theme === t && <Check size={16} className={t === 'Light' || t === 'Sephiroa' || t === 'Green' ? 'text-black' : 'text-white'} />}
+                                {themeOptions.map(t => (
+                                    <button key={t.name} onClick={() => setTheme(t.name as Theme)} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${theme === t.name ? 'ring-2 ring-brand-500 scale-110 border-brand-500' : 'border-transparent opacity-70'}`} style={{ backgroundColor: t.color }}>
+                                        {theme === t.name && <Check size={16} className={t.isLight ? 'text-black' : 'text-white'} />}
                                     </button>
                                 ))}
                             </div>
@@ -244,3 +316,4 @@ export const Header: React.FC<HeaderProps> = ({
         </>
     );
 }
+
