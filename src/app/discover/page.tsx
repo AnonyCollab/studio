@@ -9,16 +9,12 @@ import { FeaturedProjectCard } from "./components/FeaturedProjectCard";
 import { StatsBar } from "./components/StatsBar";
 import { StarredProjectsList } from "./components/StarredProjectsList";
 import { ProjectGrid } from "./components/ProjectGrid";
-import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { usePosts } from "@/context/PostContext";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
-import { TopNav } from "../header/components/TopNav";
 
 
 const sectionTitles: Record<string, string> = {
@@ -108,6 +104,7 @@ export default function App() {
       image: `https://picsum.photos/seed/${newProjectId}/1080/600`,
       sector: "New",
       owner: {
+        uid: user.uid,
         name: user.displayName || "You",
         avatar: user.photoURL || "",
         initials: user.displayName ? user.displayName.charAt(0) : "U",
@@ -169,7 +166,6 @@ export default function App() {
     <div
       className="min-h-screen"
     >
-      <TopNav theme={theme} onToggleTheme={toggleTheme} onCreateProject={handleCreateNewProject} />
       {/* Mobile Navigation Drawer */}
       {sidebarOpen && (
         <div
@@ -273,4 +269,3 @@ export default function App() {
     </div>
   );
 }
-
