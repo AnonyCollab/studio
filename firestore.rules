@@ -61,19 +61,26 @@ service cloud.firestore {
     
     // Rules for Direct Messages
     match /dms/{dmId} {
-        // Allow a user to get, list, or update a DM document if they are listed as a participant.
-        allow read, update: if request.auth != null && request.auth.uid in resource.data.participants;
+        // Allow a user to read a specific DM document if they are a participant.
+        // This is crucial for allowing subcollection rules to check the parent document.
+        allow get: if request.auth != null && request.auth.uid in resource.data.participants;
+
+        // Allow a user to list (query) DMs, but only if they are querying for DMs they are part of.
+        allow list: if request.auth != null && request.query.where.get("participants").get("array-contains") == request.auth.uid;
         
         // Allow create if the user is including themselves in the participants list of the new document.
         allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
         
+        // Allow update if the user is a participant. (e.g., for lastMessage)
+        allow update: if request.auth != null && request.auth.uid in resource.data.participants;
+        
         match /messages/{messageId} {
-            // Allow read/list if user is a participant of the parent DM. This requires a 'get' on the parent.
-            allow list, read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/dms/$(dmId)).data.participants;
+            // Allow read/list if user is a participant of the parent DM. This requires a 'get' on the parent, which is allowed by the rule above.
+            allow read, list: if request.auth != null && get(/databases/$(database)/documents/dms/$(dmId)).data.participants.hasAny([request.auth.uid]);
             
             // Allow create if user is a participant and the senderId matches their UID
             allow create: if request.auth != null 
-                && request.auth.uid in get(/databases/$(database)/documents/dms/$(dmId)).data.participants
+                && get(/databases/$(database)/documents/dms/$(dmId)).data.participants.hasAny([request.auth.uid])
                 && request.resource.data.senderId == request.auth.uid;
         }
     }
