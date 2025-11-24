@@ -48,16 +48,18 @@ export default function AppContent({ children }: { children: ReactNode }) {
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
       </head>
       <body className={bodyClassName}>
-        {showHeader && <TopNav theme={theme} onSetTheme={setTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
-        <div className="relative isolate min-h-screen">
-          {!isLandingPage && (
-            <Suspense fallback={null}>
-              <AnimatedBackground theme={theme} />
-            </Suspense>
-          )}
-          
-          <main>{children}</main>
-          {showBottomNav && <BottomNav theme={theme} />}
+        <div className="flex flex-col h-screen">
+          {showHeader && <TopNav theme={theme} onSetTheme={setTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
+          <div className="relative isolate flex-1 min-h-0">
+            {!isLandingPage && (
+              <Suspense fallback={null}>
+                <AnimatedBackground theme={theme} />
+              </Suspense>
+            )}
+            
+            <main className="h-full">{children}</main>
+            {showBottomNav && <BottomNav theme={theme} />}
+          </div>
         </div>
         <Toaster />
       </body>
