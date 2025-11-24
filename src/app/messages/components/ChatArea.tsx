@@ -1,26 +1,60 @@
 
 'use client';
 
-import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle, ArrowLeft } from 'lucide-react';
+import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle, ArrowLeft, FileText, Download } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { UserProfileTrigger } from './ProfileCard';
-import { mockUsers } from '../data/mockUsers';
-import { useCollection, useDoc, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, orderBy, serverTimestamp, addDoc, doc, onSnapshot } from 'firebase/firestore';
-import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, updateMetadata } from "firebase/storage";
-import { formatDistanceToNow } from 'date-fns';
-import { PostShareCard } from './PostShareCard';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import {
+  collection,
+  query,
+  orderBy,
+  serverTimestamp,
+  addDoc,
+  doc,
+  setDoc,
+  getDoc,
+  Timestamp
+} from 'firebase/firestore';
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytesResumable,
+  getDownloadURL,
+  updateMetadata
+} from "firebase/storage";
+import { formatDistanceToNow } from 'date-fns';
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from '@/firebase';
+import { UserProfileTrigger } from './ProfileCard';
+import { PostShareCard } from './PostShareCard';
 import { FileCard } from './FileCard';
 
+// Mock EmojiPicker (Simple replacement)
+function EmojiPickerMock({ onEmojiClick, theme }: { onEmojiClick: (emoji: any) => void, theme: string }) {
+  const emojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '🎉', '🔥', '🚀', '👀', '✨', '💯'];
+  return (
+    <div className={`p-2 grid grid-cols-4 gap-2 ${theme === 'dark' ? 'bg-[#1a1f2e]' : 'bg-white'} rounded-lg border shadow-lg`}>
+      {emojis.map(emoji => (
+        <button
+          key={emoji}
+          onClick={() => onEmojiClick({ emoji })}
+          className="text-2xl hover:bg-black/10 rounded p-1"
+        >
+          {emoji}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+
+// --- MAIN COMPONENT ---
 
 interface Message {
     id: string;
     senderId: string;
-    text: string;
+    text?: string;
     type: 'text' | 'postShare' | 'file';
     postId?: string;
     fileInfo?: {
@@ -57,10 +91,42 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     if (!firestore || !channelId || !isDM) return null;
     return doc(firestore, 'dms', channelId);
   }, [firestore, channelId, isDM]);
-  
+
   const { data: dmData } = useDoc(dmRef);
 
+  // --- FIX: Ensure DM Document Exists ---
+  useEffect(() => {
+    const ensureDMExists = async () => {
+      if (!isDM || !channelId || !currentUser || !firestore || dmData) return;
+
+      if (channelId.includes('_')) {
+        const participants = channelId.split('_');
+
+        if (participants.includes(currentUser.uid)) {
+          try {
+            await setDoc(doc(firestore, 'dms', channelId), {
+              participants: participants,
+              isGroup: false,
+              updatedAt: serverTimestamp()
+            }, { merge: true });
+          } catch (error) {
+            console.error("Error ensuring DM existence:", error);
+          }
+        }
+      }
+    };
+
+    ensureDMExists();
+  }, [channelId, isDM, currentUser, firestore, dmData]);
+  // --------------------------------------
+
   const otherUserUid = useMemo(() => {
+    if (isDM && channelId && currentUser && channelId.includes('_')) {
+        const parts = channelId.split('_');
+        const other = parts.find(p => p !== currentUser.uid);
+        if (other) return other;
+    }
+
     if (!isDM || !channelId || !currentUser || !dmData || dmData.isGroup) return null;
     return dmData.participants.find((uid: string) => uid !== currentUser.uid);
   }, [channelId, isDM, currentUser, dmData]);
@@ -76,13 +142,11 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore || !channelId) return null;
     if (isDM) {
-        // Only fetch messages if the parent DM document exists.
-        if (!dmData) return null; 
+        if (!dmData) return null; // Wait for DM doc to exist before querying subcollection
         return query(collection(firestore, 'dms', channelId, 'messages'), orderBy('createdAt', 'asc'));
     }
-    // For group chats (servers)
     return query(collection(firestore, 'servers', channelId, 'messages'), orderBy('createdAt', 'asc'));
-  }, [firestore, channelId, isDM, dmData]); // Add dmData as a dependency
+  }, [firestore, channelId, isDM, dmData]);
 
   const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
   const [senderProfiles, setSenderProfiles] = useState<Record<string, any>>({});
@@ -90,24 +154,30 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
   useEffect(() => {
     const fetchSenderProfiles = async () => {
         if (!messages || !firestore) return;
-        const newProfiles: Record<string, any> = {};
-        for (const msg of messages) {
-            if (!senderProfiles[msg.senderId]) {
-                const userDocRef = doc(firestore, 'users', msg.senderId);
-                const unsub = onSnapshot(userDocRef, (docSnap) => {
-                    if (docSnap.exists()) {
-                        setSenderProfiles(prev => ({...prev, [msg.senderId]: docSnap.data().profile}));
-                    }
-                });
-                // In a real app, manage unsubscribing
-            }
-        }
+        const missingIds = new Set(
+            messages
+            .map(m => m.senderId)
+            .filter(id => id && !senderProfiles[id])
+        );
+
+        if (missingIds.size === 0) return;
+
+        missingIds.forEach(id => {
+            const userDocRef = doc(firestore, 'users', id);
+            onSnapshot(userDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    setSenderProfiles(prev => ({
+                        ...prev,
+                        [id]: docSnap.data().profile || { displayName: 'Unknown', photoURL: '' }
+                    }));
+                }
+            });
+        });
     };
     fetchSenderProfiles();
-  }, [messages, firestore, senderProfiles]);
+  }, [messages, firestore]);
 
 
-  
   const handleSendMessage = async () => {
     if (message.trim() === '' || !firestore || !currentUser || !channelId) return;
 
@@ -117,15 +187,23 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
         text: message,
         createdAt: serverTimestamp(),
     };
-    
-    setMessage(''); // Clear input immediately
+
+    setMessage('');
     setShowEmojiPicker(false);
     setShowGifPicker(false);
-    
+
     if (isDM) {
         await addDoc(collection(firestore, 'dms', channelId, 'messages'), messageData);
+        // Also update the lastMessage on the parent DM doc
+        await setDoc(doc(firestore, 'dms', channelId), {
+          lastMessage: {
+            text: message,
+            senderId: currentUser.uid,
+            timestamp: serverTimestamp()
+          },
+          updatedAt: serverTimestamp()
+        }, { merge: true });
     } else {
-        // Handle group messages
         await addDoc(collection(firestore, 'servers', channelId, 'messages'), messageData);
     }
   };
@@ -133,14 +211,13 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !channelId || !currentUser) return;
-  
+
     const storage = getStorage();
     const filePath = `dms/${channelId}/${currentUser.uid}/${file.name}`;
     const fileStorageRef = storageRef(storage, filePath);
-  
-    // Perform the upload without setting content type to avoid preflight
+
     const uploadTask = uploadBytesResumable(fileStorageRef, file);
-  
+
     uploadTask.on('state_changed',
       (snapshot) => {
         // Can be used to show upload progress
@@ -150,13 +227,13 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
       },
       async () => {
         try {
-          // After the upload is complete, update metadata with the correct content type
           await updateMetadata(uploadTask.snapshot.ref, { contentType: file.type });
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-  
+
           const fileMessage = {
             senderId: currentUser.uid,
             type: 'file' as const,
+            text: `Sent a file: ${file.name}`,
             fileInfo: {
               name: file.name,
               size: file.size,
@@ -165,19 +242,28 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
             },
             createdAt: serverTimestamp(),
           };
-  
-          if (isDM) {
-            await addDoc(collection(firestore, 'dms', channelId, 'messages'), fileMessage);
-          } else {
-            await addDoc(collection(firestore, 'servers', channelId, 'messages'), fileMessage);
+          
+          const messageCollection = isDM ? collection(firestore, 'dms', channelId, 'messages') : collection(firestore, 'servers', channelId, 'messages');
+          await addDoc(messageCollection, fileMessage);
+          
+          if(isDM) {
+             await setDoc(doc(firestore, 'dms', channelId), {
+              lastMessage: {
+                text: `Sent a file: ${file.name}`,
+                senderId: currentUser.uid,
+                timestamp: serverTimestamp()
+              },
+              updatedAt: serverTimestamp()
+            }, { merge: true });
           }
+
         } catch (error) {
             console.error("Failed to finalize upload:", error);
         }
       }
     );
   };
-  
+
   useEffect(() => {
     if (scrollAreaRef.current) {
         const scrollContainer = scrollAreaRef.current.querySelector('div[data-radix-scroll-area-viewport]');
@@ -187,7 +273,7 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     }
   }, [messages]);
 
-  const onEmojiClick = (emojiData: EmojiClickData) => {
+  const onEmojiClick = (emojiData: any) => {
     setMessage(prevMessage => prevMessage + emojiData.emoji);
   };
 
@@ -209,9 +295,10 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
       </div>
     );
   }
-  
+
   const chatName = useMemo(() => {
     if (!isDM) return channelId;
+    if (otherUser) return otherUser.displayName;
     if (!dmData) return "Loading...";
     if (dmData.isGroup) return dmData.groupName;
     return otherUser?.displayName || "Loading...";
@@ -221,8 +308,8 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     <div className={`flex-1 flex flex-col h-full ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
       {/* Channel header */}
       <div className={`h-12 px-4 flex-shrink-0 flex items-center justify-between ${
-        isDarkTheme 
-          ? 'bg-[#131823] border-b border-white/10' 
+        isDarkTheme
+          ? 'bg-[#131823] border-b border-white/10'
           : 'bg-white border-b border-gray-200'
       }`}>
         <div className="flex items-center gap-2">
@@ -273,22 +360,27 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
           {isLoading && <p>Loading messages...</p>}
           {messages && messages.map((msg, index) => {
             const senderProfile = senderProfiles[msg.senderId];
-            if (!senderProfile) return <div key={msg.id}></div>; // Or a placeholder
-            
+
+            if (!senderProfile) {
+                // Render a placeholder or skip
+                return null;
+            }
+
             const prevMessage = messages[index - 1];
             const showAvatarAndName = !prevMessage || prevMessage.senderId !== msg.senderId;
+            const profileToUse = senderProfile;
 
             return (
               <div key={msg.id} className={`flex gap-3 p-2 rounded-lg transition-colors group ${
                 isDarkTheme ? 'hover:bg-white/5' : 'hover:bg-gray-100'
               }`}>
-                
+
                 <div className="w-10 flex-shrink-0">
                     {showAvatarAndName && (
-                        <UserProfileTrigger user={{...mockUsers.currentUser, ...senderProfile}} theme={theme}>
+                        <UserProfileTrigger user={profileToUse} theme={theme}>
                             <Avatar className={`w-10 h-10 ${isDarkTheme ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
-                                <AvatarImage src={senderProfile.photoURL} />
-                                <AvatarFallback>{senderProfile.displayName[0]}</AvatarFallback>
+                                <AvatarImage src={profileToUse.photoURL} />
+                                <AvatarFallback>{profileToUse.displayName?.[0]}</AvatarFallback>
                             </Avatar>
                         </UserProfileTrigger>
                     )}
@@ -297,8 +389,8 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
                 <div className="flex-1 min-w-0">
                   {showAvatarAndName && (
                       <div className="flex items-baseline gap-2">
-                        <UserProfileTrigger user={{...mockUsers.currentUser, ...senderProfile}} theme={theme}>
-                            <span className={`cursor-pointer hover:underline ${isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{senderProfile.displayName}</span>
+                        <UserProfileTrigger user={profileToUse} theme={theme}>
+                            <span className={`cursor-pointer hover:underline ${isDarkTheme ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{profileToUse.displayName}</span>
                         </UserProfileTrigger>
                         <span className={`text-xs ${isDarkTheme ? 'text-[#6b7280]' : 'text-gray-500'}`}>
                             {msg.createdAt ? formatDistanceToNow(new Date(msg.createdAt.seconds * 1000)) + ' ago' : 'sending...'}
@@ -322,8 +414,8 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
       {/* Message input */}
       <div className={`p-4 flex-shrink-0 border-t ${isDarkTheme ? 'border-white/10 bg-[#0a0e1a]' : 'border-gray-200 bg-gray-50'}`}>
         <div className={`rounded-lg p-3 flex items-end gap-2 ${
-          isDarkTheme 
-            ? 'bg-white/5 border border-white/10 focus-within:bg-white/10 focus-within:border-[#22d3ee]/50' 
+          isDarkTheme
+            ? 'bg-white/5 border border-white/10 focus-within:bg-white/10 focus-within:border-[#22d3ee]/50'
             : 'bg-gray-100 border border-gray-300 focus-within:bg-gray-200 focus-within:border-cyan-500/50'
         } transition-all`}>
            <button onClick={() => fileInputRef.current?.click()} className={`p-1 transition-colors ${
@@ -339,8 +431,8 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
               onChange={(e) => setMessage(e.target.value)}
               placeholder={`Message ${isDM ? `@${chatName}` : `#${chatName}`}`}
               className={`w-full bg-transparent outline-none ${
-                isDarkTheme 
-                  ? 'text-white placeholder:text-gray-500' 
+                isDarkTheme
+                  ? 'text-white placeholder:text-gray-500'
                   : 'text-gray-900 placeholder:text-gray-400'
               }`}
               onKeyDown={(e) => {
@@ -381,7 +473,7 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
                     </button>
                 </PopoverTrigger>
                 <PopoverContent className="p-0 border-0 mb-2">
-                    <EmojiPicker onEmojiClick={onEmojiClick} theme={isDarkTheme ? 'dark' : 'light'} />
+                    <EmojiPickerMock onEmojiClick={onEmojiClick} theme={isDarkTheme ? 'dark' : 'light'} />
                 </PopoverContent>
             </Popover>
             {message && (
@@ -397,4 +489,3 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     </div>
   );
 }
-
