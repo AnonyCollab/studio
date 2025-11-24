@@ -92,6 +92,13 @@ service cloud.firestore {
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
     }
+    
+    match /projects/{projectId} {
+      // Allow any authenticated user to read and create projects.
+      allow list, get, create: if request.auth != null;
+      // Only allow the owner of the project to update or delete it.
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.owner.uid;
+    }
 
     /**
      * @description Allows anyone to read and write posts.
