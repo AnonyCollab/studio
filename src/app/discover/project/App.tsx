@@ -17,9 +17,13 @@ import { CreationSheet } from './components/CreationSheet';
 import { useStore } from './store/useStore';
 import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from './types';
 import { SettingsPage } from './components/SettingsPage';
+import { useUser } from '@/firebase';
 
 const App: React.FC = () => {
-  const store = useStore();
+  const { user: authUser, isUserLoading } = useUser();
+
+  const store = useStore(authUser);
+  
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
@@ -167,6 +171,10 @@ const App: React.FC = () => {
   const handleBackToMembers = () => {
       setViewedProfile(null);
       setPage('members');
+  }
+
+  if (isUserLoading) {
+      return <div className="w-screen h-screen flex items-center justify-center bg-[#09090b]">Loading Project...</div>;
   }
 
   return (

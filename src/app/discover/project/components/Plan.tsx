@@ -8,13 +8,14 @@ import {
   FolderOpen,
   FileText
 } from 'lucide-react';
-import { Status, Priority, ViewMode, TaskNode, FilterOption } from '../types';
+import { Status, Priority, ViewMode, TaskNode, FilterOption, CurrentUser } from '../types';
 import { CanvasView } from './views/Board';
 import { KanbanView } from './views/Kanban';
 import { ListView } from './views/List';
 import { GanttView } from './views/Gantt';
 import { Sidebar } from './Sidebar';
 import { CheckCircle2, Users, Layers, Briefcase, ChevronDown, AlertCircle } from 'lucide-react';
+import { useStore } from '../store/useStore';
 
 // --- Shared Components ---
 export const StatusBadge: React.FC<{ status: Status }> = ({ status }) => {
@@ -231,12 +232,12 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
 
   // Filter Logic
   const filteredTasks = useMemo(() => {
-      const currentUser = 'Alex Chen';
-      const currentTeam = 'Frontend Team';
+      const currentUserName = currentUser.name;
+      const currentTeam = currentUser.teamName;
 
       switch(filter) {
           case 'Mine':
-              return tasks.filter((t: TaskNode) => t.assignee.name === currentUser);
+              return tasks.filter((t: TaskNode) => t.assignee.name === currentUserName);
           case 'Team':
               return tasks.filter((t: TaskNode) => t.assignee.name === currentTeam || t.assignee.type === 'team');
           case 'Project':
@@ -249,7 +250,7 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
           default:
               return tasks;
       }
-  }, [tasks, filter, focusedParentId]);
+  }, [tasks, filter, focusedParentId, currentUser]);
 
   const canvasTasks = useMemo(() => {
     if (!focusedParentId) {
@@ -258,7 +259,7 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
             // Level 0: Milestone
             if (!t.parentId) return true; 
             
-            const parent = tasks.find(p => p.id === t.parentId);
+            const parent = tasks.find((p: TaskNode) => p.id === t.parentId);
             if (!parent) return false;
             
             // Level 1: Goal (Is child of Root/Milestone)

@@ -1,11 +1,12 @@
 
 import React, { useMemo } from 'react';
-import { TaskNode, Theme, DashboardViewMode } from '../types';
+import { TaskNode, Theme, DashboardViewMode, CurrentUser } from '../types';
 import { StatusBadge, PriorityIcon } from './Plan';
 import { 
     CheckCircle2, AlertTriangle, Clock, TrendingUp, Users, Layers, 
     Target, Zap, AlertCircle, Briefcase, Crown 
 } from 'lucide-react';
+import { useStore } from '../store/useStore';
 
 interface DashboardProps {
     tasks: TaskNode[];
@@ -15,21 +16,21 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ tasks, theme, viewMode, setViewMode }) => {
+    const { currentUser } = useStore(null);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     
-    // Mock User Context
-    const currentUser = 'Alex Chen'; 
-    const currentTeamName = 'Frontend Team'; 
+    // Mock Team Context for Demo
+    const currentTeamName = currentUser.teamName || 'Frontend Team';
     const teamMembers = ['Alex Chen', 'Sarah Jones', 'Mike Ross']; 
 
     // --- Data Selectors ---
 
-    const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser), [tasks]);
+    const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser.name), [tasks, currentUser.name]);
     
     const teamTasks = useMemo(() => tasks.filter(t => 
         t.assignee.name === currentTeamName || 
         (t.assignee.type === 'user' && teamMembers.includes(t.assignee.name))
-    ), [tasks]);
+    ), [tasks, currentTeamName]);
 
     const projectTasks = tasks;
 
@@ -153,7 +154,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ tasks, theme, viewMode, se
             {/* Welcome Banner */}
             <div className="flex items-center justify-between mb-2">
                 <div>
-                    <h2 className={`text-2xl font-bold ${textMain}`}>Good morning, Alex.</h2>
+                    <h2 className={`text-2xl font-bold ${textMain}`}>Good morning, {currentUser.name}.</h2>
                     <p className={textMuted}>You have {myTasks.filter(t => t.status !== 'Done').length} active tasks on your plate.</p>
                 </div>
                 <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-white/5 border-white/10'}`}>

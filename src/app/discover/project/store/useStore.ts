@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../constants';
 import { FileText } from 'lucide-react'; 
+import { User } from 'firebase/auth';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -15,17 +16,28 @@ export interface ExtendedAppState extends AppState {
 
 const STORAGE_KEY = 'omnicanvas-v1-pro';
 
-const DEFAULT_USER: CurrentUser = {
-    id: 'u1',
-    name: 'Alex Chen',
-    initials: 'AC',
-    role: 'Owner',
-    avatarColor: 'bg-blue-500',
-    teamName: 'Frontend Team'
+const createDefaultUser = (authUser: User | null): CurrentUser => {
+    if (!authUser) {
+        return {
+            id: 'guest',
+            name: 'Guest',
+            initials: 'G',
+            role: 'Visitor',
+            avatarColor: 'bg-slate-500',
+        };
+    }
+    return {
+        id: authUser.uid,
+        name: authUser.displayName || 'Anonymous User',
+        initials: (authUser.displayName || 'AU').slice(0, 2).toUpperCase(),
+        role: 'Owner', // Default role for now
+        avatarColor: 'bg-blue-500', // This could also be generated
+        teamName: 'Frontend Team', // Placeholder
+    };
 };
 
-const DEFAULT_STATE: AppState = {
-    currentUser: DEFAULT_USER,
+const createInitialState = (authUser: User | null): AppState => ({
+    currentUser: createDefaultUser(authUser),
     tasks: [],
     cycles: INITIAL_CYCLES,
     posts: MOCK_POSTS,
@@ -40,7 +52,7 @@ const DEFAULT_STATE: AppState = {
     theme: 'Dark',
     background: 'Dots',
     filter: 'Project'
-};
+});
 
 // Helper to bubble up date changes from children to parents (Epic -> Goal -> Milestone)
 const updateCascadingDates = (tasks: TaskNode[], startTaskId: string): TaskNode[] => {
@@ -136,8 +148,8 @@ const updateCascadingStatus = (tasks: TaskNode[], startTaskId: string): TaskNode
     return currentTasks;
 };
 
-export const useStore = () => {
-    const [state, setState] = useState<AppState>(DEFAULT_STATE);
+export const useStore = (authUser: User | null) => {
+    const [state, setState] = useState<AppState>(() => createInitialState(authUser));
 
     useEffect(() => {
         const savedState = localStorage.getItem(STORAGE_KEY);
@@ -147,18 +159,18 @@ export const useStore = () => {
                 setState(prev => ({
                     ...prev,
                     ...parsed,
-                    currentUser: parsed.currentUser || DEFAULT_STATE.currentUser,
-                    tasks: parsed.tasks?.length ? parsed.tasks : DEFAULT_STATE.tasks,
-                    posts: parsed.posts?.length ? parsed.posts : DEFAULT_STATE.posts,
-                    members: parsed.members?.length ? parsed.members : DEFAULT_STATE.members,
-                    files: parsed.files?.length ? parsed.files : DEFAULT_STATE.files,
+                    currentUser: createDefaultUser(authUser),
+                    tasks: parsed.tasks?.length ? parsed.tasks : [],
+                    posts: parsed.posts?.length ? parsed.posts : MOCK_POSTS,
+                    members: parsed.members?.length ? parsed.members : MOCK_ASSIGNEES,
+                    files: parsed.files?.length ? parsed.files : MOCK_FILES,
                 }));
             } catch (e) {
                 console.error('Failed to parse local storage', e);
-                setState(DEFAULT_STATE);
+                setState(createInitialState(authUser));
             }
         }
-    }, []);
+    }, [authUser]);
 
   useEffect(() => {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -429,9 +441,9 @@ export const useStore = () => {
           } else {
               const rootTasks = prev.tasks.filter(t => !t.parentId && t.id !== taskId);
               const maxY = rootTasks.length > 0 ? Math.max(...rootTasks.map(t => t.position.y)) : 0;
-              newPosition = {
+              newPosition = { 
                   x: (1536 - 280) / 2, 
-                  y: Math.max(600, maxY + 500)
+                  y: Math.max(600, maxY + 500) 
               };
           }
 
