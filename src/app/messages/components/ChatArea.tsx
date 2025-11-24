@@ -76,11 +76,13 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
   const messagesQuery = useMemoFirebase(() => {
     if (!firestore || !channelId) return null;
     if (isDM) {
+        // Only fetch messages if the parent DM document exists.
+        if (!dmData) return null; 
         return query(collection(firestore, 'dms', channelId, 'messages'), orderBy('createdAt', 'asc'));
     }
-    // For group chats
+    // For group chats (servers)
     return query(collection(firestore, 'servers', channelId, 'messages'), orderBy('createdAt', 'asc'));
-  }, [firestore, channelId, isDM]);
+  }, [firestore, channelId, isDM, dmData]); // Add dmData as a dependency
 
   const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
   const [senderProfiles, setSenderProfiles] = useState<Record<string, any>>({});
@@ -395,3 +397,4 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     </div>
   );
 }
+
