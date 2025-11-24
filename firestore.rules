@@ -72,11 +72,11 @@ service cloud.firestore {
         
         match /messages/{messageId} {
             // Allow read/list if user is a participant of the parent DM
-            allow list, read: if request.auth != null && get(/databases/$(database)/documents/dms/$(dmId)).data.participants.hasAny([request.auth.uid]);
+            allow list, read: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/dms/$(dmId)).data.participants;
             
             // Allow create if user is a participant and the senderId matches their UID
             allow create: if request.auth != null 
-                && get(/databases/$(database)/documents/dms/$(dmId)).data.participants.hasAny([request.auth.uid])
+                && request.auth.uid in get(/databases/$(database)/documents/dms/$(dmId)).data.participants
                 && request.resource.data.senderId == request.auth.uid;
         }
     }
