@@ -1,7 +1,7 @@
 
 export type ViewMode = 'canvas' | 'board' | 'list' | 'timeline' | 'outline';
 export type CalendarViewMode = 'Schedule' | 'Day' | '3 Days' | 'Week' | 'Month';
-export type Page = 'dashboard' | 'roadmap' | 'calendar' | 'members' | 'resources' | 'community' | 'about' | 'profile';
+export type Page = 'dashboard' | 'roadmap' | 'calendar' | 'members' | 'resources' | 'community' | 'about' | 'profile' | 'settings';
 
 export type DashboardViewMode = 'Personal' | 'Team' | 'Project';
 export type MembersViewMode = 'All' | 'Team Members' | 'Teams' | 'Coordinators';

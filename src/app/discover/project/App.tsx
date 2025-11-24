@@ -16,6 +16,7 @@ import { MobileViewSheet } from './components/MobileViewSheet';
 import { CreationSheet } from './components/CreationSheet';
 import { useStore } from './store/useStore';
 import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole } from './types';
+import { SettingsPage } from './components/SettingsPage';
 
 const App: React.FC = () => {
   const store = useStore();
@@ -238,6 +239,7 @@ const App: React.FC = () => {
             )}
             {currentPage === 'profile' && <ProfilePage theme={theme} tasks={store.tasks} />}
             {currentPage === 'about' && <About theme={theme} />}
+            {currentPage === 'settings' && <SettingsPage theme={theme} />}
         </div>
 
         {/* --- Root Level Mobile Sheets (High Z-Index) --- */}

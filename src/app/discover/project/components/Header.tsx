@@ -4,7 +4,7 @@
 import React, { useRef, useEffect } from 'react';
 import { 
     Layout, BarChart3, Layers, Calendar, Users, FolderHeart, MessageSquare, Info, Palette, 
-    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper, Handshake, Dot, Grid
+    Check, CheckCircle2, Briefcase, X, User, Shield, ChevronDown, Bell, Home, Compass, Newspaper, Handshake, Dot, Grid, Settings
 } from 'lucide-react';
 import Link from 'next/link';
 import {
@@ -110,6 +110,8 @@ export const Header: React.FC<HeaderProps> = ({
         { id: 'members', label: 'Members', icon: Users },
         { id: 'resources', label: 'Resources', icon: FolderHeart },
         { id: 'community', label: 'Community', icon: MessageSquare },
+        { id: 'about', label: 'About', icon: Info },
+        { id: 'settings', label: 'Settings', icon: Settings },
     ];
 
     const filterOptions = [
@@ -316,4 +318,5 @@ export const Header: React.FC<HeaderProps> = ({
         </>
     );
 }
+
 
