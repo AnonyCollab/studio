@@ -46,7 +46,7 @@ export default function App() {
   const { data: allProjectsData } = useCollection<ProjectType>(projectsQuery);
   const allProjects = allProjectsData || [];
 
-  const myProjects = useMemo(() => allProjects.filter(p => p.owner?.name === (user?.displayName || 'You')), [allProjects, user]);
+  const myProjects = useMemo(() => allProjects.filter(p => p.owner?.uid === (user?.uid)), [allProjects, user]);
 
   // Sort by last edit date (most recent first)
   const recentProjects = [...allProjects].sort((a, b) => {
@@ -120,6 +120,14 @@ export default function App() {
 
     router.push(`/discover/${newProjectId}`);
   };
+
+  useEffect(() => {
+    const createProjectHandler = () => handleCreateNewProject();
+    window.addEventListener('create-new-project', createProjectHandler);
+    return () => {
+      window.removeEventListener('create-new-project', createProjectHandler);
+    };
+  }, [handleCreateNewProject]);
 
 
   const renderContent = () => {

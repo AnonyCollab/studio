@@ -20,7 +20,6 @@ function AppContent({ children }: { children: ReactNode }) {
   const { theme, toggleTheme } = useTheme();
   const pathname = usePathname();
   const { handleOpenCreatePost } = usePosts();
-  const router = useRouter();
 
   const [bodyClassName, setBodyClassName] = useState('font-body antialiased');
   const isLandingPage = pathname === '/';
