@@ -178,7 +178,7 @@ export default function App() {
         </div>
       );
     }
-    return <ProjectGrid projects={projectsToDisplay} theme={theme} />;
+    return <ProjectGrid projects={projectsToDisplay} theme={theme} onJoinProject={handleJoinProject} user={user} />;
   };
 
   return (

@@ -1,9 +1,11 @@
 
-import { Users, Calendar, Clock, Tag } from "lucide-react";
+import { Users, Calendar, Clock, Tag, UserPlus, Check } from "lucide-react";
 import { ImageWithFallback } from "@/components/ImageWithFallback";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import type { User } from 'firebase/auth';
 
 export interface Project {
   id: string;
@@ -27,13 +29,22 @@ export interface Project {
 interface ProjectCardProps {
   project: Project;
   theme: "light" | "dark";
+  onJoinProject: (projectId: string) => void;
+  user: User | null;
 }
 
-export function ProjectCard({ project, theme }: ProjectCardProps) {
+export function ProjectCard({ project, theme, onJoinProject, user }: ProjectCardProps) {
   const isDark = theme === "dark";
+  const isMember = user ? project.members?.includes(user.uid) : false;
+
+  const handleJoinClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onJoinProject(project.id);
+  };
 
   return (
-    <Link href={`/discover/${project.id}`}>
+    <Link href={`/discover/${project.id}`} className="flex">
         <div
         className={`group cursor-pointer rounded-lg border transition-all overflow-hidden h-full flex flex-col ${
             isDark
@@ -179,7 +190,7 @@ export function ProjectCard({ project, theme }: ProjectCardProps) {
                 </div>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2 mb-4">
                 {project.tags.map((tag, index) => {
                     const tagColors = [
                     isDark
@@ -209,6 +220,14 @@ export function ProjectCard({ project, theme }: ProjectCardProps) {
                     );
                 })}
                 </div>
+
+                {/* Join Button */}
+                {user && (
+                    <Button onClick={handleJoinClick} disabled={isMember} className="w-full mt-2">
+                        {isMember ? <Check className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
+                        {isMember ? 'Joined' : 'Join Project'}
+                    </Button>
+                )}
             </div>
         </div>
         </div>
