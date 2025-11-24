@@ -3,20 +3,24 @@ import { TaskNode, Assignee, Priority, Cycle, UserProfile, UserPost, UserArticle
 import { FileText, Link, Image, Video, Archive } from 'lucide-react';
 
 export const MOCK_ASSIGNEES: Assignee[] = [
-  { name: 'Alex Chen', initials: 'AC', color: 'bg-blue-500', type: 'user' },
-  { name: 'Sarah Jones', initials: 'SJ', color: 'bg-pink-500', type: 'user' },
-  { name: 'Mike Ross', initials: 'MR', color: 'bg-yellow-500', type: 'user' },
-  { name: 'Frontend Team', initials: 'FE', color: 'bg-indigo-600', type: 'team' },
-  { name: 'Design Team', initials: 'DS', color: 'bg-rose-600', type: 'team' },
-  { name: 'Backend Team', initials: 'BE', color: 'bg-emerald-600', type: 'team' },
-  { name: 'Unassigned', initials: '?', color: 'bg-slate-600', type: 'user' },
+  { id: 'u1', name: 'Alex Chen', initials: 'AC', color: 'bg-blue-500', type: 'user', role: 'Owner' },
+  { id: 'u2', name: 'Sarah Jones', initials: 'SJ', color: 'bg-pink-500', type: 'user', role: 'Co-Owner' },
+  { id: 'u3', name: 'Mike Ross', initials: 'MR', color: 'bg-yellow-500', type: 'user', role: 'Coordinator' },
+  { id: 'u4', name: 'Jessica Pearson', initials: 'JP', color: 'bg-emerald-500', type: 'user', role: 'Team Lead' },
+  { id: 'u5', name: 'Harvey Specter', initials: 'HS', color: 'bg-purple-500', type: 'user', role: 'Member' },
+  { id: 't1', name: 'Frontend Team', initials: 'FE', color: 'bg-indigo-600', type: 'team' },
+  { id: 't2', name: 'Design Team', initials: 'DS', color: 'bg-rose-600', type: 'team' },
+  { id: 't3', name: 'Backend Team', initials: 'BE', color: 'bg-emerald-600', type: 'team' },
+  { id: 'u-unassigned', name: 'Unassigned', initials: '?', color: 'bg-slate-600', type: 'user', role: 'Visitor' },
 ];
 
 export const MOCK_PROFILE: UserProfile = {
+  id: 'u1',
   name: 'Alex Chen',
   initials: 'AC',
   color: 'bg-blue-500',
   type: 'user',
+  role: 'Owner',
   roleTitle: 'Senior Product Architect',
   businessType: 'Solopreneur',
   naicsCode: '541511 - Custom Computer Programming Services',

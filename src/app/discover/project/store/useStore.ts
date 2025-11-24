@@ -10,6 +10,7 @@ export interface ExtendedAppState extends AppState {
   setBackground: (bg: BackgroundType) => void;
   setFilter: (filter: FilterOption) => void;
   setCurrentUser: (user: CurrentUser) => void;
+  updateMember: (id: string, updates: Partial<Assignee>) => void;
 }
 
 const STORAGE_KEY = 'omnicanvas-v1-pro';
@@ -172,6 +173,13 @@ export const useStore = () => {
         ...prev,
         tasks: typeof tasksOrUpdater === 'function' ? tasksOrUpdater(prev.tasks) : tasksOrUpdater
     }));
+  }, []);
+
+  const updateMember = useCallback((id: string, updates: Partial<Assignee>) => {
+    setState(prev => ({
+        ...prev,
+        members: prev.members.map(m => m.id === id ? { ...m, ...updates } : m)
+    }))
   }, []);
 
   const updateTask = useCallback((id: string, updates: Partial<TaskNode>) => {
@@ -422,7 +430,7 @@ export const useStore = () => {
               const rootTasks = prev.tasks.filter(t => !t.parentId && t.id !== taskId);
               const maxY = rootTasks.length > 0 ? Math.max(...rootTasks.map(t => t.position.y)) : 0;
               newPosition = {
-                  x: (1536 - 280) / 2,
+                  x: (1536 - 280) / 2, 
                   y: Math.max(600, maxY + 500)
               };
           }
@@ -627,6 +635,7 @@ export const useStore = () => {
 
   const addMember = useCallback((member: Partial<Assignee>) => {
       const newMember: Assignee = {
+          id: `u-${Date.now()}`,
           name: 'New Member',
           initials: 'NM',
           color: 'bg-slate-500',
@@ -670,6 +679,7 @@ export const useStore = () => {
     setFilter,
     addPost,
     addMember,
-    addFile
+    addFile,
+    updateMember
   };
 };

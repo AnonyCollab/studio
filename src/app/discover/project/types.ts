@@ -19,7 +19,8 @@ export enum DocStatus {
   DONE = 'Done'
 }
 
-export type UserRole = 'Visitor' | 'Member' | 'Team Lead' | 'Coordinator' | 'Owner';
+export type UserRole = 'Visitor' | 'Member' | 'Team Lead' | 'Coordinator' | 'Co-Owner' | 'Owner';
+
 
 export interface CurrentUser {
     id: string;
@@ -31,10 +32,12 @@ export interface CurrentUser {
 }
 
 export interface Assignee {
+  id: string;
   name: string;
   initials: string;
   color: string;
   type?: 'user' | 'team';
+  role?: UserRole;
 }
 
 export interface UserProfile extends Assignee {
