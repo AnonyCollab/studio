@@ -61,9 +61,14 @@ service cloud.firestore {
     
     // Rules for Direct Messages
     match /dms/{dmId} {
-        // Allow read/list if user is a participant.
-        // For 'list', client query must include `where('participants', 'array-contains', request.auth.uid)`.
-        allow get, list: if request.auth != null && request.auth.uid in resource.data.participants;
+        // Allow get if user is a participant OR if the doc doesn't exist yet and user's ID is in the dmId
+        allow get: if request.auth != null && (
+            (exists(path) && request.auth.uid in resource.data.participants) ||
+            (!exists(path) && dmId.matches('.*' + request.auth.uid + '.*'))
+        );
+
+        // Allow list only if the query constrains it to the user's conversations.
+        allow list: if request.auth != null && request.query.where.get("participants").get("array-contains") == request.auth.uid;
         
         // Allow create if the user is including themselves in the participants list.
         allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
