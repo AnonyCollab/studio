@@ -253,12 +253,6 @@ export default function App() {
                     Explore featured projects and collaborate with teams worldwide
                   </p>
                 </div>
-                {user && activeSection === 'overview' && (
-                  <Button onClick={() => handleJoinProject(featuredProjects[0].id)} disabled={featuredProjects[0]?.members?.includes(user.uid)}>
-                    {featuredProjects[0]?.members?.includes(user.uid) ? <Check /> : <UserPlus />}
-                    {featuredProjects[0]?.members?.includes(user.uid) ? 'Joined' : 'Join Project'}
-                  </Button>
-                )}
               </div>
 
               {activeSection === 'overview' && <StatsBar theme={theme} /> }
