@@ -1,11 +1,11 @@
 
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../constants';
 import { FileText } from 'lucide-react'; 
 import { User } from 'firebase/auth';
-import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, doc, query, where } from 'firebase/firestore';
 
 export interface ExtendedAppState extends AppState {
@@ -159,9 +159,9 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
         if (!firestore || !projectId) return null;
         return doc(firestore, 'projects', projectId);
     }, [firestore, projectId]);
-    const { data: projectData } = useCollection(projectDocQuery);
+    const { data: projectData } = useDoc(projectDocQuery);
 
-    const memberUIDs = useMemo(() => projectData?.[0]?.members || [], [projectData]);
+    const memberUIDs = useMemo(() => projectData?.members || [], [projectData]);
 
     const usersQuery = useMemoFirebase(() => {
         if (!firestore || memberUIDs.length === 0) return null;
@@ -178,7 +178,7 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
                 initials: (user.profile.displayName || 'U').slice(0, 2).toUpperCase(),
                 color: 'bg-blue-500',
                 type: 'user',
-                role: user.id === projectData?.[0]?.owner.uid ? 'Owner' : 'Member', 
+                role: user.id === projectData?.owner.uid ? 'Owner' : 'Member', 
             }));
             setState(prev => ({ ...prev, members: membersList }));
         }
@@ -467,8 +467,8 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
                   startY = maxSiblingY + spacing;
               }
               
-              newPosition = {
-                  x: newParent.position.x + (newParent.type === 'Milestone' ? 0 : 40),
+              newPosition = { 
+                  x: newParent.position.x + (newParent.type === 'Milestone' ? 0 : 40), 
                   y: startY
               };
           } else {
@@ -728,3 +728,5 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
     updateMember
   };
 };
+
+    
