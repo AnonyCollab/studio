@@ -18,9 +18,10 @@ interface MembersProps {
     theme: Theme;
     viewMode: MembersViewMode;
     members: Assignee[];
+    onViewProfile: (member: Assignee) => void;
 }
 
-export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers }) => {
+export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers, onViewProfile }) => {
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
     const { updateMember } = useStore();
@@ -89,7 +90,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                         const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
 
                                         return (
-                                            <tr key={member.id} className={`transition-colors ${tableRowBorder}`}>
+                                            <tr key={member.id} onClick={() => onViewProfile(member)} className={`transition-colors cursor-pointer ${tableRowBorder}`}>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xs`}>
@@ -111,17 +112,17 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                 <td className="px-6 py-4 text-right">
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                             <button className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
+                                                             <button onClick={(e) => e.stopPropagation()} className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className={`${isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}`}>
                                                             {currentRoleIndex > 0 && (
-                                                                <DropdownMenuItem onClick={() => updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex - 1] })}>
+                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex - 1] }); }}>
                                                                     <ChevronUp className="mr-2 h-4 w-4 text-emerald-500" />
                                                                     <span>Promote</span>
                                                                 </DropdownMenuItem>
                                                             )}
                                                             {currentRoleIndex < ROLE_HIERARCHY.length - 2 && ( // -2 because of Visitor
-                                                                <DropdownMenuItem onClick={() => updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex + 1] })}>
+                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex + 1] }); }}>
                                                                     <ChevronDown className="mr-2 h-4 w-4 text-rose-500" />
                                                                     <span>Demote</span>
                                                                 </DropdownMenuItem>

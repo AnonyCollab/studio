@@ -15,7 +15,7 @@ import { Sidebar } from './components/Sidebar';
 import { MobileViewSheet } from './components/MobileViewSheet';
 import { CreationSheet } from './components/CreationSheet';
 import { useStore } from './store/useStore';
-import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole } from './types';
+import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from './types';
 import { SettingsPage } from './components/SettingsPage';
 
 const App: React.FC = () => {
@@ -27,6 +27,7 @@ const App: React.FC = () => {
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
+  const [viewedProfile, setViewedProfile] = useState<Assignee | null>(null);
 
   // Lifted State for Mobile Overlays & Interactions
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -158,6 +159,15 @@ const App: React.FC = () => {
       setIsCreationSheetOpen(target);
   }, [isCreationSheetOpen, closeAllMenus]);
 
+  const handleViewProfile = (member: Assignee) => {
+    setViewedProfile(member);
+    setPage('profile');
+  };
+
+  const handleBackToMembers = () => {
+      setViewedProfile(null);
+      setPage('members');
+  }
 
   return (
     <main className={`w-screen h-screen flex flex-col overflow-hidden transition-colors duration-700 ${themeColor}`}>
@@ -221,6 +231,7 @@ const App: React.FC = () => {
                     theme={theme} 
                     viewMode={membersView} 
                     members={members} 
+                    onViewProfile={handleViewProfile}
                 />
             )}
             {currentPage === 'resources' && (
@@ -237,7 +248,7 @@ const App: React.FC = () => {
                     posts={posts} 
                 />
             )}
-            {currentPage === 'profile' && <ProfilePage theme={theme} tasks={store.tasks} />}
+            {currentPage === 'profile' && <ProfilePage theme={theme} tasks={store.tasks} member={viewedProfile} onBack={handleBackToMembers}/>}
             {currentPage === 'about' && <About theme={theme} />}
             {currentPage === 'settings' && <SettingsPage theme={theme} />}
         </div>

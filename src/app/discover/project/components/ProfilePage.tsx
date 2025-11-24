@@ -1,20 +1,50 @@
+
 import React, { useState } from 'react';
-import { Theme, TaskNode } from '../types';
-import { MOCK_PROFILE, MOCK_POSTS, MOCK_ARTICLES, MOCK_ACTIVITY } from '../constants';
-import { MapPin, Link as LinkIcon, Building2, Users, CheckCircle2, Repeat2, MessageSquare, Heart, Share2, FileText, BookOpen, Activity, Briefcase, Calendar } from 'lucide-react';
+import { Theme, TaskNode, Assignee } from '../types';
+import { MOCK_POSTS, MOCK_ARTICLES, MOCK_ACTIVITY } from '../constants';
+import { MapPin, Link as LinkIcon, Building2, Users, CheckCircle2, Repeat2, MessageSquare, Heart, Share2, FileText, BookOpen, Activity, Briefcase, Calendar, ArrowLeft } from 'lucide-react';
 import { StatusBadge, PriorityIcon } from './Plan';
 
 interface ProfilePageProps {
     theme: Theme;
     tasks: TaskNode[];
+    member: Assignee | null;
+    onBack: () => void;
 }
 
 type Tab = 'Posts' | 'Articles' | 'Projects' | 'Activity';
 
-export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks }) => {
-    const [activeTab, setActiveTab] = useState<Tab>('Posts');
+export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks, member, onBack }) => {
+    const [activeTab, setActiveTab] = useState<Tab>('Projects');
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
-    const profile = MOCK_PROFILE;
+
+    if (!member) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <p>No member selected.</p>
+            </div>
+        );
+    }
+    
+    // In a real app, this would be fetched based on member.id
+    const profile = {
+        name: member.name,
+        initials: member.initials,
+        color: member.color,
+        roleTitle: 'Senior Product Architect',
+        businessType: 'Solopreneur',
+        naicsCode: '541511 - Custom Computer Programming Services',
+        location: 'San Francisco, CA',
+        website: 'alexchen.dev',
+        bio: 'Building digital ecosystems for agile teams. Focused on React performance and collaborative AI interfaces. Currently scaling OmniCanvas.',
+        joinedDate: 'September 2021',
+        stats: {
+            followers: 1204,
+            following: 450,
+            projects: tasks.filter(t => t.assignee.name === member.name).length
+        }
+    };
+
 
     // Styles
     const textMain = isLight ? "text-slate-900" : "text-slate-100";
@@ -36,6 +66,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks }) => {
             </div>
 
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10">
+                
+                {/* Back Button for Mobile */}
+                 <button onClick={onBack} className={`absolute -top-12 left-4 p-2 rounded-full text-white bg-black/20 backdrop-blur-sm lg:hidden`}>
+                    <ArrowLeft size={20} />
+                </button>
                 
                 {/* Header Profile Card */}
                 <div className={`rounded-2xl border backdrop-blur-xl shadow-xl p-6 md:p-8 mb-8 flex flex-col md:flex-row gap-6 ${isLight ? 'bg-white/90 border-white' : 'bg-[#121212]/90 border-white/10'}`}>
@@ -124,7 +159,7 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks }) => {
                         
                         {/* Sticky Tabs */}
                         <div className={`sticky top-0 z-30 backdrop-blur-xl border-b mb-6 flex gap-8 ${borderClass} ${isLight ? 'bg-white/80' : 'bg-[#020617]/80'}`}>
-                            {['Posts', 'Articles', 'Projects', 'Activity'].map(tab => (
+                            {['Projects', 'Posts', 'Articles', 'Activity'].map(tab => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab as Tab)}
