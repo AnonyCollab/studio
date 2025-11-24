@@ -60,8 +60,7 @@ function MessagesAppContent() {
 
   return (
     <div
-      style={{ height: 'calc(100vh - 3.5rem)' }}
-      className="w-screen overflow-hidden relative"
+      className="w-screen h-[calc(100vh_-_3.5rem)] overflow-hidden relative"
     >
       {/* Animated background blobs - only in dark mode */}
       {isDark && (
