@@ -15,7 +15,8 @@ import {
   doc,
   setDoc,
   getDoc,
-  Timestamp
+  Timestamp,
+  onSnapshot
 } from 'firebase/firestore';
 import {
   getStorage,
@@ -175,7 +176,7 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
         });
     };
     fetchSenderProfiles();
-  }, [messages, firestore]);
+  }, [messages, firestore, senderProfiles]);
 
 
   const handleSendMessage = async () => {
