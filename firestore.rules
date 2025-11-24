@@ -61,7 +61,7 @@ service cloud.firestore {
     
     // Rules for Direct Messages
     match /dms/{dmId} {
-        // Allow a user to read a specific DM document if they are a participant.
+        // Allow a user to get a specific DM document if they are a participant.
         // This is crucial for allowing subcollection rules to check the parent document.
         allow get: if request.auth != null && request.auth.uid in resource.data.participants;
 
