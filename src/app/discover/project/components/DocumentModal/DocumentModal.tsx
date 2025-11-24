@@ -7,7 +7,7 @@ import { ContentEditor } from './ContentEditor';
 import { CommentsSection } from './CommentsSection';
 import { ChecklistSection } from './ChecklistSection';
 import { ResourcePickerModal } from './ResourcePickerModal';
-import { breakDownTask } from '../../services/geminiService';
+import { breakDownTask } from '@/ai/flows/breakDownTaskFlow';
 import { TaskNode, Theme, Attachment, CurrentUser, TaskType } from '../../types';
 import { MOCK_ASSIGNEES } from '../../constants';
 import { StatusBadge } from '../Plan';
@@ -123,7 +123,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
   const handleAIAction = async () => {
       if (isReadOnly) return;
       setAiLoading(true);
-      const subtasks = await breakDownTask(task.title, task.description);
+      const subtasks = await breakDownTask({taskTitle: task.title, taskDescription: task.description});
       
       subtasks.forEach((st, idx) => {
           onAddSubTask({
@@ -448,7 +448,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
                     )}
                     <div className="space-y-2">
                         {subTasks.length === 0 && (
-                            <div className={`text-xs italic pl-6 ${textMuted}`}>No subtasks yet</div>
+                            <div className={`text-xs italic pl-6 ${textMuted}`}>No subtasks yet.</div>
                         )}
                         {subTasks.map(sub => (
                             <div key={sub.id} className={`p-3 rounded-xl border transition-all group cursor-pointer hover:border-brand-500/30 ${isLight ? 'bg-slate-50 border-slate-100 hover:bg-white' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
