@@ -244,15 +244,12 @@ export default function App() {
   const starredProjectIds = ["1", "3", "6"];
   const starredProjects = allProjects.filter((p) => starredProjectIds.includes(p.id));
 
-  // Featured grid: mix of recent and trending
-  const featuredProjects = [
-    recentProjects[0], // Most recent
-    trendingProjects[0], // Most popular
-    recentProjects[1], // 2nd most recent
-    trendingProjects[1], // 2nd most popular
-    recentProjects[2], // 3rd most recent
-    trendingProjects[2], // 3rd most popular
-  ];
+  // Featured grid: mix of recent and trending, ensuring no duplicates
+  const featuredProjects = Array.from(new Map([
+    ...recentProjects.slice(0, 3).map(p => [p.id, p]),
+    ...trendingProjects.slice(0, 3).map(p => [p.id, p]),
+  ]).values());
+
 
   const getProjectsForSection = (section: string): Project[] => {
     if (mockProjects[section]) {
