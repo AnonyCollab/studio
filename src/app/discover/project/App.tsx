@@ -342,8 +342,8 @@ const App: React.FC = () => {
             setViewMode={setViewMode}
             onToggleSidebar={handleToggleSidebar}
             onToggleViewMenu={handleToggleViewMenu}
-            onToggleMobileTasks={handleToggleMobileTasks}
-            onToggleMobileMenu={handleToggleMobileMenu}
+            onToggleMobileTasks={handleToggleTasks}
+            onToggleMobileMenu={handleToggleMenu}
             onAddTask={handleOpenCreation} 
             isSidebarOpen={isSidebarOpen}
             isViewMenuOpen={isViewMenuOpen}
