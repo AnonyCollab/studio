@@ -144,6 +144,11 @@
           },
           "required": ["uid", "name", "initials"]
         },
+        "members": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "An array of user UIDs who are members of this project."
+        },
         "totalMembers": {
           "type": "integer",
           "description": "The total number of members in the project."

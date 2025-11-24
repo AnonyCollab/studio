@@ -2,19 +2,20 @@
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import { Project as ProjectType } from "./components/ProjectCard";
-import { Plus, Search, Menu, Edit } from "lucide-react";
+import { Plus, Search, Menu, Edit, UserPlus, Check } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SideNavigation } from "./components/SideNavigation";
 import { FeaturedProjectCard } from "./components/FeaturedProjectCard";
 import { StatsBar } from "./components/StatsBar";
 import { StarredProjectsList } from "./components/StarredProjectsList";
 import { ProjectGrid } from "./components/ProjectGrid";
-import { useTheme } from "@/context/ThemeContext";
+import { useTheme } from "@/app/context/ThemeContext";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, setDoc } from "firebase/firestore";
+import { collection, doc, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
+import { Button } from "@/components/ui/button";
 
 
 const sectionTitles: Record<string, string> = {
@@ -109,6 +110,7 @@ export default function App() {
         avatar: user.photoURL || "",
         initials: user.displayName ? user.displayName.charAt(0) : "U",
       },
+      members: [user.uid],
       totalMembers: 1,
       createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
       lastEditDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
@@ -119,6 +121,15 @@ export default function App() {
     await setDoc(projectRef, newProject);
 
     router.push(`/discover/${newProjectId}`);
+  };
+
+  const handleJoinProject = async (projectId: string) => {
+    if (!user || !firestore) return;
+    const projectRef = doc(firestore, 'projects', projectId);
+    await updateDoc(projectRef, {
+        members: arrayUnion(user.uid),
+        totalMembers: increment(1)
+    });
   };
 
   useEffect(() => {
@@ -242,6 +253,12 @@ export default function App() {
                     Explore featured projects and collaborate with teams worldwide
                   </p>
                 </div>
+                {user && activeSection === 'overview' && (
+                  <Button onClick={() => handleJoinProject(featuredProjects[0].id)} disabled={featuredProjects[0]?.members?.includes(user.uid)}>
+                    {featuredProjects[0]?.members?.includes(user.uid) ? <Check /> : <UserPlus />}
+                    {featuredProjects[0]?.members?.includes(user.uid) ? 'Joined' : 'Join Project'}
+                  </Button>
+                )}
               </div>
 
               {activeSection === 'overview' && <StatsBar theme={theme} /> }

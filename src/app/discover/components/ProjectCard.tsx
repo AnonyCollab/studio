@@ -12,10 +12,12 @@ export interface Project {
   image: string;
   sector: string;
   owner: {
+    uid?: string;
     name: string;
     avatar: string;
     initials: string;
   };
+  members?: string[];
   totalMembers: number;
   createdDate: string;
   lastEditDate: string;

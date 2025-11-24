@@ -5,7 +5,7 @@ import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../const
 import { FileText } from 'lucide-react'; 
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, doc, query, where } from 'firebase/firestore';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -150,16 +150,23 @@ const updateCascadingStatus = (tasks: TaskNode[], startTaskId: string): TaskNode
     return currentTasks;
 };
 
-export const useStore = (authUser: User | null) => {
+export const useStore = (authUser: User | null, projectId: string | null) => {
     const [state, setState] = useState<AppState>(() => createInitialState(authUser));
     const firestore = useFirestore();
 
-    // Fetch all users to populate the members list
-    const usersQuery = useMemoFirebase(() => {
-        if (!firestore) return null;
-        return collection(firestore, 'users');
-    }, [firestore]);
+    const projectDocQuery = useMemoFirebase(() => {
+        if (!firestore || !projectId) return null;
+        return doc(firestore, 'projects', projectId);
+    }, [firestore, projectId]);
+    const { data: projectData } = useCollection(projectDocQuery);
 
+    const memberUIDs = useMemo(() => projectData?.[0]?.members || [], [projectData]);
+
+    const usersQuery = useMemoFirebase(() => {
+        if (!firestore || memberUIDs.length === 0) return null;
+        return query(collection(firestore, 'users'), where('profile.uid', 'in', memberUIDs));
+    }, [firestore, memberUIDs]);
+    
     const { data: usersData } = useCollection(usersQuery);
 
     useEffect(() => {
@@ -168,14 +175,14 @@ export const useStore = (authUser: User | null) => {
                 id: user.id,
                 name: user.profile.displayName,
                 initials: (user.profile.displayName || 'U').slice(0, 2).toUpperCase(),
-                color: 'bg-blue-500', // This could be randomized or based on user ID
+                color: 'bg-blue-500',
                 type: 'user',
-                // This is a placeholder role. A real app would store this on the user document.
-                role: user.id === authUser?.uid ? 'Owner' : 'Member', 
+                role: user.id === projectData?.[0]?.owner.uid ? 'Owner' : 'Member', 
             }));
             setState(prev => ({ ...prev, members: membersList }));
         }
-    }, [usersData, authUser?.uid]);
+    }, [usersData, projectData]);
+
 
     useEffect(() => {
         const savedState = localStorage.getItem(STORAGE_KEY);
@@ -188,7 +195,6 @@ export const useStore = (authUser: User | null) => {
                     currentUser: createDefaultUser(authUser),
                     tasks: parsed.tasks?.length ? parsed.tasks : [],
                     posts: parsed.posts?.length ? parsed.posts : MOCK_POSTS,
-                    // members will be overwritten by the user fetch effect
                     files: parsed.files?.length ? parsed.files : MOCK_FILES,
                 }));
             } catch (e) {
@@ -721,4 +727,3 @@ export const useStore = (authUser: User | null) => {
     updateMember
   };
 };
-

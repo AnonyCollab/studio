@@ -18,11 +18,14 @@ import { useStore } from './store/useStore';
 import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from './types';
 import { SettingsPage } from './components/SettingsPage';
 import { useUser } from '@/firebase';
+import { useParams } from 'next/navigation';
 
 const App: React.FC = () => {
   const { user: authUser, isUserLoading } = useUser();
+  const params = useParams();
+  const projectId = typeof params.projectId === 'string' ? params.projectId : null;
 
-  const store = useStore(authUser);
+  const store = useStore(authUser, projectId);
   
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
@@ -339,8 +342,8 @@ const App: React.FC = () => {
             setViewMode={setViewMode}
             onToggleSidebar={handleToggleSidebar}
             onToggleViewMenu={handleToggleViewMenu}
-            onToggleMobileTasks={handleToggleTasks}
-            onToggleMobileMenu={handleToggleMenu}
+            onToggleMobileTasks={handleToggleMobileTasks}
+            onToggleMobileMenu={handleToggleMobileMenu}
             onAddTask={handleOpenCreation} 
             isSidebarOpen={isSidebarOpen}
             isViewMenuOpen={isViewMenuOpen}
