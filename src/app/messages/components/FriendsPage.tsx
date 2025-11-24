@@ -134,21 +134,23 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
         const dmDoc = await getDoc(dmRef);
 
         if (!dmDoc.exists()) {
-            const participantsData = { participants: [user.uid, friendId] };
-            // IMPORTANT: No await here, we chain .catch for error handling
-            setDoc(dmRef, participantsData)
+            const participantsData = { 
+                participants: [user.uid, friendId],
+                isGroup: false,
+                createdAt: serverTimestamp(),
+                lastMessage: null,
+            };
+            await setDoc(dmRef, participantsData)
                 .catch(error => {
                     const permissionError = new FirestorePermissionError({
                         path: dmRef.path,
                         operation: 'create',
                         requestResourceData: participantsData,
                     });
-                    // This will be caught by the <FirebaseErrorListener /> and shown in the overlay
                     errorEmitter.emit('permission-error', permissionError);
                 });
         }
     } catch (error) {
-        // This outer catch is for getDoc, which might also fail.
         const permissionError = new FirestorePermissionError({
             path: dmRef.path,
             operation: 'get',

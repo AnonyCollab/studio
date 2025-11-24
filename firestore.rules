@@ -61,10 +61,10 @@ service cloud.firestore {
     
     // Rules for Direct Messages
     match /dms/{dmId} {
-        // Allow get if user is a participant OR if the doc doesn't exist yet and user's ID is in the dmId
+        // Allow get if user is a participant OR if the doc doesn't exist yet (for creation check)
         allow get: if request.auth != null && (
-            (exists(path) && request.auth.uid in resource.data.participants) ||
-            (!exists(path) && dmId.matches('.*' + request.auth.uid + '.*'))
+          (exists(path) && request.auth.uid in resource.data.participants) ||
+          (!exists(path)) // Allow the initial getDoc check before creation
         );
 
         // Allow list only if the query constrains it to the user's conversations.
