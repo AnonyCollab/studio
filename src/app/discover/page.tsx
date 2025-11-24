@@ -9,7 +9,7 @@ import { FeaturedProjectCard } from "./components/FeaturedProjectCard";
 import { StatsBar } from "./components/StatsBar";
 import { StarredProjectsList } from "./components/StarredProjectsList";
 import { ProjectGrid } from "./components/ProjectGrid";
-import { useTheme } from "@/app/context/ThemeContext";
+import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, doc, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore";
