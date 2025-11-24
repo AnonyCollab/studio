@@ -16,29 +16,29 @@ export default function AppContent({ children }: { children: ReactNode }) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
   const { handleOpenCreatePost } = usePosts();
+  const isMobile = useIsMobile();
 
-  const [bodyClassName, setBodyClassName] = useState('font-body antialiased');
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   const isLandingPage = pathname === '/';
   const isProjectPage = /^\/discover\//.test(pathname) && pathname.split('/').length > 2;
-  
-  const showHeader = !isLandingPage && !isProjectPage;
-  
-  const isMobile = useIsMobile();
   const isDiscoverPage = pathname.startsWith('/discover');
   
+  const showHeader = !isLandingPage && !isProjectPage;
+  const showBottomNav = hydrated && isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage;
+
   const handleCreateProject = () => {
     window.dispatchEvent(new CustomEvent('create-new-project'));
   };
 
-  const showBottomNav = isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage;
-
-  useEffect(() => {
-    setBodyClassName(cn(
-      "font-body antialiased",
-      isLandingPage ? 'landing-page-body' : '',
-      showBottomNav ? 'pb-16' : '' // Add padding for bottom nav on mobile
-    ));
-  }, [pathname, isLandingPage, showBottomNav]);
+  const bodyClassName = cn(
+    "font-body antialiased",
+    isLandingPage ? 'landing-page-body' : '',
+    showBottomNav ? 'pb-16' : '' // Add padding for bottom nav on mobile
+  );
 
   return (
     <html lang="en" className={theme} style={{colorScheme: theme}}>
