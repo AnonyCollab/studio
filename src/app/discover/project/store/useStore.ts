@@ -1,7 +1,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
-import { INITIAL_TASKS, MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../constants';
+import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../constants';
 import { FileText } from 'lucide-react'; 
 
 export interface ExtendedAppState extends AppState {
@@ -25,7 +25,7 @@ const DEFAULT_USER: CurrentUser = {
 
 const DEFAULT_STATE: AppState = {
     currentUser: DEFAULT_USER,
-    tasks: INITIAL_TASKS,
+    tasks: [],
     cycles: INITIAL_CYCLES,
     posts: MOCK_POSTS,
     members: MOCK_ASSIGNEES,

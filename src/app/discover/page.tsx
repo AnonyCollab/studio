@@ -1,8 +1,8 @@
 
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Project, ProjectCard } from "./components/ProjectCard";
-import { Plus, Search, Menu } from "lucide-react";
+import { Plus, Search, Menu, Edit } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SideNavigation } from "./components/SideNavigation";
 import { FeaturedProjectCard } from "./components/FeaturedProjectCard";
@@ -13,8 +13,12 @@ import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { v4 as uuidv4 } from "uuid";
+import { TopNav } from "../header/components/TopNav";
+import { usePosts } from "@/context/PostContext";
 
-const mockProjects: Record<string, Project[]> = {
+
+const initialProjects: Record<string, Project[]> = {
   my: [
     {
       id: "1",
@@ -217,7 +221,8 @@ const sectionTitles: Record<string, string> = {
 };
 
 export default function App() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme } = useTheme();
+  const [mockProjects, setMockProjects] = useState(initialProjects);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSection, setActiveSection] = useState("overview");
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -268,6 +273,35 @@ export default function App() {
   };
 
   const projectsToDisplay = getProjectsForSection(activeSection);
+  
+  const { handleOpenCreatePost } = usePosts();
+
+  const handleCreateNewProject = () => {
+    const newProjectId = uuidv4();
+    const newProject: Project = {
+      id: newProjectId,
+      title: "New Untitled Project",
+      description: "A brand new project, ready for ideas.",
+      image: `https://picsum.photos/seed/${newProjectId}/1080/600`,
+      sector: "New",
+      owner: {
+        name: "You",
+        avatar: "",
+        initials: "U",
+      },
+      totalMembers: 1,
+      createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
+      lastEditDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
+      tags: ["new-project"],
+    };
+
+    setMockProjects(prev => ({
+        ...prev,
+        my: [newProject, ...prev.my]
+    }));
+    setActiveSection('my');
+  };
+
 
   const renderContent = () => {
     if (activeSection === "overview") {
@@ -312,6 +346,7 @@ export default function App() {
     <div
       className="min-h-screen"
     >
+      <TopNav onCreateProject={handleCreateNewProject} />
       {/* Mobile Navigation Drawer */}
       {sidebarOpen && (
         <div
