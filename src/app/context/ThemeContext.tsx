@@ -8,6 +8,7 @@ export type Theme = 'light' | 'dark' | 'Sephiroa' | 'Green' | 'Blue';
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
+  toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -15,7 +16,11 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = React.useState<Theme>('dark');
 
-  const value = useMemo(() => ({ theme, setTheme }), [theme]);
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'dark' ? 'light' : 'dark'));
+  };
+
+  const value = useMemo(() => ({ theme, setTheme, toggleTheme }), [theme]);
 
   return (
     <ThemeContext.Provider value={value}>

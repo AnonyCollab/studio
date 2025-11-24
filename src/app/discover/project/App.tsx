@@ -80,8 +80,8 @@ const App: React.FC = () => {
 
   const themeColor = useMemo(() => {
       switch(theme) {
-          case 'Light': return 'bg-slate-50 text-slate-900'; 
-          case 'Dark': return 'bg-[#09090b] text-slate-200';
+          case 'light': return 'bg-slate-50 text-slate-900'; 
+          case 'dark': return 'bg-[#09090b] text-slate-200';
           case 'Sephiroa': return 'bg-[#FDFCF0] text-[#3D3B29]';
           case 'Green': return 'bg-[#F0F5F0] text-[#264026]';
           case 'Blue': return 'bg-[#020817] text-slate-200';
