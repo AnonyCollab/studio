@@ -1,22 +1,22 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Plan } from './components/Plan';
-import { Dashboard } from './components/Dashboard';
-import { Header } from './components/Header';
-import { CalendarPage } from './components/CalendarPage';
-import { Members } from './components/Members';
-import { Resources } from './components/Resources';
-import { Community } from './components/Community';
-import { About } from './components/About';
-import { ProfilePage } from './components/ProfilePage';
-import { MobileDock } from './components/MobileDock';
-import { DocumentModal } from './components/DocumentModal/DocumentModal';
-import { Sidebar } from './components/Sidebar';
-import { MobileViewSheet } from './components/MobileViewSheet';
-import { CreationSheet } from './components/CreationSheet';
-import { useStore } from './store/useStore';
-import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from './types';
-import { SettingsPage } from './components/SettingsPage';
+import { Plan } from './Plan';
+import { Dashboard } from './Dashboard';
+import { Header } from './Header';
+import { CalendarPage } from './CalendarPage';
+import { Members } from './Members';
+import { Resources } from './Resources';
+import { Community } from './Community';
+import { About } from './About';
+import { ProfilePage } from './ProfilePage';
+import { MobileDock } from './MobileDock';
+import { DocumentModal } from './DocumentModal/DocumentModal';
+import { Sidebar } from './Sidebar';
+import { MobileViewSheet } from './MobileViewSheet';
+import { CreationSheet } from './CreationSheet';
+import { useStore } from '../store/useStore';
+import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from '../types';
+import { SettingsPage } from './SettingsPage';
 import { useUser } from '@/firebase';
 import { useParams } from 'next/navigation';
 
@@ -80,8 +80,8 @@ const App: React.FC = () => {
 
   const themeColor = useMemo(() => {
       switch(theme) {
-          case 'light': return 'bg-slate-50 text-slate-900'; 
-          case 'dark': return 'bg-[#09090b] text-slate-200';
+          case 'Light': return 'bg-slate-50 text-slate-900'; 
+          case 'Dark': return 'bg-[#09090b] text-slate-200';
           case 'Sephiroa': return 'bg-[#FDFCF0] text-[#3D3B29]';
           case 'Green': return 'bg-[#F0F5F0] text-[#264026]';
           case 'Blue': return 'bg-[#020817] text-slate-200';

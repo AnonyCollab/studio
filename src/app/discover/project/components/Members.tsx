@@ -88,17 +88,17 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {users.map(member => {
-                                        const stats = getStats(member.name);
+                                        const stats = getStats(member.displayName || member.name);
                                         const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
 
                                         return (
                                             <tr key={member.id} onClick={() => onViewProfile(member)} className={`transition-colors cursor-pointer ${tableRowBorder}`}>
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
-                                                        <div className={`w-8 h-8 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xs`}>
-                                                            {member.initials}
+                                                        <div className={`w-8 h-8 rounded-full ${member.color || 'bg-slate-500'} flex items-center justify-center text-white font-bold text-xs`}>
+                                                            {member.initials || (member.displayName || '?').charAt(0)}
                                                         </div>
-                                                        <span className={`font-bold text-sm ${textMain}`}>{member.name}</span>
+                                                        <span className={`font-bold text-sm ${textMain}`}>{member.displayName || member.name}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 hidden md:table-cell">

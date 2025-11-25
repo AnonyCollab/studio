@@ -5,7 +5,7 @@ import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { FileText } from 'lucide-react'; 
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, query, where, serverTimestamp, addDoc } from 'firebase/firestore';
+import { collection, doc, query, where, serverTimestamp, addDoc, writeBatch } from 'firebase/firestore';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -162,7 +162,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         return doc(firestore, 'projects', projectId);
     }, [firestore, projectId]);
     
-    const { data: projectData } = useDoc(projectDocQuery);
+    const { data: projectData, isLoading: isProjectLoading } = useDoc(projectDocQuery);
     
     const resourcesQuery = useMemoFirebase(() => {
         if (!firestore || !projectId) return null;
@@ -183,24 +183,35 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         return collection(firestore, 'projects', projectId, 'members');
     }, [firestore, projectId]);
     
-    const { data: membersData } = useCollection<Assignee>(membersQuery);
+    const { data: membersData, isLoading: isMembersLoading } = useCollection<Assignee>(membersQuery);
 
 
     useEffect(() => {
+      // Wait for project data and members data to be loaded before determining role
+      if (isProjectLoading || isMembersLoading) {
+          return;
+      }
+      
+      let userRole: UserRole = 'Visitor';
       if (projectData && membersData && authUser) {
-        let userRole: UserRole = 'Visitor';
         
-        const member = membersData.find(m => m.uid === authUser.uid);
+        const member = membersData.find(m => m.id === authUser.uid);
 
         if (projectData.owner.uid === authUser.uid) {
             userRole = 'Owner';
         } else if (member) {
-            userRole = member.role === 'owner' ? 'Owner' : 'Member';
+            // Firestore data for role might be just a string, ensure it matches UserRole type
+            userRole = (member.role || 'Member') as UserRole;
         }
 
         setState(prev => ({
           ...prev,
-          members: membersData,
+          members: membersData.map(m => ({
+              ...m,
+              type: 'user', // Ensure type is set for consistency
+              color: 'bg-blue-500', // Assign a default or hash-based color
+              initials: (m.displayName || '?').charAt(0)
+          })),
           currentUser: {
             ...prev.currentUser,
             name: authUser.displayName || prev.currentUser.name,
@@ -212,7 +223,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
           // Handle case where user logs out
           setState(prev => ({...prev, currentUser: createDefaultUser(null)}));
       }
-    }, [projectData, membersData, authUser]);
+    }, [projectData, membersData, authUser, isProjectLoading, isMembersLoading]);
 
 
     useEffect(() => {
@@ -732,11 +743,18 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     if (!firestore || !projectId) return;
     const resourcesCollection = collection(firestore, 'projects', projectId, 'resources');
     
-    addDoc(resourcesCollection, {
+    const newFileDoc = {
       ...file,
       createdAt: serverTimestamp(),
-    });
-  }, [firestore, projectId]);
+      parentId: state.resourcePath[state.resourcePath.length - 1] || null
+    };
+
+    addDoc(resourcesCollection, newFileDoc)
+      .catch(error => {
+        console.error("Error adding file to Firestore: ", error);
+        // Optionally handle the error, e.g., show a toast to the user
+      });
+  }, [firestore, projectId, state.resourcePath]);
 
 
   return {
