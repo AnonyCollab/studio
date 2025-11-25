@@ -1,25 +1,4 @@
 
-/**
- * @fileOverview Firestore Security Rules for AnonyCollab application.
- *
- * Core Philosophy:
- * This ruleset enforces a public-read, public-write model for posts, with comments also being publicly accessible.
- *
- * Data Structure:
- * - Posts are stored in the /posts/{postId} collection.
- * - Comments are stored in the /posts/{postId}/comments/{commentId} subcollection.
- *
- * Key Security Decisions:
- * - Posts and comments are publicly readable and writable by anyone, including unauthenticated users.
- * - No authentication is required for any operation.
- * - There is no data validation beyond ensuring the document IDs in subcollections match their paths.
- *
- * Denormalization for Authorization:
- * - Not applicable in this public access scenario. If comments required role-based access, the post's member list or owner would be denormalized into the comment documents.
- *
- * Structural Segregation:
- * - Not applicable, as all data is public.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -123,7 +102,6 @@ service cloud.firestore {
       // Rules for the members subcollection
       match /members/{userId} {
         // Allow project members to list and read other members' info.
-        // This is a key fix: `list` permission is needed for useCollection.
         allow list, get: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
         
         // Allow a user to join a project (create their own member doc)
@@ -142,9 +120,13 @@ service cloud.firestore {
       
       // Rules for the resources subcollection
       match /resources/{resourceId} {
-        // CORRECTED RULE: Allow list/read/write for any member of the project.
         allow read: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
         allow write: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
+      }
+      
+       // Rules for the tasks subcollection
+      match /tasks/{taskId} {
+        allow read, write: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
       }
     }
 
@@ -191,3 +173,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

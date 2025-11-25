@@ -171,6 +171,34 @@
       },
       "required": ["id", "title", "description", "owner", "createdDate", "lastEditDate"]
     },
+     "Task": {
+      "title": "Task",
+      "description": "Represents a single task or node within a project plan.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Backlog", "In Progress", "Review", "Done"] },
+        "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
+        "type": { "type": "string", "enum": ["Milestone", "Goal", "Epic", "Story", "Issue", "Sub-issue"] },
+        "assignee": { "type": "object" },
+        "startDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "color": { "type": "string" },
+        "position": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+        "next": { "type": "array", "items": { "type": "string" } },
+        "prev": { "type": "array", "items": { "type": "string" } },
+        "childrenIds": { "type": "array", "items": { "type": "string" } },
+        "parentId": { "type": "string" },
+        "size": { "type": "string" },
+        "history": { "type": "array" },
+        "attachments": { "type": "array" },
+        "checklist": { "type": "array" },
+        "cycleId": { "type": "string" }
+      },
+      "required": ["id", "title", "status", "priority", "type", "assignee", "startDate", "dueDate", "color", "position"]
+    },
     "ProjectMember": {
       "title": "Project Member",
       "description": "Represents a user's membership in a project.",
@@ -509,6 +537,14 @@
         }
       },
       {
+        "path": "/projects/{projectId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": { "$ref": "#/backend/entities/Task" },
+          "description": "Stores tasks for a specific project."
+        }
+      },
+      {
         "path": "/projects/{projectId}/members/{userId}",
         "definition": {
             "entityName": "ProjectMember",
@@ -558,3 +594,5 @@
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
+
+    
