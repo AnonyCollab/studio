@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 
 const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
 
@@ -28,6 +29,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
     const { updateMember } = useStore(null);
+    const { user: currentUser } = useUser();
     const { toast } = useToast();
 
     const allMembers = initialMembers;
@@ -94,6 +96,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                         const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
                                         const canPromote = currentRoleIndex > 0;
                                         const canDemote = currentRoleIndex < ROLE_HIERARCHY.length - 1;
+                                        const isCurrentUser = currentUser?.uid === member.uid;
 
 
                                         return (
@@ -117,30 +120,32 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                      </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                             <button onClick={(e) => e.stopPropagation()} className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end" className={`${isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}`}>
-                                                            {canPromote && (
-                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex - 1] }); }}>
-                                                                    <ChevronUp className="mr-2 h-4 w-4 text-emerald-500" />
-                                                                    <span>Promote</span>
+                                                    {!isCurrentUser && (
+                                                        <DropdownMenu>
+                                                            <DropdownMenuTrigger asChild>
+                                                                <button onClick={(e) => e.stopPropagation()} className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
+                                                            </DropdownMenuTrigger>
+                                                            <DropdownMenuContent align="end" className={`${isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}`}>
+                                                                {canPromote && (
+                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex - 1] }); }}>
+                                                                        <ChevronUp className="mr-2 h-4 w-4 text-emerald-500" />
+                                                                        <span>Promote</span>
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                                {canDemote && (
+                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex + 1] }); }}>
+                                                                        <ChevronDown className="mr-2 h-4 w-4 text-rose-500" />
+                                                                        <span>Demote</span>
+                                                                    </DropdownMenuItem>
+                                                                )}
+                                                                <DropdownMenuItem><Mail className="mr-2 h-4 w-4" /> Message</DropdownMenuItem>
+                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddFriend(member); }}>
+                                                                    <UserPlus className="mr-2 h-4 w-4" />
+                                                                    <span>Add Friend</span>
                                                                 </DropdownMenuItem>
-                                                            )}
-                                                            {canDemote && (
-                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex + 1] }); }}>
-                                                                    <ChevronDown className="mr-2 h-4 w-4 text-rose-500" />
-                                                                    <span>Demote</span>
-                                                                </DropdownMenuItem>
-                                                            )}
-                                                            <DropdownMenuItem><Mail className="mr-2 h-4 w-4" /> Message</DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddFriend(member); }}>
-                                                                <UserPlus className="mr-2 h-4 w-4" />
-                                                                <span>Add Friend</span>
-                                                            </DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                            </DropdownMenuContent>
+                                                        </DropdownMenu>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );
