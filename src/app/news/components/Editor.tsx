@@ -36,7 +36,7 @@ interface EditorProps {
     onChange?: (value: string) => void;
     initialContent?: string;
     editable?: boolean;
-    collaborationId: string; // New required prop
+    collaborationId: string;
 }
 
 // Our <Editor> component we can reuse later
@@ -85,7 +85,7 @@ export default function Editor({ onChange, initialContent, editable = true, coll
     theme={customTheme}
     editable={editable}
     onChange={() => {
-        if(onChange && editor) {
+        if(onChange && editor && editable) {
             onChange(JSON.stringify(editor.document, null, 2));
         }
     }}
