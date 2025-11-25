@@ -120,21 +120,29 @@ service cloud.firestore {
       // Only allow the owner to delete.
       allow delete: if request.auth != null && request.auth.uid == resource.data.owner.uid;
 
+      // Rules for the members subcollection
+      match /members/{userId} {
+        // Allow project members to read other members' info.
+        allow read: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
+
+        // Allow a user to join a project (create their own member doc)
+        // or the project owner to add members.
+        allow create: if request.auth != null && 
+          (request.auth.uid == userId || request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.owner.uid);
+
+        // Allow owner to update roles, or user to update their own info.
+        allow update: if request.auth != null && 
+          (request.auth.uid == userId || request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.owner.uid);
+          
+        // Allow user to leave or owner to remove.
+        allow delete: if request.auth != null && 
+          (request.auth.uid == userId || request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.owner.uid);
+      }
+      
       // Rules for the resources subcollection
       match /resources/{resourceId} {
-        function isProjectMember() {
-          return request.auth != null && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
-        }
-        
-        // Allow members to read individual documents
-        allow get: if isProjectMember();
-        
-        // Allow members to query/list the collection.
-        // This rule is more permissive but necessary for `useCollection`.
-        allow list: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)) && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
-
-        // Allow members to create, update, or delete resources.
-        allow create, update, delete: if isProjectMember();
+        // CORRECTED RULE: Allow list/read/write for any member of the project.
+        allow read, write: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
       }
     }
 
