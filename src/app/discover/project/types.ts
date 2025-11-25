@@ -36,6 +36,7 @@ export interface CurrentUser {
 export interface Assignee {
   id: string;
   name: string;
+  displayName?: string;
   initials: string;
   color: string;
   type?: 'user' | 'team';
@@ -131,6 +132,26 @@ export interface Cycle {
   status: 'Active' | 'Upcoming' | 'Completed';
 }
 
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  sector: string;
+  owner: {
+    uid?: string;
+    name: string;
+    avatar: string;
+    initials: string;
+  };
+  members?: string[];
+  totalMembers: number;
+  createdDate: string;
+  lastEditDate: string;
+  tags: string[];
+}
+
+
 export interface TaskNode {
   id: string;
   title: string;
@@ -182,6 +203,8 @@ export interface AppState {
   background: BackgroundType;
   filter: FilterOption;
   resourcePath: (string | null)[];
+  drillDownStack: string[];
+  projectData: Project | null;
 }
 
 export interface AIActionResponse {

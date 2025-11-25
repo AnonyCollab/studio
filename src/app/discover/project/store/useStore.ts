@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
+import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole, Project } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
@@ -29,6 +29,8 @@ export interface ExtendedAppState extends AppState {
   moveTask: (taskId: string, newParentId: string | null) => void;
   drillDownStack: string[];
   setDrillDownStack: (stack: string[] | ((prev: string[]) => string[])) => void;
+  projectData: Project | null;
+  updateProject: (updates: Partial<Project>) => void;
 }
 
 const createDefaultUser = (authUser: User | null): CurrentUser => {
@@ -69,6 +71,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     filter: 'Project',
     resourcePath: [null], // Start at the root
     drillDownStack: [],
+    projectData: null,
 });
 
 // Helper to bubble up date changes from children to parents (Epic -> Goal -> Milestone)
@@ -174,7 +177,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         return doc(firestore, 'projects', projectId);
     }, [firestore, projectId]);
     
-    const { data: projectData, isLoading: isProjectLoading } = useDoc(projectDocQuery);
+    const { data: projectData, isLoading: isProjectLoading } = useDoc<Project>(projectDocQuery);
     
     const resourcesQuery = useMemoFirebase(() => {
         if (!firestore || !projectId) return null;
@@ -189,6 +192,10 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     }, [firestore, projectId]);
 
     const { data: tasksData, error: tasksError, isLoading: isTasksLoading } = useCollection<TaskNode>(tasksQuery);
+
+    useEffect(() => {
+        setState(prev => ({...prev, projectData: projectData || null}));
+    }, [projectData]);
 
     useEffect(() => {
         if (isTasksLoading) return;
@@ -295,6 +302,13 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         return { ...prev, tasks: tempTasks };
     });
   }, [firestore, projectId]);
+
+  const updateProject = useCallback((updates: Partial<Project>) => {
+    if (!firestore || !projectId) return;
+    const projectRef = doc(firestore, 'projects', projectId);
+    updateDocumentNonBlocking(projectRef, updates);
+  }, [firestore, projectId]);
+
 
   const deleteTask = useCallback((id: string) => {
     if (!firestore || !projectId) return;
@@ -433,7 +447,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
       setState(prev => ({...prev, selectedTaskIds: ids}));
   }, []);
   const setFocusedParentId = useCallback((id: string | null) => {
-    setState(p => ({ ...p, focusedParentId: id, drillDownStack: id ? [id] : [], filter: 'Project' }));
+    setState(p => ({ ...p, focusedParentId: id, drillDownStack: [], filter: 'Project' }));
   }, []);
   const setDrillDownStack = useCallback((stack: string[] | ((prev: string[]) => string[])) => {
     setState(p => ({...p, drillDownStack: typeof stack === 'function' ? stack(p.drillDownStack) : stack}));
@@ -465,5 +479,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     setResourcePath,
     setDrillDownStack,
     leaveProject,
+    updateProject,
   };
 };
