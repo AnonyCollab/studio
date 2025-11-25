@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import { TaskNode, Theme, BackgroundType, Page, MembersViewMode, ResourcesViewMode, CommunityViewMode } from '../types';
-import { ChevronRight, ChevronDown, FileText, Plus, ArrowRightCircle, Search, X, ChevronUp, Calendar as CalendarIcon, ChevronLeft, Eye, Filter, Users, Video, Image, File, MoreHorizontal, Copy, Trash2, Circle, ArrowLeft, CornerDownRight, Flag, Target, CheckSquare, Zap, BookOpen, Maximize2 } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileText, Plus, ArrowRightCircle, Search, X, ChevronUp, Calendar as CalendarIcon, ChevronLeft, Eye, Filter, Users, Video, Image, File, MoreHorizontal, Copy, Trash2, Circle, ArrowLeft, CornerDownRight, Flag, Target, CheckSquare, Zap, BookOpen, Maximize2, Folder } from 'lucide-react';
 import { StatusBadge } from './Plan';
 
 interface SidebarProps {
@@ -31,6 +31,8 @@ interface SidebarProps {
   communityView?: CommunityViewMode;
   setCommunityView?: (mode: CommunityViewMode) => void;
   isMainView?: boolean;
+  resourcePath?: (string | null)[];
+  setResourcePath?: (path: (string | null)[]) => void;
 }
 
 const MAX_INLINE_DEPTH = 2; 
@@ -484,7 +486,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     theme, background, setTheme, setBackground, isOpen, onClose,
     currentPage, calendarDate, setCalendarDate,
     membersView, setMembersView, resourcesView, setResourcesView, communityView, setCommunityView,
-    isMainView
+    isMainView, resourcePath, setResourcePath
 }) => {
   // ... rest of the component (unchanged logic for container, calendar etc) ...
   const [collapsed, setCollapsed] = useState(false);
@@ -555,7 +557,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   };
   const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-  const renderContextLayers = (title: string, icon: React.ElementType, items: { label: string, icon?: React.ElementType, active?: boolean }[]) => (
+  const renderContextLayers = (title: string, icon: React.ElementType, items: { label: string, icon?: React.ElementType, active?: boolean }[], setViewFn: any) => (
     <div className="flex flex-col h-full w-full">
         {isOpen && (
             <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
@@ -578,12 +580,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="p-6 flex flex-col gap-3">
              <div className={`text-xs font-bold uppercase tracking-wider mb-2 opacity-60 ${textClass}`}>Active Filters</div>
              {items.map((item, i) => (
-                 <div key={i} onClick={() => {
-                     if (currentPage === 'members' && setMembersView) setMembersView(item.label as MembersViewMode);
-                     if (currentPage === 'resources' && setResourcesView) setResourcesView(item.label as ResourcesViewMode);
-                     if (currentPage === 'community' && setCommunityView) setCommunityView(item.label as CommunityViewMode);
-                     if (onClose) onClose();
-                 }} className={`p-4 rounded-xl border flex items-center justify-between group cursor-pointer ${item.active ? (isLight ? 'bg-brand-50 border-brand-200' : 'bg-brand-500/10 border-brand-500/30') : (isLight ? 'bg-slate-50 border-black/5 hover:bg-slate-100' : 'bg-white/5 border-white/5 hover:bg-white/10')}`}>
+                 <div key={i} onClick={() => { setViewFn(item.label); if (onClose) onClose(); }} className={`p-4 rounded-xl border flex items-center justify-between group cursor-pointer ${item.active ? (isLight ? 'bg-brand-50 border-brand-200' : 'bg-brand-500/10 border-brand-500/30') : (isLight ? 'bg-slate-50 border-black/5 hover:bg-slate-100' : 'bg-white/5 border-white/5 hover:bg-white/10')}`}>
                     <div className="flex items-center gap-3">
                         {item.icon && React.createElement(item.icon, { size: 18, className: item.active ? 'text-brand-500' : (isLight ? 'text-slate-400' : 'text-slate-500') })}
                         <span className={`font-bold ${item.active ? 'text-brand-500' : textClass}`}>{item.label}</span>
@@ -656,26 +653,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )
     }
 
-    if (currentPage === 'members') return renderContextLayers('Directory Filters', Users, [
+    if (currentPage === 'members' && setMembersView) return renderContextLayers('Directory Filters', Users, [
         { label: 'All', active: membersView === 'All', icon: Users }, 
         { label: 'Team Members', active: membersView === 'Team Members', icon: Users }, 
         { label: 'Teams', active: membersView === 'Teams', icon: Eye }, 
         { label: 'Coordinators', active: membersView === 'Coordinators', icon: Filter }
-    ]);
-    if (currentPage === 'resources') return renderContextLayers('Resource Types', File, [
-        { label: 'All', active: resourcesView === 'All', icon: File }, 
-        { label: 'Files', active: resourcesView === 'Files', icon: FileText }, 
-        { label: 'Folders', active: resourcesView === 'Folders', icon: Image },
-        { label: 'PDF', active: resourcesView === 'PDF', icon: File },
-        { label: 'Image', active: resourcesView === 'Image', icon: Image }
-    ]);
-    if (currentPage === 'community') return renderContextLayers('Topics', MoreHorizontal, [
+    ], setMembersView);
+    if (currentPage === 'resources' && setResourcePath && resourcePath) {
+      return (
+        <div className="flex flex-col h-full w-full">
+            {isMobile && (
+                <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                    <div className="w-full flex items-center justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
+                        <div className={`w-12 h-1.5 rounded-full ${isLight ? 'bg-slate-300' : 'bg-white/20'}`} />
+                    </div>
+                </div>
+            )}
+             <div className="flex items-center justify-between px-6 pb-4 pt-4 border-b border-transparent">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
+                        <Folder size={18} />
+                    </div>
+                    <span className={`font-bold text-2xl ${textClass}`}>Resources</span>
+                </div>
+                <button onClick={onClose} className={`p-2 rounded-full ${isLight ? 'bg-slate-100 hover:bg-slate-200' : 'bg-white/10 hover:bg-white/20'}`}>
+                    <X size={24} />
+                </button>
+            </div>
+        </div>
+      );
+    }
+    if (currentPage === 'community' && setCommunityView) return renderContextLayers('Topics', MoreHorizontal, [
         { label: 'All', active: communityView === 'All' },
         { label: 'Help', active: communityView === 'Help' }, 
         { label: 'Feedback', active: communityView === 'Feedback' }, 
         { label: 'Updates', active: communityView === 'Updates' },
         { label: 'Polls', active: communityView === 'Polls' }
-    ]);
+    ], setCommunityView);
 
     return (
     <div className="flex flex-col h-full w-full">

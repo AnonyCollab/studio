@@ -1,8 +1,9 @@
 
 
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
-import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS, MOCK_FILES } from '../constants';
+import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { FileText } from 'lucide-react'; 
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
@@ -15,6 +16,7 @@ export interface ExtendedAppState extends AppState {
   setFilter: (filter: FilterOption) => void;
   setCurrentUser: (user: CurrentUser) => void;
   updateMember: (id: string, updates: Partial<Assignee>) => void;
+  setResourcePath: (path: (string | null)[]) => void;
 }
 
 const STORAGE_KEY = 'omnicanvas-v1-pro';
@@ -45,7 +47,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     cycles: INITIAL_CYCLES,
     posts: MOCK_POSTS,
     members: [], // Initialize as empty
-    files: MOCK_FILES,
+    files: [],
     selectedTaskId: null,
     selectedTaskIds: [],
     isModalOpen: false,
@@ -54,7 +56,8 @@ const createInitialState = (authUser: User | null): AppState => ({
     focusedParentId: null,
     theme: 'Dark',
     background: 'Dots',
-    filter: 'Project'
+    filter: 'Project',
+    resourcePath: [null], // Start at the root
 });
 
 // Helper to bubble up date changes from children to parents (Epic -> Goal -> Milestone)
@@ -196,7 +199,8 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
                     currentUser: createDefaultUser(authUser),
                     tasks: parsed.tasks?.length ? parsed.tasks : [],
                     posts: parsed.posts?.length ? parsed.posts : MOCK_POSTS,
-                    files: parsed.files?.length ? parsed.files : MOCK_FILES,
+                    files: parsed.files?.length ? parsed.files : [],
+                    resourcePath: parsed.resourcePath || [null],
                 }));
             } catch (e) {
                 console.error('Failed to parse local storage', e);
@@ -225,6 +229,10 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
         ...prev,
         members: prev.members.map(m => m.id === id ? { ...m, ...updates } : m)
     }))
+  }, []);
+
+  const setResourcePath = useCallback((path: (string | null)[]) => {
+      setState(prev => ({ ...prev, resourcePath: path }));
   }, []);
 
   const updateTask = useCallback((id: string, updates: Partial<TaskNode>) => {
@@ -691,19 +699,19 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
   }, []);
 
   const addFile = useCallback((file: Partial<FileItem>) => {
+    setState(prev => {
       const newFile: FileItem = {
-          id: `f-${Date.now()}`,
+          id: `file-${Date.now()}`,
           name: 'New File',
-          type: 'File',
-          size: '0 KB',
-          date: new Date().toLocaleDateString(),
-          icon: FileText, 
-          color: 'text-slate-500',
-          bg: 'bg-slate-500/10',
+          type: 'file',
+          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+          parentId: prev.resourcePath[prev.resourcePath.length - 1] || null,
           ...file
       };
-      setState(prev => ({ ...prev, files: [newFile, ...prev.files] }));
+      return { ...prev, files: [...prev.files, newFile] };
+    });
   }, []);
+
 
   return {
     ...state,
@@ -725,7 +733,8 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
     addPost,
     addMember,
     addFile,
-    updateMember
+    updateMember,
+    setResourcePath,
   };
 };
 

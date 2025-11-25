@@ -74,9 +74,33 @@ export const CreationSheet: React.FC<CreationSheetProps> = ({
     }
 
     const handleUpload = () => {
-        if (onAddFile) onAddFile({ name: 'Uploaded_File.pdf', size: '2.4 MB' });
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (e) => {
+            const target = e.target as HTMLInputElement;
+            const file = target.files?.[0];
+            if (file && onAddFile) {
+                onAddFile({ 
+                    name: file.name, 
+                    type: 'file',
+                    fileType: file.type,
+                    size: `${(file.size / 1024).toFixed(2)} KB` 
+                });
+            }
+        };
+        input.click();
         onClose();
     }
+    
+    const handleCreateFolder = () => {
+        if (onAddFile) {
+            const folderName = prompt("Enter folder name:");
+            if (folderName) {
+                onAddFile({ name: folderName, type: 'folder' });
+            }
+        }
+        onClose();
+    };
 
     const getOptions = () => {
         switch (currentPage) {
@@ -89,7 +113,7 @@ export const CreationSheet: React.FC<CreationSheetProps> = ({
             ];
             case 'calendar': return [{ label: 'New Event', icon: Calendar, action: onCreateTask, color: 'text-emerald-500' }, { label: 'Campaign', icon: Flag, action: onCreateTask, color: 'text-orange-500' }];
             case 'members': return [{ label: 'Invite Member', icon: UserPlus, action: handleInviteMember, color: 'text-brand-500' }, { label: 'Create Team', icon: Users, action: () => console.log('Create Team'), color: 'text-purple-500' }];
-            case 'resources': return [{ label: 'Upload Item', icon: Upload, action: handleUpload, color: 'text-brand-500' }, { label: 'New Folder', icon: FolderPlus, action: () => console.log('Folder'), color: 'text-yellow-500' }];
+            case 'resources': return [{ label: 'Upload File', icon: Upload, action: handleUpload, color: 'text-brand-500' }, { label: 'New Folder', icon: FolderPlus, action: handleCreateFolder, color: 'text-yellow-500' }];
             case 'community': return [{ label: 'Ask for Help', icon: HelpCircle, action: () => setSelectedAction('Help'), color: 'text-rose-500' }, { label: 'Submit Feedback', icon: MessageSquare, action: () => setSelectedAction('Feedback'), color: 'text-blue-500' }, { label: 'Post Update', icon: RefreshCcw, action: () => setSelectedAction('Update'), color: 'text-emerald-500' }, { label: 'Create Poll', icon: BarChart, action: () => setSelectedAction('Poll'), color: 'text-purple-500' }];
             default: return [{ label: 'New Task', icon: CheckSquare, action: onCreateTask, color: 'text-brand-500' }];
         }

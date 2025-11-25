@@ -111,13 +111,14 @@ export interface ChecklistItem {
 export interface FileItem {
     id: string;
     name: string;
-    type: string;
-    size: string;
+    type: 'folder' | 'file';
+    fileType?: string; // e.g., 'PDF', 'Image' for files
+    size?: string;
     date: string;
-    icon: any; 
-    color: string;
-    bg: string;
+    parentId: string | null;
+    url?: string; // Only for files
 }
+
 
 export interface Cycle {
   id: string;
@@ -177,6 +178,7 @@ export interface AppState {
   theme: Theme;
   background: BackgroundType;
   filter: FilterOption;
+  resourcePath: (string | null)[];
 }
 
 export interface AIActionResponse {

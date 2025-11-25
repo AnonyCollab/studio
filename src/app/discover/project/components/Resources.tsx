@@ -1,7 +1,28 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, Upload, ChevronRight, ArrowLeft } from 'lucide-react';
+import { useStore } from '../store/useStore';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+
+const getFileIcon = (type?: string) => {
+    if (!type) return <File size={20} />;
+    if (type.startsWith('image/')) return <Image size={20} />;
+    if (type.startsWith('video/')) return <Video size={20} />;
+    if (type.includes('zip') || type.includes('archive')) return <Archive size={20} />;
+    if (type.includes('pdf')) return <FileText size={20} />;
+    return <File size={20} />;
+};
+
+const getFileColor = (type?: string) => {
+    if (!type) return 'text-gray-400';
+    if (type.startsWith('image/')) return 'text-emerald-500';
+    if (type.startsWith('video/')) return 'text-pink-500';
+    if (type.includes('zip') || type.includes('archive')) return 'text-blue-500';
+    if (type.includes('pdf')) return 'text-red-500';
+    return 'text-gray-400';
+};
 
 interface ResourcesProps {
     theme: Theme;
@@ -9,8 +30,11 @@ interface ResourcesProps {
     files: FileItem[];
 }
 
-export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode, files }) => {
+export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
+    const { files, addFile, resourcePath, setResourcePath } = useStore();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
+    const [newFolderName, setNewFolderName] = useState('');
+    const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:bg-white" : "bg-[#18181b]/80 border-white/5 hover:bg-[#202023]";
@@ -18,31 +42,80 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode, files }) 
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
     const inputClass = isLight ? "bg-white border-slate-200 text-slate-700" : "bg-[#18181b] border-white/10 text-slate-200";
 
-    const folders = ['Design Assets', 'Documentation', 'Legal Contracts', 'Marketing'];
+    const currentFolderId = resourcePath[resourcePath.length - 1];
+    
+    const currentItems = useMemo(() => {
+        return files.filter(file => file.parentId === currentFolderId);
+    }, [files, currentFolderId]);
 
-    const displayedFiles = useMemo(() => {
-        if (viewMode === 'Folders') return []; // Hide files if in Folders view
-        if (viewMode === 'All' || viewMode === 'Files') return files;
-        
-        // Filter by specific type
-        return files.filter(f => {
-            if (viewMode === 'Image') return f.type === 'Image' || f.type === 'PNG' || f.type === 'JPG';
-            if (viewMode === 'Video') return f.type === 'Video' || f.type === 'MP4';
-            return f.type.includes(viewMode);
+    const folders = useMemo(() => currentItems.filter(item => item.type === 'folder'), [currentItems]);
+    const fileItems = useMemo(() => currentItems.filter(item => item.type === 'file'), [currentItems]);
+
+    const breadcrumbs = useMemo(() => {
+        const path = [{ id: null, name: 'Resources' }];
+        resourcePath.slice(1).forEach(folderId => {
+            const folder = files.find(f => f.id === folderId);
+            if(folder) path.push({ id: folder.id, name: folder.name });
         });
-    }, [viewMode, files]);
+        return path;
+    }, [resourcePath, files]);
 
-    const showFolders = viewMode === 'All' || viewMode === 'Folders';
+    const handleNavigate = (folderId: string) => {
+        setResourcePath([...resourcePath, folderId]);
+    };
+
+    const handleBreadcrumbClick = (index: number) => {
+        setResourcePath(resourcePath.slice(0, index + 1));
+    };
+
+    const handleCreateFolder = () => {
+        if (!newFolderName.trim()) return;
+        addFile({ name: newFolderName, type: 'folder', parentId: currentFolderId });
+        setNewFolderName('');
+        setIsCreatingFolder(false);
+    };
+
+    const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        addFile({
+            name: file.name,
+            type: 'file',
+            fileType: file.type,
+            size: `${(file.size / 1024).toFixed(2)} KB`,
+            parentId: currentFolderId,
+            url: URL.createObjectURL(file) // Placeholder URL
+        });
+    }
 
     return (
         <div className="w-full h-full p-4 md:p-8 overflow-y-auto custom-scrollbar pb-32 md:pb-24">
             <div className="max-w-6xl mx-auto">
-                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
                     <div>
-                        <h1 className={`text-2xl md:text-3xl font-bold mb-2 ${textMain}`}>{viewMode === 'All' ? 'Resources' : viewMode}</h1>
+                         {/* Breadcrumbs */}
+                        <div className="flex items-center gap-1.5 text-sm mb-2">
+                             {breadcrumbs.map((crumb, index) => (
+                                 <React.Fragment key={crumb.id || 'root'}>
+                                     <button 
+                                         onClick={() => handleBreadcrumbClick(index)}
+                                         className={`transition-colors ${
+                                             index === breadcrumbs.length - 1
+                                             ? `font-bold ${textMain}`
+                                             : `${textMuted} hover:text-brand-500`
+                                         }`}
+                                     >
+                                         {crumb.name}
+                                     </button>
+                                     {index < breadcrumbs.length - 1 && (
+                                         <ChevronRight size={16} className={textMuted} />
+                                     )}
+                                 </React.Fragment>
+                             ))}
+                        </div>
                         <p className={textMuted}>Central repository for project assets and documents.</p>
                     </div>
-                    <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                     <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                          <div className="relative w-full md:w-auto">
                             <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMuted}`} size={16} />
                             <input 
@@ -51,28 +124,53 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode, files }) 
                                 className={`pl-10 pr-4 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-brand-500/20 w-full md:w-64 transition-all ${inputClass}`}
                             />
                          </div>
+                         <Button onClick={() => setIsCreatingFolder(true)} className="flex items-center gap-2">
+                            <Plus size={16} /> New Folder
+                         </Button>
+                         <Button variant="outline" onClick={() => document.getElementById('file-upload-input')?.click()}>
+                             <Upload size={16} className="mr-2"/> Upload File
+                         </Button>
+                         <input type="file" id="file-upload-input" className="hidden" onChange={handleFileUpload} />
                     </div>
                 </div>
 
-                {/* Recent Folders */}
-                {showFolders && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+                {isCreatingFolder && (
+                    <div className="p-4 rounded-xl border bg-opacity-50 mb-6 flex gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}}>
+                        <Folder size={20} className="text-brand-500" />
+                        <Input
+                            autoFocus
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                            onBlur={() => { if(!newFolderName) setIsCreatingFolder(false); }}
+                            placeholder="New folder name..."
+                            className="bg-transparent border-none focus-visible:ring-0 p-0 h-auto"
+                        />
+                        <Button size="sm" onClick={handleCreateFolder}>Create</Button>
+                        <Button size="sm" variant="ghost" onClick={() => setIsCreatingFolder(false)}>Cancel</Button>
+                    </div>
+                )}
+                
+                {folders.length > 0 && (
+                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
                         {folders.map((folder, i) => (
-                            <div key={i} className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${cardClass}`}>
+                            <div 
+                                key={i} 
+                                onClick={() => handleNavigate(folder.id)}
+                                className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${cardClass}`}
+                            >
                                 <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
                                     <Folder size={24} />
                                 </div>
                                 <div className="min-w-0">
-                                    <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder}</h3>
-                                    <p className={`text-xs ${textMuted}`}>12 items</p>
+                                    <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder.name}</h3>
                                 </div>
                             </div>
                         ))}
                     </div>
                 )}
 
-                {/* Files List */}
-                {displayedFiles.length > 0 ? (
+                {fileItems.length > 0 ? (
                     <div className={`rounded-2xl border overflow-hidden ${containerClass}`}>
                         <div className="overflow-x-auto">
                             <div className="min-w-[700px]">
@@ -85,18 +183,15 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode, files }) 
                                 </div>
                                 
                                 <div className="divide-y divide-white/5">
-                                    {displayedFiles.map((file, idx) => (
+                                    {fileItems.map((file, idx) => (
                                         <div key={idx} className={`grid grid-cols-12 p-4 items-center transition-colors group ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
                                             <div className="col-span-5 flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${file.bg} ${file.color}`}>
-                                                    {file.type === 'PDF' ? <FileText size={20} /> : 
-                                                     file.type === 'ZIP' ? <Archive size={20} /> :
-                                                     file.type === 'Image' ? <Image size={20} /> :
-                                                     file.type === 'Video' ? <Video size={20} /> : <File size={20} />}
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${getFileColor(file.fileType)}`}>
+                                                    {getFileIcon(file.fileType)}
                                                 </div>
                                                 <span className={`font-medium truncate ${textMain}`}>{file.name}</span>
                                             </div>
-                                            <div className={`col-span-2 text-sm ${textMuted}`}>{file.type}</div>
+                                            <div className={`col-span-2 text-sm ${textMuted}`}>{file.fileType || 'File'}</div>
                                             <div className={`col-span-2 text-sm font-mono ${textMuted}`}>{file.size}</div>
                                             <div className={`col-span-2 text-sm ${textMuted}`}>{file.date}</div>
                                             <div className="col-span-1 flex justify-end">
@@ -111,9 +206,11 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode, files }) 
                         </div>
                     </div>
                 ) : (
-                     viewMode !== 'Folders' && (
-                         <div className={`text-center py-12 ${textMuted}`}>
-                             No files found for this filter.
+                     folders.length === 0 && (
+                         <div className={`text-center py-16 ${textMuted}`}>
+                            <Folder size={48} className="mx-auto mb-4 opacity-30" />
+                            <p className="text-lg">This folder is empty.</p>
+                            <p>Upload a file or create a new folder to get started.</p>
                          </div>
                      )
                 )}

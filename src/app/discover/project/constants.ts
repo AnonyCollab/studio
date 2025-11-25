@@ -86,14 +86,7 @@ export const MOCK_POSTS: UserPost[] = [
     }
 ];
 
-export const MOCK_FILES: FileItem[] = [
-    { id: 'f1', name: 'Brand_Guidelines_v2.pdf', type: 'PDF', size: '4.2 MB', date: 'Oct 12, 2023', icon: FileText, color: 'text-red-500', bg: 'bg-red-500/10' },
-    { id: 'f2', name: 'Q4_Roadmap_Presentation.pptx', type: 'PPTX', size: '12.5 MB', date: 'Oct 10, 2023', icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-    { id: 'f3', name: 'Hero_Banner_Assets.zip', type: 'ZIP', size: '145 MB', date: 'Oct 08, 2023', icon: Archive, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-    { id: 'f4', name: 'UI_Kit_v3.fig', type: 'Figma', size: 'Link', date: 'Oct 05, 2023', icon: Link, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-    { id: 'f5', name: 'Landing_Page_Mockup.png', type: 'Image', size: '2.1 MB', date: 'Sep 28, 2023', icon: Image, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-    { id: 'f6', name: 'Demo_Walkthrough.mp4', type: 'Video', size: '450 MB', date: 'Sep 25, 2023', icon: Video, color: 'text-pink-500', bg: 'bg-pink-500/10' },
-];
+export const MOCK_FILES: FileItem[] = [];
 
 export const MOCK_ARTICLES: UserArticle[] = [
   {
