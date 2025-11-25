@@ -22,8 +22,9 @@ const darkTheme = {
     ...darkDefaultTheme.colors,
     editor: {
       ...darkDefaultTheme.colors!.editor,
-      background: "hsl(var(--background))",
+      background: "#09090b", // Use the specific dark theme background
     },
+    // You can also customize other colors here if needed
   },
 } satisfies Theme;
 
