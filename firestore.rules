@@ -1,25 +1,4 @@
 
-/**
- * @fileOverview Firestore Security Rules for AnonyCollab application.
- *
- * Core Philosophy:
- * This ruleset enforces a public-read, public-write model for posts, with comments also being publicly accessible.
- *
- * Data Structure:
- * - Posts are stored in the /posts/{postId} collection.
- * - Comments are stored in the /posts/{postId}/comments/{commentId} subcollection.
- *
- * Key Security Decisions:
- * - Posts and comments are publicly readable and writable by anyone, including unauthenticated users.
- * - No authentication is required for any operation.
- * - There is no data validation beyond ensuring the document IDs in subcollections match their paths.
- *
- * Denormalization for Authorization:
- * - Not applicable in this public access scenario. If comments required role-based access, the post's member list or owner would be denormalized into the comment documents.
- *
- * Structural Segregation:
- * - Not applicable, as all data is public.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -35,20 +14,10 @@ service cloud.firestore {
       );
     }
 
-    // Users can be read by anyone. Writes are restricted.
+    // Users can be read by anyone. Writes are restricted to the owner of the document.
     match /users/{userId} {
       allow read: if true;
-      
-      // Allow a user to update their own document.
-      // Also, allow another user to update the `friends` list if an accepted friend request exists.
-      allow write: if request.auth != null && (
-        request.auth.uid == userId ||
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends']) &&
-          request.resource.data.friends.size() == resource.data.friends.size() + 1 &&
-          acceptedFriendRequestExists(request.auth.uid, userId)
-        )
-      );
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Friend requests can be created by the sender, read by sender/receiver, and updated by the receiver.
