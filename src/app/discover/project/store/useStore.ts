@@ -1,7 +1,4 @@
 
-
-
-
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
@@ -37,7 +34,7 @@ const createDefaultUser = (authUser: User | null): CurrentUser => {
         id: authUser.uid,
         name: authUser.displayName || 'Anonymous User',
         initials: (authUser.displayName || 'AU').slice(0, 2).toUpperCase(),
-        role: 'Owner', // Default role for now
+        role: 'Visitor', // Start as visitor, role will be determined after project data loads
         avatarColor: 'bg-blue-500', // This could also be generated
         teamName: 'Frontend Team', // Placeholder
     };
@@ -164,6 +161,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         if (!firestore || !projectId) return null;
         return doc(firestore, 'projects', projectId);
     }, [firestore, projectId]);
+    
     const { data: projectData } = useDoc(projectDocQuery);
     
     // --- New: Fetch Resources from Firestore ---
@@ -181,32 +179,46 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     }, [filesData]);
 
 
-    const memberUIDs = useMemo(() => projectData?.members || [], [projectData]);
-
-    const usersQuery = useMemoFirebase(() => {
-        if (!firestore || memberUIDs.length === 0) return null;
-        return query(collection(firestore, 'users'), where('profile.uid', 'in', memberUIDs));
-    }, [firestore, memberUIDs]);
+    const membersQuery = useMemoFirebase(() => {
+        if (!firestore || !projectId) return null;
+        return collection(firestore, 'projects', projectId, 'members');
+    }, [firestore, projectId]);
     
-    const { data: usersData } = useCollection(usersQuery);
+    const { data: membersData } = useCollection<Assignee>(membersQuery);
+
 
     useEffect(() => {
-        if (usersData) {
-            const membersList: Assignee[] = usersData.map(user => ({
-                id: user.id,
-                name: user.profile.displayName,
-                initials: (user.profile.displayName || 'U').slice(0, 2).toUpperCase(),
-                color: 'bg-blue-500',
-                type: 'user',
-                role: user.id === projectData?.owner.uid ? 'Owner' : 'Member', 
-            }));
-            setState(prev => ({ ...prev, members: membersList }));
+      // This effect now correctly depends on projectData and membersData.
+      if (projectData && membersData && authUser) {
+        let userRole: UserRole = 'Visitor';
+        
+        const member = membersData.find(m => m.uid === authUser.uid);
+
+        if (projectData.owner.uid === authUser.uid) {
+            userRole = 'Owner';
+        } else if (member) {
+            userRole = member.role === 'owner' ? 'Owner' : 'Member';
         }
-    }, [usersData, projectData]);
+
+        setState(prev => ({
+          ...prev,
+          members: membersData,
+          currentUser: {
+            ...prev.currentUser,
+            name: authUser.displayName || prev.currentUser.name,
+            initials: (authUser.displayName || prev.currentUser.initials).slice(0, 2).toUpperCase(),
+            role: userRole,
+          }
+        }));
+      } else if (!authUser) {
+          // Handle case where user logs out
+          setState(prev => ({...prev, currentUser: createDefaultUser(null)}));
+      }
+    }, [projectData, membersData, authUser]);
 
 
     useEffect(() => {
-        const savedState = localStorage.getItem(STORAGE_KEY);
+        const savedState = localStorage.getItem(`${STORAGE_KEY}-${projectId}`);
         if (savedState) {
             try {
                 const parsed = JSON.parse(savedState);
@@ -217,20 +229,22 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
                     tasks: parsed.tasks?.length ? parsed.tasks : [],
                     posts: parsed.posts?.length ? parsed.posts : MOCK_POSTS,
                     resourcePath: parsed.resourcePath || [null],
-                    // files are now managed by firestore
                 }));
             } catch (e) {
                 console.error('Failed to parse local storage', e);
                 setState(createInitialState(authUser));
             }
+        } else {
+             setState(createInitialState(authUser));
         }
-    }, [authUser]);
+    }, [authUser, projectId]);
 
   useEffect(() => {
+      if (!projectId) return;
       // Don't save files to local storage anymore
-      const { files, ...stateToSave } = state;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
-  }, [state]);
+      const { files, members, ...stateToSave } = state;
+      localStorage.setItem(`${STORAGE_KEY}-${projectId}`, JSON.stringify(stateToSave));
+  }, [state, projectId]);
 
   const setCurrentUser = useCallback((user: CurrentUser) => {
       setState(prev => ({ ...prev, currentUser: user }));
@@ -753,4 +767,5 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
   };
 };
 
+    
     
