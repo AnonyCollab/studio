@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileItem } from '../types';
 import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText } from 'lucide-react';
@@ -31,9 +31,14 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
     const isVideo = file.fileType?.startsWith('video/');
     const isAudio = file.fileType?.startsWith('audio/');
     
+    // Expand embeddable types
     const canEmbed = file.fileType && (
         file.fileType.startsWith('text/') ||
-        file.fileType === 'application/pdf'
+        file.fileType === 'application/pdf' ||
+        file.fileType.startsWith('application/msword') ||
+        file.fileType.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml') ||
+        file.fileType.startsWith('application/vnd.ms-excel') ||
+        file.fileType.startsWith('application/vnd.openxmlformats-officedocument.spreadsheetml')
     );
 
     const renderPreview = () => {
@@ -48,6 +53,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
         if (isAudio) {
             return <audio src={file.url} controls className="w-full" />;
         }
+        // Use embed for a wider range of document types
         if (canEmbed) {
             return <embed src={file.url} type={file.fileType} className="w-full h-[75vh] rounded-lg border" />;
         }
@@ -84,11 +90,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
                                 Download
                             </Button>
                         </a>
-                        <DialogClose asChild>
-                            <Button variant="ghost" size="icon" className={`h-9 w-9 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                                <X className="h-5 w-5" />
-                            </Button>
-                        </DialogClose>
+                         <Button onClick={onClose} variant="ghost" size="icon" className={`h-9 w-9 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+                            <X className="h-5 w-5" />
+                        </Button>
                     </div>
                 </DialogHeader>
 

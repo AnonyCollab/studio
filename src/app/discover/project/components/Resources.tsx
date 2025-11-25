@@ -186,19 +186,19 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                                         }}
                                                         onBlur={() => { if(!newFolderName) setIsCreatingFolder(false); else handleCreateFolder() }}
                                                         placeholder="New folder name"
-                                                        className="h-9 bg-transparent focus-visible:ring-1 focus-visible:ring-brand-500 border-brand-500/50"
+                                                        className={`font-medium truncate h-auto bg-transparent border-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 ${textMain}`}
                                                     />
                                                 </div>
                                             </div>
                                         )}
                                         {fileItems.map((file, idx) => (
                                             <div key={idx} onClick={() => file.url && setPreviewFile(file)} className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
-                                                <div className="col-span-5 flex items-center gap-3">
+                                                <a href={file.url} target="_blank" rel="noopener noreferrer" className="col-span-5 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
                                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${getFileColor(file.fileType)}`}>
                                                         {getFileIcon(file.fileType)}
                                                     </div>
                                                     <span className={`font-medium truncate ${textMain}`}>{file.name}</span>
-                                                </div>
+                                                </a>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.fileType || 'File'}</div>
                                                 <div className={`col-span-2 text-sm font-mono ${textMuted}`}>{file.size}</div>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.date}</div>
