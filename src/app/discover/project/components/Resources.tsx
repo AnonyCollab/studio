@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, Upload, ChevronRight, ArrowLeft } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -198,7 +198,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                     
                                     <div className="divide-y divide-white/5">
                                         {fileItems.map((file, idx) => (
-                                            <a key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
+                                            <div key={idx} onClick={() => setPreviewFile(file)} className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
                                                 <div className="col-span-5 flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${getFileColor(file.fileType)}`}>
                                                         {getFileIcon(file.fileType)}
@@ -215,7 +215,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                                         </a>
                                                     )}
                                                 </div>
-                                            </a>
+                                            </div>
                                         ))}
                                     </div>
                                 </div>
@@ -243,4 +243,4 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
             )}
         </>
     );
-};
+}
