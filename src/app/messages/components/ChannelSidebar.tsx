@@ -116,7 +116,7 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
   };
 
   return (
-    <div className={`w-80 flex-shrink-0 flex flex-col ${isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'}`}>
+    <div className={`w-80 h-full flex-shrink-0 flex flex-col ${isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'}`}>
       {/* Server header with dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
