@@ -234,34 +234,31 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         if (isProjectLoading || isMembersLoading || !authUser) {
             return;
         }
-        
+
         let userRole: UserRole = 'Visitor';
-        
-        if (projectData && authUser) {
-            if (projectData.owner?.uid === authUser.uid) {
-                userRole = 'Owner';
-            } else if (membersData?.some(m => m.id === authUser.uid)) {
-                const memberInfo = membersData.find(m => m.id === authUser.uid);
-                userRole = (memberInfo?.role || 'Member') as UserRole;
-            }
+        if (projectData && authUser && projectData.owner?.uid === authUser.uid) {
+            userRole = 'Owner';
+        } else if (membersData?.some(m => m.uid === authUser.uid)) {
+            const memberInfo = membersData.find(m => m.uid === authUser.uid);
+            userRole = (memberInfo?.role || 'Member') as UserRole;
         }
-        
+
         setState(prev => ({
-          ...prev,
-          members: membersData ? membersData.map(m => ({
-              ...m,
-              id: m.uid, // Ensure id is populated from uid
-              type: m.type || 'user',
-              color: m.color || 'bg-blue-500',
-              initials: (m.displayName || '?').charAt(0)
-          })) : [],
-          currentUser: {
-            ...prev.currentUser,
-            id: authUser.uid,
-            name: authUser.displayName || prev.currentUser.name,
-            initials: (authUser.displayName || prev.currentUser.initials).slice(0, 2).toUpperCase(),
-            role: userRole,
-          }
+            ...prev,
+            members: membersData ? membersData.map(m => ({
+                ...m,
+                id: m.uid || m.id, // Ensure id is populated from uid
+                type: m.type || 'user',
+                color: m.color || 'bg-blue-500',
+                initials: (m.displayName || '?').charAt(0)
+            })) : [],
+            currentUser: {
+                ...prev.currentUser,
+                id: authUser.uid,
+                name: authUser.displayName || prev.currentUser.name,
+                initials: (authUser.displayName || prev.currentUser.initials || '??').slice(0, 2).toUpperCase(),
+                role: userRole,
+            }
         }));
     }, [projectData, membersData, authUser, isProjectLoading, isMembersLoading]);
 
