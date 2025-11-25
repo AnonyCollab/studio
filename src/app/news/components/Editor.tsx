@@ -22,7 +22,7 @@ const darkTheme = {
     ...darkDefaultTheme.colors,
     editor: {
       ...darkDefaultTheme.colors!.editor,
-      background: "#09090b", // Use the specific dark theme background
+      background: "#18181b", // Updated to match the task window background
     },
     // You can also customize other colors here if needed
   },
@@ -54,7 +54,7 @@ export default function Editor({ onChange, initialContent, editable = true, coll
       // We'll wrap it in a paragraph block to make it valid for BlockNote.
       return [{ type: "paragraph", content: initialContent }];
     }
-  }, [initialContent]);
+  }, [initialContent])
 
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
@@ -78,6 +78,7 @@ export default function Editor({ onChange, initialContent, editable = true, coll
         showCursorLabels: "activity",
       };
     }, [collaborationId]),
+    editable: editable,
   });
 
   // Renders the editor instance using a React component.
