@@ -119,6 +119,23 @@ service cloud.firestore {
 
       // Only allow the owner to delete.
       allow delete: if request.auth != null && request.auth.uid == resource.data.owner.uid;
+
+      // Rules for the resources subcollection
+      match /resources/{resourceId} {
+        function isProjectMember() {
+          return request.auth != null && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
+        }
+        
+        // Allow members to read individual documents
+        allow get: if isProjectMember();
+        
+        // Allow members to query/list the collection.
+        // This rule is more permissive but necessary for `useCollection`.
+        allow list: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)) && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
+
+        // Allow members to create, update, or delete resources.
+        allow create, update, delete: if isProjectMember();
+      }
     }
 
     /**
