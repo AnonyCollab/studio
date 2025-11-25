@@ -1,7 +1,7 @@
 
 
 'use client';
-import { Hash, Volume2, ChevronDown, ChevronRight, Lock, Plus, Settings } from 'lucide-react';
+import { Hash, ChevronDown, ChevronRight, Lock, Plus, Settings } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -11,13 +11,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 
 interface Channel {
   id: string;
   name: string;
-  type: 'text' | 'voice';
+  type: 'text';
   locked?: boolean;
 }
 
@@ -46,8 +46,6 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
   useEffect(() => {
     if(firestore && serverId) {
         const serverDoc = collection(firestore, 'servers');
-        // This is not efficient, but we don't have a direct getDoc hook with ID.
-        // For a real app, this should be a direct doc read.
         const serverQuery = query(serverDoc, where('__name__', '==', serverId));
         const unsubscribe = onSnapshot(serverQuery, (snapshot) => {
             if (!snapshot.empty) {
@@ -59,29 +57,26 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
     }
   }, [firestore, serverId]);
 
-  const sections = useMemo(() => {
+  const textChannels = useMemo(() => {
     if (!channelsData) return [];
-    return [
-      {
-        name: 'TEXT CHANNELS',
-        channels: channelsData.filter(c => c.type === 'text'),
-      },
-      {
-        name: 'VOICE CHANNELS',
-        channels: channelsData.filter(c => c.type === 'voice'),
-      }
-    ]
+    return channelsData.filter(c => c.type === 'text');
   }, [channelsData]);
+
+  const handleCreateChannel = () => {
+    if (!firestore || !serverId) return;
+    const name = prompt("Enter new channel name:");
+    if (name) {
+        const channelsCollection = collection(firestore, 'servers', serverId, 'channels');
+        addDocumentNonBlocking(channelsCollection, {
+            name: name.toLowerCase().replace(/\s+/g, '-'),
+            type: 'text',
+            serverId: serverId,
+        });
+    }
+  };
 
 
   if (!server) return null;
-
-  const toggleSection = (sectionName: string) => {
-    setCollapsedSections(prev => ({
-      ...prev,
-      [sectionName]: !prev[sectionName],
-    }));
-  };
 
   return (
     <div className={`w-80 h-full flex-shrink-0 flex flex-col ${isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'}`}>
@@ -129,29 +124,22 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
       {/* Channels list */}
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-4">
-          {sections.map((section: any) => (
-            <div key={section.name}>
-              <button
-                onClick={() => toggleSection(section.name)}
-                className={`w-full flex items-center justify-between px-2 py-1 group rounded transition-colors ${
-                  isDark ? 'hover:bg-white/5' : 'hover:bg-gray-100'
-                }`}
+            <div>
+              <div
+                className={`w-full flex items-center justify-between px-2 py-1 group rounded transition-colors`}
               >
                 <span className={`text-xs tracking-wider ${isDark ? 'text-[#94a3b8]' : 'text-gray-500'}`}>
-                  {section.name}
+                  TEXT CHANNELS
                 </span>
-                {collapsedSections[section.name] ? (
-                  <ChevronRight className={`w-3 h-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`} />
-                ) : (
-                  <ChevronDown className={`w-3 h-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`} />
-                )}
-              </button>
+                <button onClick={handleCreateChannel} className={`p-1 rounded-full ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                    <Plus className="w-4 h-4" />
+                </button>
+              </div>
 
-              {!collapsedSections[section.name] && (
                 <div className="mt-1 space-y-0.5">
-                  {section.channels.map((channel: any) => {
+                  {textChannels.map((channel: any) => {
                     const isSelected = selectedChannel === channel.id;
-                    const Icon = channel.type === 'voice' ? Volume2 : Hash;
+                    const Icon = Hash;
 
                     return (
                       <button
@@ -170,20 +158,13 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
                         <Icon className="w-4 h-4 flex-shrink-0" />
                         <span className="text-sm truncate flex-1 text-left">{channel.name}</span>
                         {channel.locked && <Lock className={`w-3 h-3 ${isDark ? 'text-white/40' : 'text-gray-400'}`} />}
-                        {!isSelected && (
-                          <Plus className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        )}
                       </button>
                     );
                   })}
                 </div>
-              )}
             </div>
-          ))}
         </div>
       </ScrollArea>
     </div>
   );
 }
-
-    

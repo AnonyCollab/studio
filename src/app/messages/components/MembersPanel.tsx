@@ -1,62 +1,20 @@
 
+
 import { UserPlus, Crown, Shield, Users as UsersIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfileTrigger } from './ProfileCard';
-import { mockUsers } from '../data/mockUsers';
+import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, doc, documentId, query, where, getDoc } from 'firebase/firestore';
+import { useState, useEffect } from 'react';
 
 interface Member {
   id: string;
-  name: string;
-  avatar: string;
+  displayName: string;
+  photoURL: string;
   role: 'owner' | 'admin' | 'moderator' | 'member';
   status: 'online' | 'idle' | 'offline';
 }
-
-const members: Member[] = [
-  {
-    id: 'user1',
-    name: 'Alice Wonderland',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alice',
-    role: 'owner',
-    status: 'online',
-  },
-  {
-    id: 'user2',
-    name: 'Bob the Builder',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Bob',
-    role: 'admin',
-    status: 'online',
-  },
-  {
-    id: 'user3',
-    name: 'Charlie Notes',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
-    role: 'moderator',
-    status: 'idle',
-  },
-  {
-    id: 'user4',
-    name: 'Diana',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Diana',
-    role: 'member',
-    status: 'dnd',
-  },
-  {
-    id: 'user5',
-    name: 'Eve',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Eve',
-    role: 'member',
-    status: 'online',
-  },
-  {
-    id: 'user6',
-    name: 'Frank Words',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Frank',
-    role: 'member',
-    status: 'offline',
-  },
-];
 
 const roleConfig = {
   owner: {
@@ -83,12 +41,54 @@ const roleConfig = {
 
 interface MembersPanelProps {
   theme: 'light' | 'dark';
+  serverId: string;
 }
 
-export function MembersPanel({ theme }: MembersPanelProps) {
+export function MembersPanel({ theme, serverId }: MembersPanelProps) {
   const isDark = theme === 'dark';
+  const firestore = useFirestore();
+  const [members, setMembers] = useState<Member[]>([]);
 
-  // Group members by role
+  useEffect(() => {
+    if (!firestore || !serverId) return;
+
+    const serverRef = doc(firestore, 'servers', serverId);
+
+    const unsub = getDoc(serverRef).then(serverDoc => {
+      if (serverDoc.exists()) {
+        const memberIds = serverDoc.data().members || [];
+        if (memberIds.length > 0) {
+          const usersQuery = query(collection(firestore, 'users'), where(documentId(), 'in', memberIds));
+          
+          return onSnapshot(usersQuery, (snapshot) => {
+            const fetchedMembers = snapshot.docs.map(doc => {
+              const profile = doc.data().profile;
+              let role: Member['role'] = 'member';
+              if (doc.id === serverDoc.data().ownerId) {
+                role = 'owner';
+              }
+              
+              return {
+                id: doc.id,
+                displayName: profile.displayName,
+                photoURL: profile.photoURL,
+                role: role,
+                status: 'online'
+              } as Member;
+            });
+            setMembers(fetchedMembers);
+          });
+        }
+      }
+      setMembers([]);
+      return () => {};
+    });
+
+    return () => {
+      unsub.then(unsubFunc => unsubFunc && unsubFunc());
+    };
+  }, [firestore, serverId]);
+
   const membersByRole = {
     owner: members.filter((m) => m.role === 'owner'),
     admin: members.filter((m) => m.role === 'admin'),
@@ -148,14 +148,9 @@ export function MembersPanel({ theme }: MembersPanelProps) {
                 </div>
                 <div className="space-y-1">
                   {roleMembers.map((member) => {
-                    const userProfile = mockUsers[member.id];
                     return (
-                      <UserProfileTrigger
-                        key={member.id}
-                        user={userProfile}
-                        theme={theme}
-                      >
-                        <div
+                      <div
+                          key={member.id}
                           className={`flex items-center gap-3 px-2 py-1.5 rounded group transition-all cursor-pointer ${
                             isDark
                               ? 'hover:bg-white/5'
@@ -164,8 +159,8 @@ export function MembersPanel({ theme }: MembersPanelProps) {
                         >
                           <div className="relative flex-shrink-0">
                             <Avatar className={`w-8 h-8 ${isDark ? 'ring-1 ring-white/10' : 'ring-1 ring-gray-200'}`}>
-                              <AvatarImage src={member.avatar} />
-                              <AvatarFallback>{member.name[0]}</AvatarFallback>
+                              <AvatarImage src={member.photoURL} />
+                              <AvatarFallback>{member.displayName[0]}</AvatarFallback>
                             </Avatar>
                             <div
                               className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${getStatusColor(
@@ -181,10 +176,9 @@ export function MembersPanel({ theme }: MembersPanelProps) {
                               color: member.role !== 'member' ? config.color : undefined,
                             }}
                           >
-                            {member.name}
+                            {member.displayName}
                           </span>
-                        </div>
-                      </UserProfileTrigger>
+                      </div>
                     );
                   })}
                 </div>

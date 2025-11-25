@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { Mic, Headphones, Settings, MicOff, HeadphoneOff, Sun, Moon } from 'lucide-react';
+import { Settings, Sun, Moon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState } from 'react';
 import {
@@ -12,8 +13,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ProfileCard } from './ProfileCard';
-import { useUser } from '@/firebase';
+import { useUser, useAuth } from '@/firebase';
 import type { Theme } from '@/context/ThemeContext';
+import { signOut } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 interface UserInfoPanelProps {
   theme: Theme;
@@ -21,11 +24,11 @@ interface UserInfoPanelProps {
 }
 
 export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
-  const [isMuted, setIsMuted] = useState(false);
-  const [isDeafened, setIsDeafened] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const isDark = theme === 'dark';
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
   
   if (isUserLoading || !user) {
     // Render a skeleton or loading state while user data is being fetched
@@ -46,6 +49,11 @@ export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
     avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
     status: 'online' as const,
     joinDate: user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'N/A',
+  };
+  
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push('/login');
   };
 
 
@@ -75,30 +83,6 @@ export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
           </div>
 
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            className={`p-2 rounded-lg transition-all ${
-              isMuted
-                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                : isDark
-                ? 'bg-[#131823] border border-white/10 text-white/70 hover:text-[#22d3ee] hover:bg-white/10'
-                : 'bg-gray-100 border border-gray-200 text-gray-600 hover:text-cyan-600 hover:bg-gray-200'
-            }`}
-          >
-            {isMuted ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => setIsDeafened(!isDeafened)}
-            className={`p-2 rounded-lg transition-all ${
-              isDeafened
-                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                : isDark
-                ? 'bg-[#131823] border border-white/10 text-white/70 hover:text-[#22d3ee] hover:bg-white/10'
-                : 'bg-gray-100 border border-gray-200 text-gray-600 hover:text-cyan-600 hover:bg-gray-200'
-            }`}
-          >
-            {isDeafened ? <HeadphoneOff className="w-4 h-4" /> : <Headphones className="w-4 h-4" />}
-          </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={`p-2 rounded-lg transition-all ${
@@ -145,7 +129,10 @@ export function UserInfoPanel({ theme, onSetTheme }: UserInfoPanelProps) {
                 Notification Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator className={isDark ? 'bg-white/10' : 'bg-gray-200'} />
-              <DropdownMenuItem className="text-red-400 focus:bg-red-500/20 focus:text-red-400">
+              <DropdownMenuItem 
+                onClick={handleLogout}
+                className="text-red-400 focus:bg-red-500/20 focus:text-red-400"
+               >
                 Log Out
               </DropdownMenuItem>
             </DropdownMenuContent>

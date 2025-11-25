@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -38,10 +39,8 @@ export function CreateServerDialog({ isOpen, onOpenChange, theme }: CreateServer
     };
 
     try {
-      // Step 1: Create the server document first and wait for it to complete.
       await setDoc(serverRef, serverData);
 
-      // Step 2: Once the server exists, create the default channels in a new batch.
       const channelsBatch = writeBatch(firestore);
       
       const generalChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
@@ -51,22 +50,14 @@ export function CreateServerDialog({ isOpen, onOpenChange, theme }: CreateServer
         serverId: serverRef.id,
       });
 
-      const lobbyChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
-      channelsBatch.set(lobbyChannelRef, {
-        name: 'Lobby',
-        type: 'voice',
-        serverId: serverRef.id,
-      });
-
       await channelsBatch.commit();
 
       toast({ title: 'Server Created!', description: `${serverName} is ready.` });
       setServerName('');
       onOpenChange(false);
     } catch (error) {
-      // This will catch errors from either setDoc or the batch commit.
       const permissionError = new FirestorePermissionError({
-        path: serverRef.path, // The initial operation that might fail.
+        path: serverRef.path,
         operation: 'create',
         requestResourceData: serverData,
       });

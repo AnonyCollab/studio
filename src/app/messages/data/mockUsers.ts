@@ -1,4 +1,5 @@
 
+
 import { Crown, ShieldCheck, Shield, Zap } from 'lucide-react';
 import { UserProfile } from '../components/ProfileCard';
 
@@ -123,10 +124,3 @@ export const mockUsers: Record<string, UserProfile> = {
     mutualFriends: 20
   }
 };
-
-// Helper function to get a random user
-export function getRandomUser(): UserProfile {
-  const userIds = Object.keys(mockUsers).filter(id => id !== 'currentUser');
-  const randomId = userIds[Math.floor(Math.random() * userIds.length)];
-  return mockUsers[randomId];
-}

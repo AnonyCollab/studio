@@ -148,7 +148,7 @@ function MessagesAppContent() {
               <ChatArea channelId={selectedChannel} isDM={false} serverId={selectedServer} theme={theme} onBack={isMobile ? handleBack : undefined} />
             )}
           </div>
-          {isInGroup && !isMobile && <MembersPanel theme={theme} />}
+          {isInGroup && !isMobile && <MembersPanel serverId={selectedServer} theme={theme} />}
         </div>
 
         {/* User info panel - at bottom left covering server list and sidebar */}
@@ -168,5 +168,3 @@ export default function App() {
     </Suspense>
   )
 }
-
-    

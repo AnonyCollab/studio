@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle, ArrowLeft, FileText, Download } from 'lucide-react';
+import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle, ArrowLeft } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useState, useMemo, useEffect, useRef } from 'react';
@@ -70,6 +70,10 @@ interface Message {
       nanoseconds: number;
     } | null;
   }
+  
+interface ChannelData {
+    name: string;
+}
 
 interface ChatAreaProps {
   channelId: string | null;
@@ -96,6 +100,13 @@ export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaP
   }, [firestore, channelId, isDM]);
 
   const { data: dmData } = useDoc(dmRef);
+
+  const channelRef = useMemoFirebase(() => {
+    if (!firestore || !channelId || isDM || !serverId) return null;
+    return doc(firestore, 'servers', serverId, 'channels', channelId);
+  }, [firestore, channelId, serverId, isDM]);
+
+  const { data: channelData } = useDoc<ChannelData>(channelRef);
 
   // --- FIX: Ensure DM Document Exists ---
   useEffect(() => {
@@ -301,12 +312,12 @@ export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaP
   }
 
   const chatName = useMemo(() => {
-    if (!isDM) return channelId;
+    if (!isDM) return channelData?.name || channelId;
     if (otherUser) return otherUser.displayName;
     if (!dmData) return "Loading...";
     if (dmData.isGroup) return dmData.groupName;
     return otherUser?.displayName || "Loading...";
-  }, [isDM, channelId, dmData, otherUser]);
+  }, [isDM, channelId, channelData, dmData, otherUser]);
 
   return (
     <div className={`flex-1 flex flex-col h-full ${isDarkTheme ? 'bg-[#0a0e1a]' : 'bg-gray-50'}`}>
@@ -493,5 +504,3 @@ export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaP
     </div>
   );
 }
-
-    
