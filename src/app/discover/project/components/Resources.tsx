@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, ArrowLeft } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, ArrowLeft, Upload } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -141,9 +141,22 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                         </div>
                     </div>
                     
-                    {(folders.length > 0 || isCreatingFolder) && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
-                            {isCreatingFolder && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+                            {folders.map((folder) => (
+                                <div 
+                                    key={folder.id} 
+                                    onClick={() => handleNavigate(folder.id)}
+                                    className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${cardClass}`}
+                                >
+                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
+                                        <Folder size={24} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder.name}</h3>
+                                    </div>
+                                </div>
+                            ))}
+                             {isCreatingFolder && (
                                 <div className={`p-4 rounded-xl border flex items-center gap-4 transition-all ${cardClass}`}>
                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
                                         <Folder size={24} />
@@ -167,22 +180,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                     </div>
                                 </div>
                             )}
-                            {folders.map((folder, i) => (
-                                <div 
-                                    key={i} 
-                                    onClick={() => handleNavigate(folder.id)}
-                                    className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${cardClass}`}
-                                >
-                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
-                                        <Folder size={24} />
-                                    </div>
-                                    <div className="min-w-0">
-                                        <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder.name}</h3>
-                                    </div>
-                                </div>
-                            ))}
                         </div>
-                    )}
 
                     {fileItems.length > 0 ? (
                         <div className={`rounded-2xl border overflow-hidden ${containerClass}`}>
