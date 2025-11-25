@@ -164,7 +164,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     
     const { data: projectData } = useDoc(projectDocQuery);
     
-    // --- New: Fetch Resources from Firestore ---
     const resourcesQuery = useMemoFirebase(() => {
         if (!firestore || !projectId) return null;
         return collection(firestore, 'projects', projectId, 'resources');
@@ -188,7 +187,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
 
 
     useEffect(() => {
-      // This effect now correctly depends on projectData and membersData.
       if (projectData && membersData && authUser) {
         let userRole: UserRole = 'Visitor';
         
@@ -241,7 +239,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
 
   useEffect(() => {
       if (!projectId) return;
-      // Don't save files to local storage anymore
       const { files, members, ...stateToSave } = state;
       localStorage.setItem(`${STORAGE_KEY}-${projectId}`, JSON.stringify(stateToSave));
   }, [state, projectId]);
@@ -766,6 +763,3 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     setResourcePath,
   };
 };
-
-    
-    

@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, ArrowLeft, Upload, Edit } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, Edit, Upload } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -224,12 +224,14 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                                 </div>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.fileType || 'File'}</div>
                                                 <div className={`col-span-2 text-sm font-mono ${textMuted}`}>{file.size}</div>
-                                                <div className={`col-span-2 text-sm ${textMuted}`}>{file.date}</div>
+                                                <div className={`col-span-2 text-sm ${textMuted}`}>{file.createdAt ? new Date(file.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
                                                 <div className="col-span-1 flex justify-end">
                                                     {file.url && (
-                                                        <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()} className={`p-2 rounded opacity-100 md:opacity-0 group-hover:opacity-100 transition-all ${isLight ? 'hover:bg-white shadow-sm' : 'hover:bg-white/10'}`}>
-                                                            <Download size={16} className={textMuted} />
-                                                        </a>
+                                                         <div onClick={(e) => e.stopPropagation()} className={`p-2 rounded opacity-100 md:opacity-0 group-hover:opacity-100 transition-all ${isLight ? 'hover:bg-white shadow-sm' : 'hover:bg-white/10'}`}>
+                                                            <a href={file.url} download={file.name}>
+                                                                <Download size={16} className={textMuted} />
+                                                            </a>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>

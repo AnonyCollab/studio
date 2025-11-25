@@ -95,6 +95,7 @@ export default function App() {
   const handleCreateNewProject = async () => {
     if (!user || !firestore) {
       // Handle not logged in case
+      router.push('/login');
       return;
     }
     const newProjectId = uuidv4();
@@ -137,7 +138,10 @@ export default function App() {
   };
 
   const handleJoinProject = async (projectId: string) => {
-    if (!user || !firestore) return;
+    if (!user || !firestore) {
+      router.push('/login');
+      return;
+    }
     
     const batch = writeBatch(firestore);
 
