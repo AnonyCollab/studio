@@ -1,4 +1,6 @@
 
+'use client';
+
 import React, { useMemo, useState } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
 import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, Upload, ChevronRight, ArrowLeft } from 'lucide-react';
@@ -184,7 +186,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                 
                                 <div className="divide-y divide-white/5">
                                     {fileItems.map((file, idx) => (
-                                        <div key={idx} className={`grid grid-cols-12 p-4 items-center transition-colors group ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
+                                        <a key={idx} href={file.url} download={file.name} target="_blank" rel="noopener noreferrer" className={`grid grid-cols-12 p-4 items-center transition-colors group ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
                                             <div className="col-span-5 flex items-center gap-3">
                                                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${getFileColor(file.fileType)}`}>
                                                     {getFileIcon(file.fileType)}
@@ -196,17 +198,17 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                             <div className={`col-span-2 text-sm ${textMuted}`}>{file.date}</div>
                                             <div className="col-span-1 flex justify-end">
                                                 <button className={`p-2 rounded opacity-100 md:opacity-0 group-hover:opacity-100 transition-all ${isLight ? 'hover:bg-white shadow-sm' : 'hover:bg-white/10'}`}>
-                                                    <MoreVertical size={16} className={textMuted} />
+                                                    <Download size={16} className={textMuted} />
                                                 </button>
                                             </div>
-                                        </div>
+                                        </a>
                                     ))}
                                 </div>
                             </div>
                         </div>
                     </div>
                 ) : (
-                     folders.length === 0 && (
+                     folders.length === 0 && !isCreatingFolder && (
                          <div className={`text-center py-16 ${textMuted}`}>
                             <Folder size={48} className="mx-auto mb-4 opacity-30" />
                             <p className="text-lg">This folder is empty.</p>
