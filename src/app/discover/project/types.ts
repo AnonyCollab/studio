@@ -117,6 +117,7 @@ export interface FileItem {
     date: string;
     parentId: string | null;
     url?: string; // Only for files
+    content?: string; // For BlockNote documents
 }
 
 

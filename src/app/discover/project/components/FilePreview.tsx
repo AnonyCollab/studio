@@ -4,16 +4,15 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { FileItem } from '../types';
+import { FileItem, Theme } from '../types';
 import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import dynamic from 'next/dynamic';
 
-interface FilePreviewProps {
-    file: FileItem;
-    isOpen: boolean;
-    onClose: () => void;
-    theme: 'light' | 'dark';
-}
+const Editor = dynamic(() => import('@/app/news/components/Editor'), { 
+    ssr: false,
+    loading: () => <div className="h-64 w-full bg-muted/50 animate-pulse rounded-lg" />
+});
+
 
 const getFileIcon = (type?: string, size = 48) => {
     if (!type) return <File size={size} />;
@@ -27,12 +26,21 @@ const getFileIcon = (type?: string, size = 48) => {
     return <File size={size} />;
 };
 
+interface FilePreviewProps {
+    file: FileItem;
+    isOpen: boolean;
+    onClose: () => void;
+    theme: Theme;
+}
+
+
 export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose, theme }) => {
     const isLight = theme === 'light';
     const isImage = file.fileType?.startsWith('image/');
     const isVideo = file.fileType?.startsWith('video/');
     const isAudio = file.fileType?.startsWith('audio/');
-    
+    const isBlockNote = file.fileType === 'application/json';
+
     const isOfficeDoc = file.fileType && (
         file.fileType.includes('msword') ||
         file.fileType.includes('vnd.openxmlformats-officedocument.wordprocessingml') || // .docx
@@ -42,14 +50,24 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
         file.fileType.includes('vnd.openxmlformats-officedocument.presentationml') // .pptx
     );
 
-    // General embeddable types, excluding office docs we now handle separately
+    // General embeddable types, including PDF but excluding office docs
     const canEmbed = file.fileType && (
         file.fileType.startsWith('text/') ||
         file.fileType === 'application/pdf'
     ) && !isOfficeDoc;
 
     const renderPreview = () => {
-        if (!file.url) return <p>No preview available.</p>;
+        if (isBlockNote && file.content) {
+            return <Editor initialContent={file.content} editable={false} />;
+        }
+        if (!file.url) {
+            return (
+                <div className={`flex flex-col items-center justify-center text-center p-8 rounded-lg ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
+                    <h3 className={`text-lg font-bold ${isLight ? 'text-gray-800' : 'text-white'}`}>No Preview Available</h3>
+                    <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>This file has no content to display.</p>
+                </div>
+            );
+        }
 
         if (isImage) {
             return <img src={file.url} alt={file.name} className="max-h-[70vh] max-w-full rounded-lg object-contain" />;
@@ -96,19 +114,21 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
                         <span className={`truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>{file.name}</span>
                     </DialogTitle>
                     <div className="flex items-center gap-2">
-                        <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
-                            <Button variant={isLight ? 'outline' : 'secondary'} size="sm" className="gap-2">
-                                <Download size={16} />
-                                Download
-                            </Button>
-                        </a>
+                        {file.url && (
+                             <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
+                                <Button variant={isLight ? 'outline' : 'secondary'} size="sm" className="gap-2">
+                                    <Download size={16} />
+                                    Download
+                                </Button>
+                            </a>
+                        )}
                          <Button onClick={onClose} variant="ghost" size="icon" className={`h-9 w-9 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
                             <X className="h-5 w-5" />
                         </Button>
                     </div>
                 </DialogHeader>
 
-                <div className="flex-1 flex items-center justify-center p-4 overflow-auto bg-black/10">
+                <div className={`flex-1 flex items-center justify-center p-4 overflow-auto ${isBlockNote ? '' : 'bg-black/10'}`}>
                     {renderPreview()}
                 </div>
             </DialogContent>

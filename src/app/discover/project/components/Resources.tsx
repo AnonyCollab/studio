@@ -3,13 +3,15 @@
 
 import React, { useMemo, useState } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, ArrowLeft, Upload } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, ArrowLeft, Upload, Edit } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FilePreview } from './FilePreview';
+import { NewFileEditor } from './NewFileEditor';
 
 const getFileIcon = (type?: string) => {
+    if (type === 'application/json') return <FileText size={20} />;
     if (!type) return <File size={20} />;
     if (type.startsWith('image/')) return <Image size={20} />;
     if (type.startsWith('video/')) return <Video size={20} />;
@@ -19,6 +21,7 @@ const getFileIcon = (type?: string) => {
 };
 
 const getFileColor = (type?: string) => {
+    if (type === 'application/json') return 'text-green-500';
     if (!type) return 'text-gray-400';
     if (type.startsWith('image/')) return 'text-emerald-500';
     if (type.startsWith('video/')) return 'text-pink-500';
@@ -39,6 +42,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
     const [newFolderName, setNewFolderName] = useState('');
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+    const [isCreatingFile, setIsCreatingFile] = useState(false);
     
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:bg-white" : "bg-[#18181b]/80 border-white/5 hover:bg-[#202023]";
@@ -95,6 +99,18 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
         });
     }
 
+    const handleSaveNewFile = (name: string, content: string) => {
+        addFile({
+          name: name,
+          type: 'file',
+          fileType: 'application/json', // Blocknote content is saved as JSON
+          size: `${(content.length / 1024).toFixed(2)} KB`,
+          parentId: currentFolderId,
+          content: content,
+        });
+        setIsCreatingFile(false);
+      };
+
     return (
         <>
             <div className="w-full h-full p-4 md:p-8 overflow-y-auto custom-scrollbar pb-32 md:pb-24">
@@ -131,6 +147,9 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                     className={`pl-10 pr-4 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-brand-500/20 w-full md:w-64 transition-all ${inputClass}`}
                                 />
                             </div>
+                             <Button variant="outline" onClick={() => setIsCreatingFile(true)}>
+                                <Edit size={16} className="mr-2"/> New File
+                            </Button>
                             <Button onClick={() => setIsCreatingFolder(true)} className="flex items-center gap-2">
                                 <Plus size={16} /> New Folder
                             </Button>
@@ -230,6 +249,13 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                     )}
                 </div>
             </div>
+            
+            <NewFileEditor
+                isOpen={isCreatingFile}
+                onClose={() => setIsCreatingFile(false)}
+                onSave={handleSaveNewFile}
+                theme={theme}
+            />
 
             {previewFile && (
                 <FilePreview 
