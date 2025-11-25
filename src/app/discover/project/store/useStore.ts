@@ -31,6 +31,7 @@ export interface ExtendedAppState extends AppState {
   setDrillDownStack: (stack: string[] | ((prev: string[]) => string[])) => void;
   projectData: Project | null;
   updateProject: (updates: Partial<Project>) => void;
+  isStoreLoading: boolean;
 }
 
 const createDefaultUser = (authUser: User | null): CurrentUser => {
@@ -193,6 +194,15 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
 
     const { data: tasksData, error: tasksError, isLoading: isTasksLoading } = useCollection<TaskNode>(tasksQuery);
 
+    const membersQuery = useMemoFirebase(() => {
+        if (!firestore || !projectId) return null;
+        return collection(firestore, 'projects', projectId, 'members');
+    }, [firestore, projectId]);
+    
+    const { data: membersData, isLoading: isMembersLoading } = useCollection<Assignee>(membersQuery);
+
+    const isStoreLoading = isProjectLoading || isMembersLoading || isTasksLoading || isFilesLoading;
+
     useEffect(() => {
         setState(prev => ({...prev, projectData: projectData || null}));
     }, [projectData]);
@@ -220,15 +230,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         }
     }, [filesData, filesError, isFilesLoading]);
 
-
-    const membersQuery = useMemoFirebase(() => {
-        if (!firestore || !projectId) return null;
-        return collection(firestore, 'projects', projectId, 'members');
-    }, [firestore, projectId]);
-    
-    const { data: membersData, isLoading: isMembersLoading } = useCollection<Assignee>(membersQuery);
-
-
     useEffect(() => {
         if (isProjectLoading || isMembersLoading || !authUser) {
             return;
@@ -245,11 +246,11 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
             }
         }
         
-
         setState(prev => ({
           ...prev,
           members: membersData ? membersData.map(m => ({
               ...m,
+              id: m.uid, // Ensure id is populated from uid
               type: m.type || 'user',
               color: m.color || 'bg-blue-500',
               initials: (m.displayName || '?').charAt(0)
@@ -447,7 +448,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
       setState(prev => ({...prev, selectedTaskIds: ids}));
   }, []);
   const setFocusedParentId = useCallback((id: string | null) => {
-    setState(p => ({ ...p, focusedParentId: id, drillDownStack: [], filter: 'Project' }));
+    setState(p => ({ ...p, focusedParentId: id, drillDownStack: [], filter: 'Project', searchQuery: '' }));
   }, []);
   const setDrillDownStack = useCallback((stack: string[] | ((prev: string[]) => string[])) => {
     setState(p => ({...p, drillDownStack: typeof stack === 'function' ? stack(p.drillDownStack) : stack}));
@@ -480,5 +481,8 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     setDrillDownStack,
     leaveProject,
     updateProject,
+    isStoreLoading,
   };
 };
+
+    

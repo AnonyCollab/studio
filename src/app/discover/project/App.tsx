@@ -20,9 +20,10 @@ import { SettingsPage } from './components/SettingsPage';
 import { useUser } from '@/firebase';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
+import { Loader } from 'lucide-react';
 
 const App: React.FC = () => {
-  const { user: authUser, isUserLoading } = useUser();
+  const { user: authUser, isUserLoading: isAuthLoading } = useUser();
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
@@ -33,7 +34,8 @@ const App: React.FC = () => {
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
-      posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject
+      posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
+      isStoreLoading // Use the new loading state from the store
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
@@ -58,10 +60,11 @@ const App: React.FC = () => {
 
   // Role Based Access Control Check
   useEffect(() => {
-      if (currentUser.role === 'Visitor' && ['dashboard', 'calendar', 'members', 'resources'].includes(currentPage)) {
+      // Only run this check if data is loaded
+      if (!isStoreLoading && currentUser.role === 'Visitor' && ['dashboard', 'calendar', 'members', 'resources'].includes(currentPage)) {
           setPage('about');
       }
-  }, [currentUser.role, currentPage]);
+  }, [currentUser.role, currentPage, isStoreLoading]);
 
   // Theme & Background Logic
   const isLightTheme = ['Light', 'Sephiroa', 'Green'].includes(theme);
@@ -196,8 +199,14 @@ const App: React.FC = () => {
     }
   };
 
-  if (isUserLoading) {
-      return <div className="w-screen h-screen flex items-center justify-center bg-[#09090b]">Loading Project...</div>;
+  // The main loading state for the entire project view
+  if (isAuthLoading || isStoreLoading) {
+    return (
+        <div className="w-screen h-screen flex flex-col items-center justify-center bg-[#09090b] text-slate-400 gap-4">
+            <Loader className="w-8 h-8 animate-spin text-brand-500" />
+            <span>Loading Project...</span>
+        </div>
+    );
   }
 
   return (
@@ -396,3 +405,5 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+    

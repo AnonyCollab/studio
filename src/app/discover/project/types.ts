@@ -41,6 +41,7 @@ export interface Assignee {
   color: string;
   type?: 'user' | 'team';
   role?: UserRole;
+  uid?: string; // Add this to align with member data
 }
 
 export interface UserProfile extends Assignee {
@@ -182,7 +183,7 @@ export interface Document extends TaskNode {
   createdAt: string;
 }
 
-export type Theme = 'Light' | 'Dark' | 'Sephiroa' | 'Green' | 'Blue';
+export type Theme = 'light' | 'dark' | 'Sephiroa' | 'Green' | 'Blue';
 export type BackgroundType = 'Dots' | 'Grid' | 'None';
 export type FilterOption = 'All' | 'Mine' | 'Team' | 'Project';
 
@@ -212,3 +213,5 @@ export interface AIActionResponse {
   description: string;
   priority: Priority;
 }
+
+    
