@@ -27,7 +27,7 @@ interface MembersProps {
 export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers, onViewProfile }) => {
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
-    const { updateMember } = useStore();
+    const { updateMember } = useStore(null);
     const { toast } = useToast();
 
     const allMembers = initialMembers;
