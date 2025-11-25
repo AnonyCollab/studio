@@ -14,20 +14,10 @@ service cloud.firestore {
       );
     }
 
-    // Users can be read by anyone. Writes are restricted.
+    // Users can be read by anyone. Writes are restricted to the owner of the document.
     match /users/{userId} {
-      allow read: if true;
-      
-      // Allow a user to update their own document.
-      // Also, allow another user to update the `friends` list if an accepted friend request exists.
-      allow write: if request.auth != null && (
-        request.auth.uid == userId ||
-        (
-          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends']) &&
-          request.resource.data.friends.size() == resource.data.friends.size() + 1 &&
-          acceptedFriendRequestExists(request.auth.uid, userId)
-        )
-      );
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
     
     // Friend requests can be created by the sender, read by sender/receiver, and updated by the receiver.
@@ -120,12 +110,6 @@ service cloud.firestore {
       
       // Rules for the resources subcollection
       match /resources/{resourceId} {
-        allow read: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
-        allow write: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
-      }
-      
-       // Rules for the tasks subcollection
-      match /tasks/{taskId} {
         allow read, write: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
       }
     }
@@ -173,5 +157,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

@@ -213,62 +213,49 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
     }
   };
 
-  const handlePendingRequest = (requestId: string, action: 'accept' | 'decline') => {
+  const handlePendingRequest = async (requestId: string, action: 'accept' | 'decline') => {
     if (!firestore || !user) return;
-  
+    
     const requestRef = doc(firestore, 'friendRequests', requestId);
-  
+
     if (action === 'accept') {
-        getDoc(requestRef).then(requestDoc => {
-            if (!requestDoc.exists()) {
-                toast({ title: 'Error', description: 'Friend request not found.', variant: 'destructive' });
-                return;
-            }
-            const { senderId, receiverId } = requestDoc.data();
-      
-            // 1. Update friend request status to 'accepted'
-            updateDoc(requestRef, { status: 'accepted' })
-                .then(() => {
-                    const receiverRef = doc(firestore, 'users', receiverId);
-                    const senderRef = doc(firestore, 'users', senderId);
-    
-                    // 2. Add sender to receiver's friend list
-                    updateDoc(receiverRef, { friends: arrayUnion(senderId) })
-                        .catch((error) => {
-                            const permissionError = new FirestorePermissionError({
-                                path: receiverRef.path,
-                                operation: 'update',
-                                requestResourceData: { friends: arrayUnion(senderId) },
-                            });
-                            errorEmitter.emit('permission-error', permissionError);
-                        });
-                    
-                    // 3. Add receiver to sender's friend list
-                    updateDoc(senderRef, { friends: arrayUnion(receiverId) })
-                         .catch((error) => {
-                            const permissionError = new FirestorePermissionError({
-                                path: senderRef.path,
-                                operation: 'update',
-                                requestResourceData: { friends: arrayUnion(receiverId) },
-                            });
-                            errorEmitter.emit('permission-error', permissionError);
-                        });
-    
-                    toast({ title: 'Friend Added', description: 'You are now friends.' });
-                })
-                .catch((error) => {
-                    const permissionError = new FirestorePermissionError({
-                        path: requestRef.path,
-                        operation: 'update',
-                        requestResourceData: { status: 'accepted' },
-                    });
-                    errorEmitter.emit('permission-error', permissionError);
-                });
-        }).catch(error => {
-            const permissionError = new FirestorePermissionError({ path: requestRef.path, operation: 'get' });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-  
+      try {
+        const requestDoc = await getDoc(requestRef);
+        if (!requestDoc.exists()) {
+          toast({ title: 'Error', description: 'Friend request not found.', variant: 'destructive' });
+          return;
+        }
+        
+        const { senderId, receiverId } = requestDoc.data();
+        
+        // Ensure the current user is the receiver
+        if (user.uid !== receiverId) {
+          toast({ title: 'Error', description: 'You cannot accept this request.', variant: 'destructive' });
+          return;
+        }
+        
+        const batch = writeBatch(firestore);
+
+        // 1. Update friend request to 'accepted'
+        batch.update(requestRef, { status: 'accepted' });
+        
+        // 2. Receiver (current user) adds sender to their friends list
+        const receiverUserRef = doc(firestore, 'users', receiverId);
+        batch.update(receiverUserRef, { friends: arrayUnion(senderId) });
+        
+        // 3. Sender adds receiver to their friends list
+        const senderUserRef = doc(firestore, 'users', senderId);
+        batch.update(senderUserRef, { friends: arrayUnion(receiverId) });
+
+        // Commit the batch
+        await batch.commit();
+
+        toast({ title: 'Friend Added', description: 'You are now friends.' });
+
+      } catch (error) {
+        console.error("Error accepting friend request: ", error);
+        toast({ title: 'Error', description: 'Failed to accept friend request.', variant: 'destructive' });
+      }
     } else { // Decline or Cancel
         deleteDoc(requestRef)
             .then(() => {
