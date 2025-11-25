@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -165,52 +164,52 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   const handleAddFriend = async () => {
     if (!newFriendInput.trim() || !user || !firestore) return;
 
-    try {
-      // Find user by displayName
-      const usersRef = collection(firestore, 'users');
-      const q = query(usersRef, where("profile.displayName", "==", newFriendInput.trim()), limit(1));
-      const querySnapshot = await getDocs(q);
+    // Find user by displayName
+    const usersRef = collection(firestore, 'users');
+    const q = query(usersRef, where("profile.displayName", "==", newFriendInput.trim()), limit(1));
+    
+    getDocs(q).then(querySnapshot => {
+        if (querySnapshot.empty) {
+            toast({ title: "User not found", description: `Could not find user ${newFriendInput.trim()}.`, variant: 'destructive' });
+            return;
+        }
+        
+        const receiver = querySnapshot.docs[0];
+        const receiverId = receiver.id;
 
-      if (querySnapshot.empty) {
-        toast({ title: "User not found", description: `Could not find user ${newFriendInput.trim()}.`, variant: 'destructive' });
-        return;
-      }
-      
-      const receiver = querySnapshot.docs[0];
-      const receiverId = receiver.id;
+        if (receiverId === user.uid) {
+            toast({ title: "Cannot add yourself", description: "You cannot send a friend request to yourself.", variant: 'destructive' });
+            return;
+        }
 
-      if (receiverId === user.uid) {
-        toast({ title: "Cannot add yourself", description: "You cannot send a friend request to yourself.", variant: 'destructive' });
-        return;
-      }
-
-      // Create friend request
-      const friendRequestRef = collection(firestore, 'friendRequests');
-      const requestData = {
-        senderId: user.uid,
-        receiverId: receiverId,
-        status: 'pending',
-        createdAt: serverTimestamp(),
-      };
-      addDoc(friendRequestRef, requestData)
-        .catch(error => {
+        // Create friend request
+        const friendRequestRef = collection(firestore, 'friendRequests');
+        const requestData = {
+            senderId: user.uid,
+            receiverId: receiverId,
+            status: 'pending',
+            createdAt: serverTimestamp(),
+        };
+        
+        addDoc(friendRequestRef, requestData).catch(error => {
             const permissionError = new FirestorePermissionError({
                 path: friendRequestRef.path,
                 operation: 'create',
                 requestResourceData: requestData,
             });
             errorEmitter.emit('permission-error', permissionError);
-            toast({ title: 'Error', description: 'Failed to send friend request.', variant: 'destructive' });
         });
 
-      toast({ title: 'Friend Request Sent', description: `Your friend request to ${newFriendInput.trim()} has been sent.` });
-      setNewFriendInput('');
-      setActiveTab("pending");
-      
-    } catch (error) {
-      console.error("Error sending friend request: ", error);
-      toast({ title: 'Error', description: 'Failed to send friend request.', variant: 'destructive' });
-    }
+        toast({ title: 'Friend Request Sent', description: `Your friend request to ${newFriendInput.trim()} has been sent.` });
+        setNewFriendInput('');
+        setActiveTab("pending");
+    }).catch(error => {
+        const permissionError = new FirestorePermissionError({
+            path: usersRef.path,
+            operation: 'list', // getDocs is a 'list' operation
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
   const handlePendingRequest = async (requestId: string, action: 'accept' | 'decline') => {
@@ -239,18 +238,14 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
         // 1. Update friend request to 'accepted'
         batch.update(requestRef, { status: 'accepted' });
         
-        // 2. Receiver (current user) adds sender to their friends list
+        // 2. Receiver (current user) adds sender to their own friends list
         const receiverUserRef = doc(firestore, 'users', receiverId);
         batch.update(receiverUserRef, { friends: arrayUnion(senderId) });
-        
-        // 3. Sender adds receiver to their friends list
-        const senderUserRef = doc(firestore, 'users', senderId);
-        batch.update(senderUserRef, { friends: arrayUnion(receiverId) });
 
         // Commit the batch
         await batch.commit();
 
-        toast({ title: 'Friend Added', description: 'You are now friends.' });
+        toast({ title: 'Friend Added!', description: 'You are now friends.' });
 
       } catch (error) {
         console.error("Error accepting friend request: ", error);
@@ -575,4 +570,5 @@ function PendingFriendItem({ friend, isDark, onAction }: { friend: PendingReques
 }
 
 
+    
     
