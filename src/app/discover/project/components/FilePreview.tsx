@@ -22,6 +22,8 @@ const getFileIcon = (type?: string, size = 48) => {
     if (type.startsWith('audio/')) return <Music size={size} />;
     if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
     if (type.includes('pdf')) return <FileText size={size} />;
+    // Add specific check for office documents
+    if (type.includes('word') || type.includes('excel') || type.includes('spreadsheet') || type.includes('presentation')) return <FileText size={size} />;
     return <File size={size} />;
 };
 
@@ -31,15 +33,20 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
     const isVideo = file.fileType?.startsWith('video/');
     const isAudio = file.fileType?.startsWith('audio/');
     
-    // Expand embeddable types
+    const isOfficeDoc = file.fileType && (
+        file.fileType.includes('msword') ||
+        file.fileType.includes('vnd.openxmlformats-officedocument.wordprocessingml') || // .docx
+        file.fileType.includes('vnd.ms-excel') ||
+        file.fileType.includes('vnd.openxmlformats-officedocument.spreadsheetml') || // .xlsx
+        file.fileType.includes('vnd.ms-powerpoint') ||
+        file.fileType.includes('vnd.openxmlformats-officedocument.presentationml') // .pptx
+    );
+
+    // General embeddable types, excluding office docs we now handle separately
     const canEmbed = file.fileType && (
         file.fileType.startsWith('text/') ||
-        file.fileType === 'application/pdf' ||
-        file.fileType.startsWith('application/msword') ||
-        file.fileType.startsWith('application/vnd.openxmlformats-officedocument.wordprocessingml') ||
-        file.fileType.startsWith('application/vnd.ms-excel') ||
-        file.fileType.startsWith('application/vnd.openxmlformats-officedocument.spreadsheetml')
-    );
+        file.fileType === 'application/pdf'
+    ) && !isOfficeDoc;
 
     const renderPreview = () => {
         if (!file.url) return <p>No preview available.</p>;
@@ -53,15 +60,20 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
         if (isAudio) {
             return <audio src={file.url} controls className="w-full" />;
         }
-        // Use embed for a wider range of document types
         if (canEmbed) {
             return <embed src={file.url} type={file.fileType} className="w-full h-[75vh] rounded-lg border" />;
         }
+
+        // Default case for office docs or any other un-embeddable type
         return (
             <div className={`flex flex-col items-center justify-center text-center p-8 rounded-lg ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
                 <div className={`mb-4 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>{getFileIcon(file.fileType, 64)}</div>
-                <h3 className={`text-lg font-bold ${isLight ? 'text-gray-800' : 'text-white'}`}>No preview available</h3>
-                <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>This file type can't be shown here, but you can download it.</p>
+                <h3 className={`text-lg font-bold ${isLight ? 'text-gray-800' : 'text-white'}`}>
+                    {isOfficeDoc ? 'Office Document' : 'No Preview Available'}
+                </h3>
+                <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+                  This file type can't be shown here, but you can download it to view.
+                </p>
                 <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
                     <Button variant={isLight ? 'default' : 'secondary'} size="lg" className="gap-2">
                         <Download size={18} />
