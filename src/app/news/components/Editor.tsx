@@ -54,14 +54,18 @@ export default function Editor({ onChange, initialContent, editable = true }: Ed
   const { theme } = useTheme();
 
   const initialBlocks: Block[] | undefined = useMemo(() => {
-    if(!initialContent) return undefined;
+    if (!initialContent) return undefined;
     try {
-        return JSON.parse(initialContent) as Block[];
-    } catch(e) {
-        console.error("Failed to parse initial content for editor");
-        return undefined;
+      // First, try to parse it as a JSON string (which is what BlockNote saves as)
+      return JSON.parse(initialContent) as Block[];
+    } catch (e) {
+      // If parsing fails, it's likely a plain string.
+      // We'll wrap it in a paragraph block to make it valid for BlockNote.
+      console.log("Initial content is not JSON, converting to paragraph block.");
+      return [{ type: "paragraph", content: initialContent }];
     }
-  }, [initialContent])
+  }, [initialContent]);
+
 
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
