@@ -171,6 +171,23 @@
       },
       "required": ["id", "title", "description", "owner", "createdDate", "lastEditDate"]
     },
+    "Resource": {
+      "title": "Resource",
+      "description": "Represents a file or folder within a project's resources section.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["folder", "file"] },
+        "fileType": { "type": "string", "description": "MIME type for files." },
+        "size": { "type": "string" },
+        "createdAt": { "type": "object", "description": "Firestore server timestamp." },
+        "parentId": { "type": ["string", "null"] },
+        "url": { "type": "string", "format": "uri" },
+        "content": { "type": "string", "description": "JSON string for BlockNote documents." }
+      },
+      "required": ["id", "name", "type", "createdAt", "parentId"]
+    },
     "Comment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Comment",
@@ -477,6 +494,16 @@
             "$ref": "#/backend/entities/Project"
           },
           "description": "Stores individual projects for the Discover page."
+        }
+      },
+      {
+        "path": "/projects/{projectId}/resources/{resourceId}",
+        "definition": {
+          "entityName": "Resource",
+          "schema": {
+            "$ref": "#/backend/entities/Resource"
+          },
+          "description": "Stores files and folders for a specific project."
         }
       },
       {

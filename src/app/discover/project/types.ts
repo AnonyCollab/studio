@@ -1,4 +1,6 @@
 
+import { Timestamp } from "firebase/firestore";
+
 export type ViewMode = 'canvas' | 'board' | 'list' | 'timeline' | 'outline';
 export type CalendarViewMode = 'Schedule' | 'Day' | '3 Days' | 'Week' | 'Month';
 export type Page = 'dashboard' | 'roadmap' | 'calendar' | 'members' | 'resources' | 'community' | 'about' | 'profile' | 'settings';
@@ -114,7 +116,7 @@ export interface FileItem {
     type: 'folder' | 'file';
     fileType?: string; // e.g., 'PDF', 'Image' for files
     size?: string;
-    date: string;
+    createdAt: Timestamp; // Using Firestore Timestamp
     parentId: string | null;
     url?: string; // Only for files
     content?: string; // For BlockNote documents

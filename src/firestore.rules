@@ -1,0 +1,172 @@
+
+/**
+ * @fileOverview Firestore Security Rules for AnonyCollab application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a public-read, public-write model for posts, with comments also being publicly accessible.
+ *
+ * Data Structure:
+ * - Posts are stored in the /posts/{postId} collection.
+ * - Comments are stored in the /posts/{postId}/comments/{commentId} subcollection.
+ *
+ * Key Security Decisions:
+ * - Posts and comments are publicly readable and writable by anyone, including unauthenticated users.
+ * - No authentication is required for any operation.
+ * - There is no data validation beyond ensuring the document IDs in subcollections match their paths.
+ *
+ * Denormalization for Authorization:
+ * - Not applicable in this public access scenario. If comments required role-based access, the post's member list or owner would be denormalized into the comment documents.
+ *
+ * Structural Segregation:
+ * - Not applicable, as all data is public.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+  
+    // Helper function to check for an accepted friend request
+    function acceptedFriendRequestExists(user1, user2) {
+      return (
+        exists(/databases/$(database)/documents/friendRequests/$(user1 + '_' + user2)) &&
+        get(/databases/$(database)/documents/friendRequests/$(user1 + '_' + user2)).data.status == 'accepted'
+      ) || (
+        exists(/databases/$(database)/documents/friendRequests/$(user2 + '_' + user1)) &&
+        get(/databases/$(database)/documents/friendRequests/$(user2 + '_' + user1)).data.status == 'accepted'
+      );
+    }
+
+    // Users can be read by anyone. Writes are restricted.
+    match /users/{userId} {
+      allow read: if true;
+      
+      // Allow a user to update their own document.
+      // Also, allow another user to update the `friends` list if an accepted friend request exists.
+      allow write: if request.auth != null && (
+        request.auth.uid == userId ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends']) &&
+          request.resource.data.friends.size() == resource.data.friends.size() + 1 &&
+          acceptedFriendRequestExists(request.auth.uid, userId)
+        )
+      );
+    }
+    
+    // Friend requests can be created by the sender, read by sender/receiver, and updated by the receiver.
+    match /friendRequests/{requestId} {
+      allow read: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.senderId;
+      allow update: if request.auth != null && request.auth.uid == resource.data.receiverId;
+      allow delete: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
+    }
+    
+    // Rules for Direct Messages
+    match /dms/{dmId} {
+        // Allow a user to read or query a DM document if they are a participant.
+        // This single rule covers both `get` and `list` scenarios correctly.
+        allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+        
+        // Allow create if the user is including themselves in the participants list.
+        allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
+        
+        // Allow update if the user is a participant. (e.g., for lastMessage)
+        allow update: if request.auth != null && request.auth.uid in resource.data.participants;
+        
+        match /messages/{messageId} {
+            // Allow read/list if user is a participant of the parent DM. This requires a 'get' on the parent.
+            allow read: if request.auth != null 
+                && get(/databases/$(database)/documents/dms/$(dmId)).data.participants.hasAny([request.auth.uid]);
+            
+            // Allow create if user is a participant and the senderId matches their UID
+            allow create: if request.auth != null 
+                && get(/databases/$(database)/documents/dms/$(dmId)).data.participants.hasAny([request.auth.uid])
+                && request.resource.data.senderId == request.auth.uid;
+        }
+    }
+    
+    // Placeholder rules for server channels
+    match /servers/{serverId}/messages/{messageId} {
+        allow read, write: if request.auth != null;
+    }
+    
+    match /news/{articleId} {
+      allow list: if true;
+      allow get: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
+    }
+    
+    match /projects/{projectId} {
+      // Allow any authenticated user to read projects.
+      allow list, get: if true;
+
+      // Allow any authenticated user to create a project.
+      allow create: if request.auth != null;
+      
+      // Only allow the owner of the project to update or delete it.
+      // Allow any authenticated user to join a project (update the 'members' array).
+      allow update: if request.auth != null && (
+        // Owner can update everything
+        request.auth.uid == resource.data.owner.uid ||
+        // Any user can add themselves to the members list
+        (
+          request.resource.data.diff(resource.data).affectedKeys().hasAll(['members', 'totalMembers']) &&
+          request.resource.data.members.hasAll(resource.data.members) && // new list contains all old members
+          request.resource.data.members.size() == resource.data.members.size() + 1 && // only one new member
+          request.resource.data.members[resource.data.members.size()] == request.auth.uid && // the new member is the user
+          request.resource.data.totalMembers == resource.data.totalMembers + 1 // totalMembers is incremented
+        )
+      );
+
+      // Only allow the owner to delete.
+      allow delete: if request.auth != null && request.auth.uid == resource.data.owner.uid;
+
+      // Rules for the resources subcollection
+      match /resources/{resourceId} {
+        // Allow read/write for any member of the project.
+        allow read, write: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/projects/$(projectId)).data.members;
+      }
+    }
+
+    /**
+     * @description Allows anyone to read and write posts.
+     * @path /posts/{postId}
+     * @allow (get, list) - Any user can read a post.
+     * @allow (create, update) - Any user can create or update a post.
+     * @allow (delete) - Only the author of a post can delete it.
+     * @deny none
+     * @principle Public read, selective write
+     */
+    match /posts/{postId} {
+      allow get, list, create, update: if true;
+      allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+
+      /**
+       * @description Allows anyone to read and write comments associated with a specific post.
+       * @path /posts/{postId}/comments/{commentId}
+       * @allow (get, list) - Any user can read a comment.
+       * @allow (create, update) - Any user can create or update a comment.
+       * @allow (delete) - Only the author of a comment can delete it.
+       * @deny none
+       * @principle Public read, selective write
+       */
+      match /comments/{commentId} {
+        allow get, list, create, update: if true;
+        allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+
+        /**
+         * @description Allows anyone to read and write replies associated with a specific comment.
+         * @path /posts/{postId}/comments/{commentId}/replies/{replyId}
+         * @allow (get, list) - Any user can read a reply.
+         * @allow (create, update) - Any user can create, update, or delete a reply.
+         * @allow (delete) - Only the author of a reply can delete it.
+         * @deny none
+         * @principle Public read, selective write
+         */
+        match /replies/{replyId} {
+          allow get, list, create, update: if true;
+          allow delete: if request.auth != null && request.auth.uid == resource.data.author.uid;
+        }
+      }
+    }
+  }
+}

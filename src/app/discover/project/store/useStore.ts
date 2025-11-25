@@ -1,13 +1,14 @@
 
 
 
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { FileText } from 'lucide-react'; 
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
-import { collection, doc, query, where } from 'firebase/firestore';
+import { collection, doc, query, where, serverTimestamp, addDoc } from 'firebase/firestore';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -17,6 +18,7 @@ export interface ExtendedAppState extends AppState {
   setCurrentUser: (user: CurrentUser) => void;
   updateMember: (id: string, updates: Partial<Assignee>) => void;
   setResourcePath: (path: (string | null)[]) => void;
+  addFile: (file: Partial<FileItem>) => void;
 }
 
 const STORAGE_KEY = 'omnicanvas-v1-pro';
@@ -154,7 +156,7 @@ const updateCascadingStatus = (tasks: TaskNode[], startTaskId: string): TaskNode
     return currentTasks;
 };
 
-export const useStore = (authUser: User | null, projectId: string | null) => {
+export const useStore = (authUser: User | null, projectId: string | null): ExtendedAppState => {
     const [state, setState] = useState<AppState>(() => createInitialState(authUser));
     const firestore = useFirestore();
 
@@ -163,6 +165,21 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
         return doc(firestore, 'projects', projectId);
     }, [firestore, projectId]);
     const { data: projectData } = useDoc(projectDocQuery);
+    
+    // --- New: Fetch Resources from Firestore ---
+    const resourcesQuery = useMemoFirebase(() => {
+        if (!firestore || !projectId) return null;
+        return collection(firestore, 'projects', projectId, 'resources');
+    }, [firestore, projectId]);
+    
+    const { data: filesData } = useCollection<FileItem>(resourcesQuery);
+
+    useEffect(() => {
+        if (filesData) {
+            setState(prev => ({...prev, files: filesData}));
+        }
+    }, [filesData]);
+
 
     const memberUIDs = useMemo(() => projectData?.members || [], [projectData]);
 
@@ -199,8 +216,8 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
                     currentUser: createDefaultUser(authUser),
                     tasks: parsed.tasks?.length ? parsed.tasks : [],
                     posts: parsed.posts?.length ? parsed.posts : MOCK_POSTS,
-                    files: parsed.files?.length ? parsed.files : [],
                     resourcePath: parsed.resourcePath || [null],
+                    // files are now managed by firestore
                 }));
             } catch (e) {
                 console.error('Failed to parse local storage', e);
@@ -210,7 +227,9 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
     }, [authUser]);
 
   useEffect(() => {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      // Don't save files to local storage anymore
+      const { files, ...stateToSave } = state;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
   }, [state]);
 
   const setCurrentUser = useCallback((user: CurrentUser) => {
@@ -699,18 +718,14 @@ export const useStore = (authUser: User | null, projectId: string | null) => {
   }, []);
 
   const addFile = useCallback((file: Partial<FileItem>) => {
-    setState(prev => {
-      const newFile: FileItem = {
-          id: `file-${Date.now()}`,
-          name: 'New File',
-          type: 'file',
-          date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-          parentId: prev.resourcePath[prev.resourcePath.length - 1] || null,
-          ...file
-      };
-      return { ...prev, files: [...prev.files, newFile] };
+    if (!firestore || !projectId) return;
+    const resourcesCollection = collection(firestore, 'projects', projectId, 'resources');
+    
+    addDoc(resourcesCollection, {
+      ...file,
+      createdAt: serverTimestamp(),
     });
-  }, []);
+  }, [firestore, projectId]);
 
 
   return {
