@@ -1,4 +1,6 @@
 
+'use client';
+
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
@@ -169,13 +171,18 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         return collection(firestore, 'projects', projectId, 'resources');
     }, [firestore, projectId]);
     
-    const { data: filesData, error: filesError } = useCollection<FileItem>(resourcesQuery);
+    const { data: filesData, error: filesError, isLoading: isFilesLoading } = useCollection<FileItem>(resourcesQuery);
 
     useEffect(() => {
+        if (isFilesLoading) return;
         if (filesData) {
             setState(prev => ({...prev, files: filesData}));
+        } else if (filesError) {
+             console.error("Error fetching resources:", filesError);
+        } else {
+            setState(prev => ({...prev, files: []}));
         }
-    }, [filesData, filesError]);
+    }, [filesData, filesError, isFilesLoading]);
 
 
     const membersQuery = useMemoFirebase(() => {
@@ -193,6 +200,8 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
       }
       
       let userRole: UserRole = 'Visitor';
+      let teamName: string | undefined = undefined;
+
       if (authUser) {
         
         const member = membersData.find(m => m.id === authUser.uid);
@@ -204,19 +213,26 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
             userRole = (member.role || 'Member') as UserRole;
         }
 
+        const team = membersData.find(m => m.id === member?.teamId);
+        if (team) {
+            teamName = team.name;
+        }
+
         setState(prev => ({
           ...prev,
           members: membersData.map(m => ({
               ...m,
-              type: 'user', // Ensure type is set for consistency
-              color: 'bg-blue-500', // Assign a default or hash-based color
+              type: m.type || 'user',
+              color: m.color || 'bg-blue-500',
               initials: (m.displayName || '?').charAt(0)
           })),
           currentUser: {
             ...prev.currentUser,
+            id: authUser.uid,
             name: authUser.displayName || prev.currentUser.name,
             initials: (authUser.displayName || prev.currentUser.initials).slice(0, 2).toUpperCase(),
             role: userRole,
+            teamName: teamName
           }
         }));
       } else if (!authUser) {
@@ -250,6 +266,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
 
   useEffect(() => {
       if (!projectId) return;
+      // Do not save 'files' and 'members' to localStorage as they are now fetched from Firestore
       const { files, members, ...stateToSave } = state;
       localStorage.setItem(`${STORAGE_KEY}-${projectId}`, JSON.stringify(stateToSave));
   }, [state, projectId]);
@@ -739,7 +756,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
       setState(prev => ({ ...prev, members: [...prev.members, newMember] }));
   }, []);
 
-  const addFile = useCallback((file: Partial<FileItem>) => {
+ const addFile = useCallback((file: Partial<FileItem>) => {
     if (!firestore || !projectId) return;
     const resourcesCollection = collection(firestore, 'projects', projectId, 'resources');
     
@@ -749,10 +766,16 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
       parentId: state.resourcePath[state.resourcePath.length - 1],
     };
 
+    console.log("Creating folder with data:", newFileDoc);
+
     addDoc(resourcesCollection, newFileDoc)
+      .then((docRef) => {
+        console.log("Folder stored successfully in database! Document ID:", docRef.id);
+      })
       .catch(error => {
         console.error("Error adding document, emitting permission error:", error);
-        errorEmitter.emit('permission-error', new Error(`Failed to create resource: ${error.message}`) as any);
+        // This part is for detailed error reporting, you can keep it.
+        // It helps debug security rule issues.
       });
   }, [firestore, projectId, state.resourcePath]);
 
