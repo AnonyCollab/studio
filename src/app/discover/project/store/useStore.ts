@@ -7,6 +7,7 @@ import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { errorEmitter, FirestorePermissionError } from '@/firebase';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -25,6 +26,8 @@ export interface ExtendedAppState extends AppState {
   setFocusedParentId: (id: string | null) => void;
   duplicateTask: (id: string) => void;
   moveTask: (taskId: string, newParentId: string | null) => void;
+  drillDownStack: string[];
+  setDrillDownStack: (stack: string[] | ((prev: string[]) => string[])) => void;
 }
 
 const createDefaultUser = (authUser: User | null): CurrentUser => {
@@ -64,6 +67,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     background: 'Dots',
     filter: 'Project',
     resourcePath: [null], // Start at the root
+    drillDownStack: [],
 });
 
 // Helper to bubble up date changes from children to parents (Epic -> Goal -> Milestone)
@@ -223,14 +227,15 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         }
         
         let userRole: UserRole = 'Visitor';
-        let teamName: string | undefined = undefined;
-    
-        if (projectData && membersData) {
-            const memberInfo = membersData.find(m => m.id === authUser.uid);
+        
+        if (projectData && authUser) {
             if (projectData.owner?.uid === authUser.uid) {
                 userRole = 'Owner';
-            } else if (memberInfo) {
-                userRole = (memberInfo.role || 'Member') as UserRole;
+            } else if (membersData) {
+                 const memberInfo = membersData.find(m => m.id === authUser.uid);
+                 if (memberInfo) {
+                    userRole = (memberInfo.role || 'Member') as UserRole;
+                 }
             }
         }
 
@@ -248,7 +253,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
             name: authUser.displayName || prev.currentUser.name,
             initials: (authUser.displayName || prev.currentUser.initials).slice(0, 2).toUpperCase(),
             role: userRole,
-            teamName: teamName
           }
         }));
     }, [projectData, membersData, authUser, isProjectLoading, isMembersLoading]);
@@ -381,13 +385,12 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     if (!firestore || !projectId) return;
     const resourcesCollection = collection(firestore, 'projects', projectId, 'resources');
     
+    console.log("Creating folder with data:", file);
     const newFileDoc = {
       ...file,
       createdAt: serverTimestamp(),
       parentId: state.resourcePath[state.resourcePath.length - 1],
     };
-
-    console.log("Creating folder with data:", newFileDoc);
 
     addDoc(resourcesCollection, newFileDoc)
       .then((docRef) => {
@@ -407,14 +410,22 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
   // Dummy/Placeholder functions that need Firestore integration
   const addPost = useCallback((post: Partial<UserPost>) => {}, []);
   const addMember = useCallback((member: Partial<Assignee>) => {}, []);
-  const setTasks = useCallback((tasksOrUpdater: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => {}, []);
-  const selectTasks = useCallback((ids: string[]) => {}, []);
+  const setTasks = useCallback((tasksOrUpdater: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => {
+    const newTasks = typeof tasksOrUpdater === 'function' ? tasksOrUpdater(state.tasks) : tasksOrUpdater;
+    setState(prev => ({ ...prev, tasks: newTasks }));
+  }, [state.tasks]);
+  const selectTasks = useCallback((ids: string[]) => {
+      setState(prev => ({...prev, selectedTaskIds: ids}));
+  }, []);
   const setFocusedParentId = useCallback((id: string | null) => {
-    setState(p => ({ ...p, focusedParentId: id }));
+    setState(p => ({ ...p, focusedParentId: id, drillDownStack: id ? [id] : [], filter: 'Project' }));
+  }, []);
+  const setDrillDownStack = useCallback((stack: string[] | ((prev: string[]) => string[])) => {
+    setState(p => ({...p, drillDownStack: typeof stack === 'function' ? stack(p.drillDownStack) : stack}));
   }, []);
   const duplicateTask = useCallback((id: string) => {}, []);
   const moveTask = useCallback((taskId: string, newParentId: string | null) => {}, []);
-   setDocumentNonBlocking
+   
   return {
     ...state,
     setCurrentUser,
@@ -437,5 +448,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     addFile,
     updateMember,
     setResourcePath,
+    setDrillDownStack,
   };
 };
+

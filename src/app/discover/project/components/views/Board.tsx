@@ -157,7 +157,7 @@ const TaskCard = React.memo(({
     task: TaskNode, 
     isSelected: boolean, 
     onMouseDown: (e: React.MouseEvent, id: string) => void,
-    onConnectStart: (e: React.MouseEvent, id: string, ox: number, oy: number) => void,
+    onConnectStart: (e: React.MouseEvent, id: string, offsetX: number, offsetY: number) => void,
     onFocus: (id: string) => void,
     onDoubleClick: (id: string) => void,
     isLight: boolean,
@@ -647,9 +647,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         const isCentral = (focusedParentId && task.id === focusedParentId) || task.id === PROJECT_ROOT_ID;
         const posX = isCentral ? (MAX_CANVAS_WIDTH - CARD_WIDTH) / 2 : task.position.x;
         const posY = isCentral ? CENTRAL_Y : task.position.y;
-        const cardHeight = cardHeights[taskId] || 160;
         connectRef.current = { isConnecting: true, startTaskId: taskId, startX: posX + offsetX, startY: posY + offsetY };
-    }, [focusedParentId, isReadOnly, cardHeights]);
+    }, [focusedParentId, isReadOnly]);
 
     const handleJumpToBottom = () => {
         if (canvasRef.current) canvasRef.current.scrollTo({ top: canvasHeight, behavior: 'smooth' });
@@ -826,3 +825,4 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         </div>
     );
 };
+
