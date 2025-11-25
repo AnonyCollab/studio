@@ -84,7 +84,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
                                 Download
                             </Button>
                         </a>
-                        {/* The default close button from DialogContent will be used */}
                     </div>
                 </DialogHeader>
 

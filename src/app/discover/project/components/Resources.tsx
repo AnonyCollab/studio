@@ -171,9 +171,9 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                     
                                     <div className="divide-y divide-white/5">
                                         {isCreatingFolder && (
-                                            <div className={`grid grid-cols-12 p-2 items-center transition-colors group ${isLight ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'}`}>
-                                                <div className="col-span-5 flex items-center gap-3 px-2">
-                                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 text-brand-500`}>
+                                            <div className={`grid grid-cols-12 p-4 items-center transition-colors group ${isLight ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'}`}>
+                                                <div className="col-span-5 flex items-center gap-3">
+                                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 text-brand-500`}>
                                                         <Folder size={20} />
                                                     </div>
                                                     <Input
@@ -186,7 +186,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                                         }}
                                                         onBlur={() => { if(!newFolderName) setIsCreatingFolder(false); else handleCreateFolder() }}
                                                         placeholder="New folder name"
-                                                        className="h-8 bg-transparent focus-visible:ring-1 focus-visible:ring-brand-500 border-brand-500/50"
+                                                        className="h-9 bg-transparent focus-visible:ring-1 focus-visible:ring-brand-500 border-brand-500/50"
                                                     />
                                                 </div>
                                             </div>
