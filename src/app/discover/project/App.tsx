@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ProjectStoreProvider, useStore } from './store/useStore';
+import { ProjectStoreProvider } from './store/useStore';
 import { AppContent } from './components/AppContent';
 
 const App: React.FC = () => {

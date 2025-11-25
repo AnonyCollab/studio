@@ -1,7 +1,7 @@
 
 "use client"; // this registers <Editor> as a Client Component
 import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote } from "@blocknote/react";
+import { useCreateBlockNote } from "@blocknote-react";
 import {
   BlockNoteView,
   darkDefaultTheme,
@@ -54,9 +54,7 @@ export default function Editor({ onChange, initialContent, editable, collaborati
   }, [initialContent])
 
   const collaborationOptions = useMemo(() => {
-    if (!collaborationId) {
-      return undefined;
-    }
+    if (!collaborationId) return undefined;
     const doc = new Y.Doc();
     const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
 
