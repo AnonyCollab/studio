@@ -3,10 +3,14 @@
 import "@blocknote/core/fonts/inter.css";
 import { Block, BlockNoteEditor } from "@blocknote/core";
 import {
-  BlockNoteView,
   useCreateBlockNote,
 } from "@blocknote/react";
-import { darkDefaultTheme, lightDefaultTheme, Theme } from "@blocknote/mantine";
+import {
+  BlockNoteView,
+  darkDefaultTheme,
+  lightDefaultTheme,
+  Theme
+} from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import * as Y from "yjs";
 import YPartyKitProvider from "y-partykit/provider";
