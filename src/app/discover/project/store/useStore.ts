@@ -169,13 +169,13 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         return collection(firestore, 'projects', projectId, 'resources');
     }, [firestore, projectId]);
     
-    const { data: filesData } = useCollection<FileItem>(resourcesQuery);
+    const { data: filesData, error: filesError } = useCollection<FileItem>(resourcesQuery);
 
     useEffect(() => {
         if (filesData) {
             setState(prev => ({...prev, files: filesData}));
         }
-    }, [filesData]);
+    }, [filesData, filesError]);
 
 
     const membersQuery = useMemoFirebase(() => {
@@ -188,12 +188,12 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
 
     useEffect(() => {
       // Wait for project data and members data to be loaded before determining role
-      if (isProjectLoading || isMembersLoading) {
+      if (isProjectLoading || isMembersLoading || !projectData || !membersData) {
           return;
       }
       
       let userRole: UserRole = 'Visitor';
-      if (projectData && membersData && authUser) {
+      if (authUser) {
         
         const member = membersData.find(m => m.id === authUser.uid);
 
@@ -746,18 +746,13 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     const newFileDoc = {
       ...file,
       createdAt: serverTimestamp(),
-      parentId: state.resourcePath[state.resourcePath.length - 1], // Correctly get current folder
+      parentId: state.resourcePath[state.resourcePath.length - 1],
     };
 
     addDoc(resourcesCollection, newFileDoc)
       .catch(error => {
-        const permissionError = new FirestorePermissionError({
-          path: resourcesCollection.path,
-          operation: 'create',
-          requestResourceData: newFileDoc
-        });
-        console.error("Permission error creating resource:", permissionError.message);
-        // The global listener will catch and display this error now
+        console.error("Error adding document, emitting permission error:", error);
+        errorEmitter.emit('permission-error', new Error(`Failed to create resource: ${error.message}`) as any);
       });
   }, [firestore, projectId, state.resourcePath]);
 
