@@ -78,7 +78,6 @@ export default function Editor({ onChange, initialContent, editable = true, coll
         showCursorLabels: "activity",
       };
     }, [collaborationId]),
-    editable: editable,
   });
 
   // Renders the editor instance using a React component.
