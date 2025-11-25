@@ -464,6 +464,29 @@
         }
       },
       "required": ["title", "content", "authorId", "authorName", "authorImage", "createdAt"]
+    },
+    "Server": {
+      "title": "Server",
+      "description": "Represents a server in the messaging app.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "iconUrl": { "type": "string", "format": "uri" },
+        "members": { "type": "array", "items": { "type": "string" }}
+      },
+      "required": ["name", "ownerId", "members"]
+    },
+    "Channel": {
+      "title": "Channel",
+      "description": "Represents a channel within a server.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["text"] },
+        "serverId": { "type": "string" }
+      },
+      "required": ["name", "type", "serverId"]
     }
   },
   "auth": {
@@ -508,6 +531,30 @@
           "entityName": "Message",
           "schema": { "$ref": "#/backend/entities/Message" },
           "description": "Stores messages within a specific direct message conversation."
+        }
+      },
+      {
+        "path": "/servers/{serverId}",
+        "definition": {
+          "entityName": "Server",
+          "schema": { "$ref": "#/backend/entities/Server" },
+          "description": "Stores server information."
+        }
+      },
+      {
+        "path": "/servers/{serverId}/channels/{channelId}",
+        "definition": {
+          "entityName": "Channel",
+          "schema": { "$ref": "#/backend/entities/Channel" },
+          "description": "Stores channels within a specific server."
+        }
+      },
+      {
+        "path": "/servers/{serverId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores messages within a specific server channel."
         }
       },
       {
@@ -594,5 +641,3 @@
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
-
-    

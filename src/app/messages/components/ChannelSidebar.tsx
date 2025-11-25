@@ -1,5 +1,4 @@
 
-
 'use client';
 import { Hash, ChevronDown, ChevronRight, Lock, Plus, Settings } from 'lucide-react';
 import { useState, useEffect, useMemo } from 'react';
@@ -12,7 +11,9 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useFirestore, useCollection, useMemoFirebase, useUser, addDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, arrayRemove } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { CreateChannelDialog } from './CreateChannelDialog';
 
 interface Channel {
   id: string;
@@ -33,6 +34,8 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
   const isDark = theme === 'dark';
   const firestore = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
+  const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
 
   const channelsQuery = useMemoFirebase(() => {
     if (!firestore || !serverId) return null;
@@ -45,12 +48,10 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
 
   useEffect(() => {
     if(firestore && serverId) {
-        const serverDoc = collection(firestore, 'servers');
-        const serverQuery = query(serverDoc, where('__name__', '==', serverId));
-        const unsubscribe = onSnapshot(serverQuery, (snapshot) => {
-            if (!snapshot.empty) {
-                const serverData = snapshot.docs[0].data();
-                setServer({ name: serverData.name });
+        const serverRef = doc(firestore, 'servers', serverId);
+        const unsubscribe = onSnapshot(serverRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setServer(docSnap.data() as { name: string });
             }
         });
         return () => unsubscribe();
@@ -62,16 +63,18 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
     return channelsData.filter(c => c.type === 'text');
   }, [channelsData]);
 
-  const handleCreateChannel = () => {
-    if (!firestore || !serverId) return;
-    const name = prompt("Enter new channel name:");
-    if (name) {
-        const channelsCollection = collection(firestore, 'servers', serverId, 'channels');
-        addDocumentNonBlocking(channelsCollection, {
-            name: name.toLowerCase().replace(/\s+/g, '-'),
-            type: 'text',
-            serverId: serverId,
+  const handleLeaveServer = async () => {
+    if (!firestore || !user || !serverId) return;
+    try {
+        const serverRef = doc(firestore, 'servers', serverId);
+        await updateDoc(serverRef, {
+            members: arrayRemove(user.uid)
         });
+        toast({ title: "You have left the server." });
+        // Parent component will handle UI change by listening to server list
+    } catch(error) {
+        console.error("Error leaving server: ", error);
+        toast({ title: "Error", description: "Failed to leave the server.", variant: "destructive" });
     }
   };
 
@@ -79,6 +82,7 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
   if (!server) return null;
 
   return (
+    <>
     <div className={`w-80 h-full flex-shrink-0 flex flex-col ${isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'}`}>
       {/* Server header with dropdown */}
       <DropdownMenu>
@@ -105,17 +109,15 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
             Server Settings
           </DropdownMenuItem>
           <DropdownMenuSeparator className={isDark ? 'bg-white/10' : 'bg-gray-200'} />
-          <DropdownMenuItem className={isDark ? 'focus:bg-white/10 focus:text-white' : 'focus:bg-gray-100'}>
-            Change Icon
+          <DropdownMenuItem onClick={() => setIsCreateChannelOpen(true)} className={isDark ? 'focus:bg-white/10 focus:text-white' : 'focus:bg-gray-100'}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Channel
           </DropdownMenuItem>
           <DropdownMenuItem className={isDark ? 'focus:bg-white/10 focus:text-white' : 'focus:bg-gray-100'}>
             Notification Settings
           </DropdownMenuItem>
-          <DropdownMenuItem className={isDark ? 'focus:bg-white/10 focus:text-white' : 'focus:bg-gray-100'}>
-            Privacy Settings
-          </DropdownMenuItem>
           <DropdownMenuSeparator className={isDark ? 'bg-white/10' : 'bg-gray-200'} />
-          <DropdownMenuItem className="text-red-400 focus:bg-red-500/20 focus:text-red-400">
+          <DropdownMenuItem onClick={handleLeaveServer} className="text-red-400 focus:bg-red-500/20 focus:text-red-400">
             Leave Server
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -131,7 +133,7 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
                 <span className={`text-xs tracking-wider ${isDark ? 'text-[#94a3b8]' : 'text-gray-500'}`}>
                   TEXT CHANNELS
                 </span>
-                <button onClick={handleCreateChannel} className={`p-1 rounded-full ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                <button onClick={() => setIsCreateChannelOpen(true)} className={`p-1 rounded-full ${isDark ? 'text-gray-400 hover:bg-white/10 hover:text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
                     <Plus className="w-4 h-4" />
                 </button>
               </div>
@@ -166,5 +168,12 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
         </div>
       </ScrollArea>
     </div>
+    <CreateChannelDialog 
+        isOpen={isCreateChannelOpen}
+        onOpenChange={setIsCreateChannelOpen}
+        theme={theme}
+        serverId={serverId}
+    />
+    </>
   );
 }

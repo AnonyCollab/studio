@@ -5,9 +5,10 @@ import { UserPlus, Crown, Shield, Users as UsersIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfileTrigger } from './ProfileCard';
-import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
 import { collection, doc, documentId, query, where, getDoc, onSnapshot } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
+import { InviteDialog } from './InviteDialog';
 
 interface Member {
   id: string;
@@ -48,45 +49,51 @@ interface MembersPanelProps {
 export function MembersPanel({ theme, serverId }: MembersPanelProps) {
   const isDark = theme === 'dark';
   const firestore = useFirestore();
+  const { user: currentUser } = useUser();
   const [members, setMembers] = useState<Member[]>([]);
+  const [server, setServer] = useState<any>(null);
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const isOwner = server?.ownerId === currentUser?.uid;
 
   useEffect(() => {
     if (!firestore || !serverId) return;
 
     const serverRef = doc(firestore, 'servers', serverId);
 
-    const unsub = getDoc(serverRef).then(serverDoc => {
-      if (serverDoc.exists()) {
-        const memberIds = serverDoc.data().members || [];
-        if (memberIds.length > 0) {
-          const usersQuery = query(collection(firestore, 'users'), where(documentId(), 'in', memberIds));
-          
-          return onSnapshot(usersQuery, (snapshot) => {
-            const fetchedMembers = snapshot.docs.map(doc => {
-              const profile = doc.data().profile;
-              let role: Member['role'] = 'member';
-              if (doc.id === serverDoc.data().ownerId) {
-                role = 'owner';
-              }
+    const unsubServer = onSnapshot(serverRef, (serverDoc) => {
+        if(serverDoc.exists()) {
+            setServer({ id: serverDoc.id, ...serverDoc.data() });
+            const memberIds = serverDoc.data().members || [];
+            if (memberIds.length > 0) {
+              const usersQuery = query(collection(firestore, 'users'), where(documentId(), 'in', memberIds));
               
-              return {
-                id: doc.id,
-                displayName: profile.displayName,
-                photoURL: profile.photoURL,
-                role: role,
-                status: 'online'
-              } as Member;
-            });
-            setMembers(fetchedMembers);
-          });
+              const unsubUsers = onSnapshot(usersQuery, (snapshot) => {
+                const fetchedMembers = snapshot.docs.map(doc => {
+                  const profile = doc.data().profile;
+                  let role: Member['role'] = 'member';
+                  if (doc.id === serverDoc.data().ownerId) {
+                    role = 'owner';
+                  }
+                  
+                  return {
+                    id: doc.id,
+                    displayName: profile.displayName,
+                    photoURL: profile.photoURL,
+                    role: role,
+                    status: 'online'
+                  } as Member;
+                });
+                setMembers(fetchedMembers);
+              });
+              return unsubUsers;
+            }
         }
-      }
-      setMembers([]);
-      return () => {};
+        setMembers([]);
+        return () => {};
     });
 
     return () => {
-      unsub.then(unsubFunc => unsubFunc && unsubFunc());
+      unsubServer();
     };
   }, [firestore, serverId]);
 
@@ -113,16 +120,20 @@ export function MembersPanel({ theme, serverId }: MembersPanelProps) {
   };
 
   return (
+    <>
     <div className={`w-60 flex flex-col ${isDark ? 'bg-[#0a0e1a] border-l border-white/10' : 'bg-white border-l border-gray-200'}`}>
       {/* Header with invite button */}
       <div className={`p-3 ${isDark ? 'bg-[#131823] border-b border-white/10' : 'bg-white border-b border-gray-200'}`}>
-        <button className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all ${
-          isDark 
-            ? 'bg-[#22d3ee] hover:bg-cyan-500 text-white' 
-            : 'bg-cyan-600 hover:bg-cyan-700 text-white'
-        }`}>
+        <button 
+            onClick={() => setIsInviteOpen(true)}
+            disabled={!isOwner}
+            className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg transition-all text-sm font-medium ${
+            isOwner
+                ? (isDark ? 'bg-[#22d3ee] hover:bg-cyan-500 text-white' : 'bg-cyan-600 hover:bg-cyan-700 text-white')
+                : (isDark ? 'bg-white/10 text-gray-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
+            }`}>
           <UserPlus className="w-4 h-4" />
-          <span className="text-sm">Invite People</span>
+          Invite People
         </button>
       </div>
 
@@ -189,5 +200,13 @@ export function MembersPanel({ theme, serverId }: MembersPanelProps) {
         </div>
       </ScrollArea>
     </div>
+    <InviteDialog 
+        isOpen={isInviteOpen} 
+        onOpenChange={setIsInviteOpen} 
+        theme={theme}
+        serverId={serverId}
+        currentMembers={members.map(m => m.id)}
+    />
+    </>
   );
 }
