@@ -15,6 +15,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import { Suspense } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
 
 function MessagesAppContent() {
@@ -25,6 +27,15 @@ function MessagesAppContent() {
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const searchParams = useSearchParams();
+  const { user: currentUser } = useUser();
+  const firestore = useFirestore();
+
+  const serversQuery = useMemoFirebase(() => {
+    if (!firestore || !currentUser) return null;
+    return query(collection(firestore, 'servers'), where('members', 'array-contains', currentUser.uid));
+  }, [firestore, currentUser]);
+
+  const { data: serversData } = useCollection(serversQuery);
 
   useEffect(() => {
     const dmId = searchParams.get('dm');
@@ -80,6 +91,7 @@ function MessagesAppContent() {
               {/* Server list */}
               <div className="w-20 h-full">
                 <ServerList 
+                  servers={serversData || []}
                   selectedServer={selectedServer}
                   onSelectServer={(id) => {
                     setSelectedServer(id);
@@ -133,7 +145,7 @@ function MessagesAppContent() {
             ) : currentView === 'dm' && selectedServer === 'home' ? (
               <ChatArea channelId={selectedDM} isDM={true} theme={theme} onBack={isMobile ? handleBack : undefined} />
             ) : (
-              <ChatArea channelId={selectedChannel} isDM={false} theme={theme} onBack={isMobile ? handleBack : undefined} />
+              <ChatArea channelId={selectedChannel} isDM={false} serverId={selectedServer} theme={theme} onBack={isMobile ? handleBack : undefined} />
             )}
           </div>
           {isInGroup && !isMobile && <MembersPanel theme={theme} />}
@@ -156,3 +168,5 @@ export default function App() {
     </Suspense>
   )
 }
+
+    

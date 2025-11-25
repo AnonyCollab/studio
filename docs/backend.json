@@ -108,6 +108,126 @@
         "createdAt"
       ]
     },
+    "Project": {
+      "title": "Project",
+      "description": "Represents a collaborative project in the Discover section.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the project."
+        },
+        "title": {
+          "type": "string",
+          "description": "The title of the project."
+        },
+        "description": {
+          "type": "string",
+          "description": "A detailed description of the project."
+        },
+        "image": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the project's cover image."
+        },
+        "sector": {
+          "type": "string",
+          "description": "The industry sector the project belongs to."
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "uid": { "type": "string" },
+            "name": { "type": "string" },
+            "avatar": { "type": "string", "format": "uri" },
+            "initials": { "type": "string" }
+          },
+          "required": ["uid", "name", "initials"]
+        },
+        "members": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "An array of user UIDs who are members of this project."
+        },
+        "totalMembers": {
+          "type": "integer",
+          "description": "The total number of members in the project."
+        },
+        "createdDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date the project was created."
+        },
+        "lastEditDate": {
+          "type": "string",
+          "format": "date",
+          "description": "The date the project was last edited."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "A list of tags associated with the project."
+        }
+      },
+      "required": ["id", "title", "description", "owner", "createdDate", "lastEditDate"]
+    },
+     "Task": {
+      "title": "Task",
+      "description": "Represents a single task or node within a project plan.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Backlog", "In Progress", "Review", "Done"] },
+        "priority": { "type": "string", "enum": ["Low", "Medium", "High", "Critical"] },
+        "type": { "type": "string", "enum": ["Milestone", "Goal", "Epic", "Story", "Issue", "Sub-issue"] },
+        "assignee": { "type": "object" },
+        "startDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "color": { "type": "string" },
+        "position": { "type": "object", "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+        "next": { "type": "array", "items": { "type": "string" } },
+        "prev": { "type": "array", "items": { "type": "string" } },
+        "childrenIds": { "type": "array", "items": { "type": "string" } },
+        "parentId": { "type": "string" },
+        "size": { "type": "string" },
+        "history": { "type": "array" },
+        "attachments": { "type": "array" },
+        "checklist": { "type": "array" },
+        "cycleId": { "type": "string" }
+      },
+      "required": ["id", "title", "status", "priority", "type", "assignee", "startDate", "dueDate", "color", "position"]
+    },
+    "ProjectMember": {
+      "title": "Project Member",
+      "description": "Represents a user's membership in a project.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "member"] },
+        "joinedAt": { "type": "object" }
+      },
+      "required": ["uid", "displayName", "role", "joinedAt"]
+    },
+    "Resource": {
+      "title": "Resource",
+      "description": "Represents a file or folder within a project's resources section.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["folder", "file"] },
+        "fileType": { "type": "string", "description": "MIME type for files." },
+        "size": { "type": "string" },
+        "createdAt": { "type": "object", "description": "Firestore server timestamp." },
+        "parentId": { "type": ["string", "null"] },
+        "url": { "type": "string", "format": "uri" },
+        "content": { "type": "string", "description": "JSON string for BlockNote documents." }
+      },
+      "required": ["id", "name", "type", "createdAt", "parentId"]
+    },
     "Comment": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Comment",
@@ -344,6 +464,29 @@
         }
       },
       "required": ["title", "content", "authorId", "authorName", "authorImage", "createdAt"]
+    },
+    "Server": {
+      "title": "Server",
+      "description": "Represents a server in the messaging app.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "ownerId": { "type": "string" },
+        "iconUrl": { "type": "string", "format": "uri" },
+        "members": { "type": "array", "items": { "type": "string" }}
+      },
+      "required": ["name", "ownerId", "members"]
+    },
+    "Channel": {
+      "title": "Channel",
+      "description": "Represents a channel within a server.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "voice"] },
+        "serverId": { "type": "string" }
+      },
+      "required": ["name", "type", "serverId"]
     }
   },
   "auth": {
@@ -391,6 +534,30 @@
         }
       },
       {
+        "path": "/servers/{serverId}",
+        "definition": {
+          "entityName": "Server",
+          "schema": { "$ref": "#/backend/entities/Server" },
+          "description": "Stores server information."
+        }
+      },
+      {
+        "path": "/servers/{serverId}/channels/{channelId}",
+        "definition": {
+          "entityName": "Channel",
+          "schema": { "$ref": "#/backend/entities/Channel" },
+          "description": "Stores channels within a specific server."
+        }
+      },
+      {
+        "path": "/servers/{serverId}/messages/{messageId}",
+        "definition": {
+          "entityName": "Message",
+          "schema": { "$ref": "#/backend/entities/Message" },
+          "description": "Stores messages within a specific server channel."
+        }
+      },
+      {
         "path": "/posts/{postId}",
         "definition": {
           "entityName": "Post",
@@ -404,6 +571,42 @@
               "description": "The unique identifier for the post."
             }
           ]
+        }
+      },
+      {
+        "path": "/projects/{projectId}",
+        "definition": {
+          "entityName": "Project",
+          "schema": {
+            "$ref": "#/backend/entities/Project"
+          },
+          "description": "Stores individual projects for the Discover page."
+        }
+      },
+      {
+        "path": "/projects/{projectId}/tasks/{taskId}",
+        "definition": {
+          "entityName": "Task",
+          "schema": { "$ref": "#/backend/entities/Task" },
+          "description": "Stores tasks for a specific project."
+        }
+      },
+      {
+        "path": "/projects/{projectId}/members/{userId}",
+        "definition": {
+            "entityName": "ProjectMember",
+            "schema": { "$ref": "#/backend/entities/ProjectMember" },
+            "description": "Stores information about each member of a project."
+        }
+      },
+      {
+        "path": "/projects/{projectId}/resources/{resourceId}",
+        "definition": {
+          "entityName": "Resource",
+          "schema": {
+            "$ref": "#/backend/entities/Resource"
+          },
+          "description": "Stores files and folders for a specific project."
         }
       },
       {
@@ -438,3 +641,5 @@
     "reasoning": "The data structure is designed to be simple and directly reflect the entity relationships described. It prioritizes straightforward access patterns and avoids unnecessary complexity. The structure enforces path-based ownership for comments within posts to ensure data integrity and simplifies security rules. All access is based on unauthenticated access with Post visibility being implicitly 'Public'.\n\nAuthorization Independence is achieved inherently because there is no explicit need for authorization besides the potential of requiring logged in status for posting. All posts are public. The use of subcollections for comments, while straightforward, doesn't necessitate denormalization in this public-access scenario. If comments needed role-based access, the post's member list or owner would be denormalized into the comment documents.\n\nThe structure supports list operations (QAPs) by leveraging the natural hierarchy. Listing comments for a specific post is efficient via a collection group query on the `/posts/{postId}/comments` subcollection. Listing posts themselves is also direct from `/posts`."
   }
 }
+
+    

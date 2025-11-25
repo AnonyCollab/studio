@@ -16,7 +16,7 @@ service cloud.firestore {
 
     // Users can be read by anyone. Writes are restricted to the owner of the document.
     match /users/{userId} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
@@ -30,9 +30,10 @@ service cloud.firestore {
     
     // Rules for Direct Messages
     match /dms/{dmId} {
-        // Allow a user to read or query a DM document if they are a participant.
-        // This single rule covers both `get` and `list` scenarios correctly.
-        allow read: if request.auth != null && request.auth.uid in resource.data.participants;
+        // Allow a user to read a DM if it exists and they are a participant.
+        allow get: if request.auth != null && (!exists(/databases/$(database)/documents/dms/$(dmId)) || request.auth.uid in resource.data.participants);
+        // Allow a user to list DMs they are a participant in.
+        allow list: if request.auth != null && request.auth.uid in resource.data.participants;
         
         // Allow create if the user is including themselves in the participants list.
         allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
@@ -52,9 +53,22 @@ service cloud.firestore {
         }
     }
     
-    // Placeholder rules for server channels
-    match /servers/{serverId}/messages/{messageId} {
-        allow read, write: if request.auth != null;
+    match /servers/{serverId} {
+        allow list: if request.auth != null;
+        allow get: if request.auth != null && request.auth.uid in resource.data.members;
+        allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
+        allow update: if request.auth != null && request.auth.uid == resource.data.ownerId;
+        allow delete: if request.auth != null && request.auth.uid == resource.data.ownerId;
+        
+        match /channels/{channelId} {
+            allow read, list: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/servers/$(serverId)).data.members;
+            allow create: if request.auth != null && request.auth.uid == get(/databases/$(database)/documents/servers/$(serverId)).data.ownerId;
+        }
+
+        match /messages/{messageId} {
+            allow read, list: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/servers/$(serverId)).data.members;
+            allow create: if request.auth != null && request.auth.uid in get(/databases/$(database)/documents/servers/$(serverId)).data.members && request.resource.data.senderId == request.auth.uid;
+        }
     }
     
     match /news/{articleId} {
@@ -157,3 +171,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

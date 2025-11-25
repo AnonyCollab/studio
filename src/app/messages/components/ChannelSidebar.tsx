@@ -1,6 +1,8 @@
 
+
+'use client';
 import { Hash, Volume2, ChevronDown, ChevronRight, Lock, Plus, Settings } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DropdownMenu,
@@ -9,90 +11,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useFirestore, useCollection, useMemoFirebase, useUser } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
 
-const serverData: Record<string, any> = {
-  server1: {
-    name: 'Gaming Squad',
-    sections: [
-      {
-        name: 'TEXT CHANNELS',
-        channels: [
-          { id: 'general', name: 'general', type: 'text' },
-          { id: 'memes', name: 'memes', type: 'text' },
-          { id: 'game-chat', name: 'game-chat', type: 'text' },
-          { id: 'announcements', name: 'announcements', type: 'text', locked: true },
-        ],
-      },
-      {
-        name: 'VOICE CHANNELS',
-        channels: [
-          { id: 'lobby', name: 'Lobby', type: 'voice' },
-          { id: 'gaming-room-1', name: 'Gaming Room 1', type: 'voice' },
-          { id: 'gaming-room-2', name: 'Gaming Room 2', type: 'voice' },
-        ],
-      },
-    ],
-  },
-  server2: {
-    name: 'Music Lovers',
-    sections: [
-      {
-        name: 'TEXT CHANNELS',
-        channels: [
-          { id: 'general', name: 'general', type: 'text' },
-          { id: 'share-music', name: 'share-music', type: 'text' },
-          { id: 'playlist-ideas', name: 'playlist-ideas', type: 'text' },
-        ],
-      },
-      {
-        name: 'VOICE CHANNELS',
-        channels: [
-          { id: 'listening-party', name: 'Listening Party', type: 'voice' },
-          { id: 'chill-zone', name: 'Chill Zone', type: 'voice' },
-        ],
-      },
-    ],
-  },
-  server3: {
-    name: 'Developers',
-    sections: [
-      {
-        name: 'TEXT CHANNELS',
-        channels: [
-          { id: 'general', name: 'general', type: 'text' },
-          { id: 'code-help', name: 'code-help', type: 'text' },
-          { id: 'project-showcase', name: 'project-showcase', type: 'text' },
-          { id: 'resources', name: 'resources', type: 'text' },
-        ],
-      },
-      {
-        name: 'VOICE CHANNELS',
-        channels: [
-          { id: 'pair-programming', name: 'Pair Programming', type: 'voice' },
-          { id: 'code-review', name: 'Code Review', type: 'voice' },
-        ],
-      },
-    ],
-  },
-  server4: {
-    name: 'Friends',
-    sections: [
-      {
-        name: 'TEXT CHANNELS',
-        channels: [
-          { id: 'general', name: 'general', type: 'text' },
-          { id: 'random', name: 'random', type: 'text' },
-        ],
-      },
-      {
-        name: 'VOICE CHANNELS',
-        channels: [
-          { id: 'hangout', name: 'Hangout', type: 'voice' },
-        ],
-      },
-    ],
-  },
-};
+interface Channel {
+  id: string;
+  name: string;
+  type: 'text' | 'voice';
+  locked?: boolean;
+}
 
 interface ChannelSidebarProps {
   serverId: string;
@@ -103,8 +30,49 @@ interface ChannelSidebarProps {
 
 export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, theme }: ChannelSidebarProps) {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-  const server = serverData[serverId];
   const isDark = theme === 'dark';
+  const firestore = useFirestore();
+  const { user } = useUser();
+
+  const channelsQuery = useMemoFirebase(() => {
+    if (!firestore || !serverId) return null;
+    return query(collection(firestore, 'servers', serverId, 'channels'));
+  }, [firestore, serverId]);
+
+  const { data: channelsData } = useCollection<Channel>(channelsQuery);
+
+  const [server, setServer] = useState<{ name: string } | null>(null);
+
+  useEffect(() => {
+    if(firestore && serverId) {
+        const serverDoc = collection(firestore, 'servers');
+        // This is not efficient, but we don't have a direct getDoc hook with ID.
+        // For a real app, this should be a direct doc read.
+        const serverQuery = query(serverDoc, where('__name__', '==', serverId));
+        const unsubscribe = onSnapshot(serverQuery, (snapshot) => {
+            if (!snapshot.empty) {
+                const serverData = snapshot.docs[0].data();
+                setServer({ name: serverData.name });
+            }
+        });
+        return () => unsubscribe();
+    }
+  }, [firestore, serverId]);
+
+  const sections = useMemo(() => {
+    if (!channelsData) return [];
+    return [
+      {
+        name: 'TEXT CHANNELS',
+        channels: channelsData.filter(c => c.type === 'text'),
+      },
+      {
+        name: 'VOICE CHANNELS',
+        channels: channelsData.filter(c => c.type === 'voice'),
+      }
+    ]
+  }, [channelsData]);
+
 
   if (!server) return null;
 
@@ -161,7 +129,7 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
       {/* Channels list */}
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-4">
-          {server.sections.map((section: any) => (
+          {sections.map((section: any) => (
             <div key={section.name}>
               <button
                 onClick={() => toggleSection(section.name)}
@@ -217,3 +185,5 @@ export function ChannelSidebar({ serverId, selectedChannel, onSelectChannel, the
     </div>
   );
 }
+
+    

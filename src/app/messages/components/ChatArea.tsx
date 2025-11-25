@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Hash, Bell, Pin, Users, Search, Smile, Plus, Gift, Sticker, Send, MessageCircle, ArrowLeft, FileText, Download } from 'lucide-react';
@@ -72,12 +73,13 @@ interface Message {
 
 interface ChatAreaProps {
   channelId: string | null;
+  serverId?: string;
   isDM: boolean;
   theme: 'light' | 'dark';
   onBack?: () => void;
 }
 
-export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
+export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaProps) {
   const [message, setMessage] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showGifPicker, setShowGifPicker] = useState(false);
@@ -146,8 +148,9 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
         if (!dmData) return null; // Wait for DM doc to exist before querying subcollection
         return query(collection(firestore, 'dms', channelId, 'messages'), orderBy('createdAt', 'asc'));
     }
-    return query(collection(firestore, 'servers', channelId, 'messages'), orderBy('createdAt', 'asc'));
-  }, [firestore, channelId, isDM, dmData]);
+    if(!serverId) return null;
+    return query(collection(firestore, 'servers', serverId, 'messages'), orderBy('createdAt', 'asc'));
+  }, [firestore, channelId, serverId, isDM, dmData]);
 
   const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
   const [senderProfiles, setSenderProfiles] = useState<Record<string, any>>({});
@@ -204,8 +207,8 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
           },
           updatedAt: serverTimestamp()
         }, { merge: true });
-    } else {
-        await addDoc(collection(firestore, 'servers', channelId, 'messages'), messageData);
+    } else if(serverId) {
+        await addDoc(collection(firestore, 'servers', serverId, 'messages'), messageData);
     }
   };
 
@@ -214,7 +217,7 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     if (!file || !channelId || !currentUser) return;
 
     const storage = getStorage();
-    const filePath = `dms/${channelId}/${currentUser.uid}/${file.name}`;
+    const filePath = isDM ? `dms/${channelId}/${currentUser.uid}/${file.name}` : `servers/${serverId}/${channelId}/${currentUser.uid}/${file.name}`;
     const fileStorageRef = storageRef(storage, filePath);
 
     const uploadTask = uploadBytesResumable(fileStorageRef, file);
@@ -244,7 +247,7 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
             createdAt: serverTimestamp(),
           };
           
-          const messageCollection = isDM ? collection(firestore, 'dms', channelId, 'messages') : collection(firestore, 'servers', channelId, 'messages');
+          const messageCollection = isDM ? collection(firestore, 'dms', channelId, 'messages') : collection(firestore, 'servers', serverId!, 'messages');
           await addDoc(messageCollection, fileMessage);
           
           if(isDM) {
@@ -490,3 +493,5 @@ export function ChatArea({ channelId, isDM, theme, onBack }: ChatAreaProps) {
     </div>
   );
 }
+
+    
