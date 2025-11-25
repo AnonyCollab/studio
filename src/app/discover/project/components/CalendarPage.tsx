@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Clock } from 'lucide-react';
 import { TaskNode, Theme, CalendarViewMode, FilterOption } from '../types';
 import { PriorityIcon, StatusBadge } from './Plan';
+import { useStore } from '../store/useStore';
 
 interface CalendarPageProps {
     tasks: TaskNode[];
@@ -19,10 +20,15 @@ const MONTHS = ["January", "February", "March", "April", "May", "June", "July", 
 const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export const CalendarPage: React.FC<CalendarPageProps> = ({ tasks, theme, onAddTask, view, date, setDate, setView, filter = 'All' }) => {
+    const { currentUser } = useStore();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showMonthToast, setShowMonthToast] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        console.log("Current user role in CalendarPage:", currentUser?.role);
+    }, [currentUser]);
 
     useEffect(() => {
         const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);
@@ -33,12 +39,12 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ tasks, theme, onAddT
 
     // --- Filter Logic ---
     const filteredTasks = useMemo(() => {
-        const currentUser = 'Alex Chen'; // Mock
+        const currentUserName = 'Alex Chen'; // Mock
         const currentTeam = 'Frontend Team'; // Mock
 
         switch(filter) {
             case 'Mine':
-                return tasks.filter(t => t.assignee.name === currentUser);
+                return tasks.filter(t => t.assignee.name === currentUserName);
             case 'Team':
                 return tasks.filter(t => t.assignee.name === currentTeam || t.assignee.type === 'team');
             case 'Project':

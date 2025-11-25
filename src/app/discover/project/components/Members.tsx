@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
 import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
 import { DepartmentSheet } from './DepartmentSheet';
@@ -26,11 +26,15 @@ interface MembersProps {
 }
 
 export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers, onViewProfile }) => {
+    const { currentUser: authenticatedUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
-    const { updateMember } = useStore(null);
-    const { user: currentUser } = useUser();
+    const { updateMember, currentUser } = useStore(null);
     const { toast } = useToast();
+
+    useEffect(() => {
+        console.log("Current user role in MembersPage:", currentUser?.role);
+    }, [currentUser]);
 
     const allMembers = initialMembers;
     const teams = allMembers.filter(m => m.type === 'team');
@@ -96,7 +100,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                         const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
                                         const canPromote = currentRoleIndex > 0;
                                         const canDemote = currentRoleIndex < ROLE_HIERARCHY.length - 1;
-                                        const isCurrentUser = currentUser?.uid === member.uid;
+                                        const isCurrentUser = authenticatedUser?.uid === member.uid;
 
 
                                         return (

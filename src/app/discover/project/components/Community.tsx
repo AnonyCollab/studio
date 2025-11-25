@@ -1,7 +1,8 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Theme, CommunityViewMode, UserPost } from '../types';
 import { MessageSquare, Heart, Share2, MoreHorizontal, Info } from 'lucide-react';
+import { useStore } from '../store/useStore';
 
 interface CommunityProps {
     theme: Theme;
@@ -10,7 +11,12 @@ interface CommunityProps {
 }
 
 export const Community: React.FC<CommunityProps> = ({ theme, viewMode, posts }) => {
+    const { currentUser } = useStore();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
+
+    useEffect(() => {
+        console.log("Current user role in CommunityPage:", currentUser?.role);
+    }, [currentUser]);
     
     const cardClass = isLight ? "bg-white/80 border-black/5" : "bg-[#18181b]/80 border-white/5";
     const textMain = isLight ? "text-slate-800" : "text-slate-100";

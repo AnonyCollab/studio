@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
 import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, Edit, Upload } from 'lucide-react';
 import { useStore } from '../store/useStore';
@@ -37,13 +37,17 @@ interface ResourcesProps {
 }
 
 export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
-    const { files, addFile, resourcePath, setResourcePath } = useStore();
+    const { files, addFile, resourcePath, setResourcePath, currentUser } = useStore();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [newFolderName, setNewFolderName] = useState('');
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
     const [isCreatingFile, setIsCreatingFile] = useState(false);
     
+    useEffect(() => {
+        console.log("Current user role in ResourcesPage:", currentUser?.role);
+    }, [currentUser]);
+
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:bg-white" : "bg-[#18181b]/80 border-white/5 hover:bg-[#202023]";
     const textMain = isLight ? "text-slate-800" : "text-slate-100";

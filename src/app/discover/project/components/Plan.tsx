@@ -215,6 +215,10 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
       setTasks, selectTask, selectTasks, setViewMode, setScale, updateTask, addTask, deleteTask, duplicateTask, moveTask, setFocusedParentId, setTheme, setBackground, setFilter
   } = store;
   
+  useEffect(() => {
+    console.log("Current user role in Plan (Roadmap):", currentUser?.role);
+  }, [currentUser]);
+
   const isLightTheme = ['Light', 'Sephiroa', 'Green'].includes(theme);
   const isReadOnly = currentUser?.role === 'Visitor';
 

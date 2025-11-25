@@ -1,13 +1,14 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
 import { Theme, TaskNode, Assignee } from '../types';
 import { MOCK_POSTS, MOCK_ARTICLES, MOCK_ACTIVITY } from '../constants';
 import { MapPin, Link as LinkIcon, Building2, Users, CheckCircle2, Repeat2, MessageSquare, Heart, Share2, FileText, BookOpen, Activity, Briefcase, Calendar, ArrowLeft } from 'lucide-react';
 import { StatusBadge, PriorityIcon } from './Plan';
+import { useStore } from '../store/useStore';
 
 interface ProfilePageProps {
     theme: Theme;
@@ -25,6 +26,11 @@ export const ProfilePage: React.FC<ProfilePageProps> = ({ theme, tasks, member, 
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const router = useRouter();
     const { user: currentUser } = useUser();
+    const { currentUser: storeUser } = useStore();
+
+    useEffect(() => {
+        console.log("Current user role in ProfilePage:", storeUser?.role);
+    }, [storeUser]);
 
     if (!member) {
         return (

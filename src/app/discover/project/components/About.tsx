@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Theme, CurrentUser } from '../types';
 import { Layers, Github, Twitter, Globe, LogOut, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,9 @@ interface AboutProps {
 }
 
 export const About: React.FC<AboutProps> = ({ theme, currentUser, onLeaveProject, isLeaving }) => {
+    useEffect(() => {
+        console.log("Current user role in AboutPage:", currentUser?.role);
+    }, [currentUser]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const textMain = isLight ? "text-slate-800" : "text-slate-100";
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";

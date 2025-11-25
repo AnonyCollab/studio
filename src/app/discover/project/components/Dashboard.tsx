@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { TaskNode, Theme, DashboardViewMode, CurrentUser } from '../types';
 import { StatusBadge, PriorityIcon } from './Plan';
 import { 
@@ -19,6 +19,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ tasks, theme, viewMode, se
     const { currentUser } = useStore(null);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     
+    useEffect(() => {
+        console.log("Current user role in Dashboard:", currentUser?.role);
+    }, [currentUser]);
+
     // Mock Team Context for Demo
     const currentTeamName = currentUser.teamName || 'Frontend Team';
     const teamMembers = ['Alex Chen', 'Sarah Jones', 'Mike Ross']; 
