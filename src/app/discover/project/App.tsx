@@ -199,8 +199,11 @@ const App: React.FC = () => {
     }
   };
 
-  // The main loading state for the entire project view
-  if (isAuthLoading || isStoreLoading) {
+  // Stricter loading condition: wait for auth AND for the store to finish loading,
+  // AND for the user role to be determined (i.e., not the initial 'Visitor' state unless they are truly a visitor).
+  const isTrulyLoading = isAuthLoading || isStoreLoading || (currentUser.id === 'guest' && authUser) || (currentUser.role === 'Visitor' && !store.projectData);
+
+  if (isTrulyLoading) {
     return (
         <div className="w-screen h-screen flex flex-col items-center justify-center bg-[#09090b] text-slate-400 gap-4">
             <Loader className="w-8 h-8 animate-spin text-brand-500" />
@@ -405,5 +408,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-    
