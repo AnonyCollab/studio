@@ -1,34 +1,28 @@
 
-import React, { useRef, useLayoutEffect } from 'react';
+import React, { useMemo } from 'react';
+import { Theme } from '../../types';
+import dynamic from 'next/dynamic';
+
+const Editor = dynamic(() => import('@/app/news/components/Editor'), { 
+    ssr: false,
+    loading: () => <div className="h-64 w-full bg-muted/50 animate-pulse rounded-lg" />
+});
 
 interface ContentEditorProps {
   content: string;
   setContent: (content: string) => void;
   isLight: boolean;
+  theme: Theme;
 }
 
-export function ContentEditor({ content, setContent, isLight }: ContentEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const textClass = isLight ? "text-slate-800 placeholder:text-slate-300" : "text-slate-300 placeholder:text-slate-700";
-
-  useLayoutEffect(() => {
-    if (textareaRef.current) {
-        // Reset height to allow shrinking
-        textareaRef.current.style.height = 'inherit';
-        // Set to scrollHeight
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [content]);
+export function ContentEditor({ content, setContent, theme }: ContentEditorProps) {
+  const editorComponent = useMemo(() => {
+    return <Editor initialContent={content} onChange={setContent} editable={true} />;
+  }, [content, setContent]);
 
   return (
     <div>
-      <textarea
-        ref={textareaRef}
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        className={`w-full bg-transparent border-none outline-none resize-none min-h-[100px] leading-relaxed text-lg focus:ring-0 p-0 overflow-hidden ${textClass}`}
-        placeholder="Start typing your description here..."
-      />
+      {editorComponent}
     </div>
   );
 }

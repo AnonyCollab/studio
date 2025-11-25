@@ -297,6 +297,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
                                     content={task.description}
                                     setContent={(c) => onUpdate(task.id, { description: c })}
                                     isLight={isLight}
+                                    theme={theme}
                                 />
                             </div>
                         </div>
@@ -351,6 +352,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
                                     content={task.description}
                                     setContent={(c) => onUpdate(task.id, { description: c })}
                                     isLight={isLight}
+                                    theme={theme}
                                 />
                             </div>
                         </MobileSection>
