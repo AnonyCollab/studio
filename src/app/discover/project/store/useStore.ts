@@ -746,13 +746,18 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     const newFileDoc = {
       ...file,
       createdAt: serverTimestamp(),
-      parentId: state.resourcePath[state.resourcePath.length - 1] || null
+      parentId: state.resourcePath[state.resourcePath.length - 1], // Correctly get current folder
     };
 
     addDoc(resourcesCollection, newFileDoc)
       .catch(error => {
-        console.error("Error adding file to Firestore: ", error);
-        // Optionally handle the error, e.g., show a toast to the user
+        const permissionError = new FirestorePermissionError({
+          path: resourcesCollection.path,
+          operation: 'create',
+          requestResourceData: newFileDoc
+        });
+        console.error("Permission error creating resource:", permissionError.message);
+        // The global listener will catch and display this error now
       });
   }, [firestore, projectId, state.resourcePath]);
 
