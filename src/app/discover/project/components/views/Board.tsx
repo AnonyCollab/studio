@@ -203,6 +203,8 @@ const TaskCard = React.memo(({
     
     const canDrag = !isReadOnly && !isRootNode; 
 
+    const cardHeight = cardRef.current?.offsetHeight ?? 160;
+
     return (
         <div 
             ref={cardRef}
@@ -227,7 +229,7 @@ const TaskCard = React.memo(({
                     {/* Top Connector */}
                     <div onMouseDown={(e) => onConnectStart(e, task.id, 140, 0)} className="absolute top-[-6px] left-1/2 -translate-x-1/2 w-6 h-3 bg-slate-400/50 rounded-full cursor-crosshair opacity-0 group-hover:opacity-100 hover:bg-brand-500 transition-opacity z-30 hover:scale-125" title="Connect"></div>
                     {/* Bottom Connector */}
-                    <div onMouseDown={(e) => onConnectStart(e, task.id, 140, 100)} className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-6 h-3 bg-slate-400/50 rounded-full cursor-crosshair opacity-0 group-hover:opacity-100 hover:bg-brand-500 transition-opacity z-30 hover:scale-125" title="Connect"></div>
+                    <div onMouseDown={(e) => onConnectStart(e, task.id, 140, cardHeight)} className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-6 h-3 bg-slate-400/50 rounded-full cursor-crosshair opacity-0 group-hover:opacity-100 hover:bg-brand-500 transition-opacity z-30 hover:scale-125" title="Connect"></div>
                 </div>
             )}
             
@@ -645,8 +647,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         const isCentral = (focusedParentId && task.id === focusedParentId) || task.id === PROJECT_ROOT_ID;
         const posX = isCentral ? (MAX_CANVAS_WIDTH - CARD_WIDTH) / 2 : task.position.x;
         const posY = isCentral ? CENTRAL_Y : task.position.y;
+        const cardHeight = cardHeights[taskId] || 160;
         connectRef.current = { isConnecting: true, startTaskId: taskId, startX: posX + offsetX, startY: posY + offsetY };
-    }, [focusedParentId, isReadOnly]);
+    }, [focusedParentId, isReadOnly, cardHeights]);
 
     const handleJumpToBottom = () => {
         if (canvasRef.current) canvasRef.current.scrollTo({ top: canvasHeight, behavior: 'smooth' });

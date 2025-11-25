@@ -51,7 +51,6 @@ export default function Editor({ onChange, initialContent, editable = true, coll
     } catch (e) {
       // If parsing fails, it's likely a plain string.
       // We'll wrap it in a paragraph block to make it valid for BlockNote.
-      console.log("Initial content is not JSON, converting to paragraph block.");
       return [{ type: "paragraph", content: initialContent }];
     }
   }, [initialContent]);
@@ -59,19 +58,25 @@ export default function Editor({ onChange, initialContent, editable = true, coll
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
-    collaboration: {
-      provider: new YPartyKitProvider(
-        "blocknote-dev.yousefed.partykit.dev",
-        collaborationId, // Use the unique ID for the room
-        new Y.Doc() // Create a new Y.Doc for each editor instance
-      ),
-      fragment: new Y.Doc().getXmlFragment("document-store"),
-      user: {
-        name: "My Username",
-        color: "#" + Math.floor(Math.random() * 16777215).toString(16),
-      },
-      showCursorLabels: "activity",
-    },
+    collaboration: useMemo(() => {
+      if (!collaborationId) return undefined;
+      // CORRECT: Create a single Y.Doc for this editor instance
+      const doc = new Y.Doc();
+      return {
+        provider: new YPartyKitProvider(
+          "blocknote-dev.yousefed.partykit.dev",
+          collaborationId,
+          doc // Use the same doc here
+        ),
+        // And use the fragment from that same doc
+        fragment: doc.getXmlFragment("document-store"),
+        user: {
+          name: "My Username",
+          color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+        },
+        showCursorLabels: "activity",
+      };
+    }, [collaborationId]),
   });
 
   // Renders the editor instance using a React component.
@@ -80,7 +85,7 @@ export default function Editor({ onChange, initialContent, editable = true, coll
     theme={customTheme}
     editable={editable}
     onChange={() => {
-        if(onChange) {
+        if(onChange && editor) {
             onChange(JSON.stringify(editor.document, null, 2));
         }
     }}
