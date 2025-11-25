@@ -47,29 +47,26 @@ export default function Editor({ onChange, initialContent, editable = true, coll
   const initialBlocks: Block[] | undefined = useMemo(() => {
     if (!initialContent) return undefined;
     try {
-      // First, try to parse it as a JSON string (which is what BlockNote saves as)
       return JSON.parse(initialContent) as Block[];
     } catch (e) {
-      // If parsing fails, it's likely a plain string.
-      // We'll wrap it in a paragraph block to make it valid for BlockNote.
       return [{ type: "paragraph", content: initialContent }];
     }
-  }, [initialContent])
+  }, [initialContent]);
 
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
     collaboration: useMemo(() => {
       if (!collaborationId) return undefined;
-      // CORRECT: Create a single Y.Doc for this editor instance
+      
       const doc = new Y.Doc();
+      
       return {
         provider: new YPartyKitProvider(
           "blocknote-dev.yousefed.partykit.dev",
           collaborationId,
-          doc // Use the same doc here
+          doc
         ),
-        // And use the fragment from that same doc
         fragment: doc.getXmlFragment("document-store"),
         user: {
           name: "My Username",
@@ -83,7 +80,7 @@ export default function Editor({ onChange, initialContent, editable = true, coll
   // Renders the editor instance using a React component.
   return <BlockNoteView 
     editor={editor} 
-    theme={customTheme}
+    theme={theme === 'dark' ? darkTheme : lightDefaultTheme}
     editable={editable}
     onChange={() => {
         if(onChange && editor && editable) {
