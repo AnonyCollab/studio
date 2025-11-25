@@ -1,18 +1,18 @@
 
 "use client"; // this registers <Editor> as a Client Component
 import "@blocknote/core/fonts/inter.css";
-import { useCreateBlockNote } from "@blocknote-react";
+import { Block, BlockNoteEditor } from "@blocknote/core";
 import {
   BlockNoteView,
+  useCreateBlockNote,
   darkDefaultTheme,
   lightDefaultTheme,
   Theme,
-} from "@blocknote/mantine";
+} from "@blocknote/react";
 import "@blocknote/mantine/style.css";
 import * as Y from "yjs";
 import YPartyKitProvider from "y-partykit/provider";
 import { useTheme } from "@/context/ThemeContext";
-import { Block } from "@blocknote/core";
 import { useMemo } from "react";
 
 // Custom theme for dark mode to match app background
@@ -36,7 +36,7 @@ interface EditorProps {
     onChange?: (value: string) => void;
     initialContent?: string;
     editable?: boolean;
-    collaborationId: string;
+    collaborationId?: string;
 }
 
 // Our <Editor> component we can reuse later
@@ -75,7 +75,7 @@ export default function Editor({ onChange, initialContent, editable, collaborati
   }, [collaborationId]);
 
   // Creates a new editor instance.
-  const editor = useCreateBlockNote({
+  const editor: BlockNoteEditor | null = useCreateBlockNote({
     initialContent: initialBlocks,
     collaboration: collaborationOptions,
   });
