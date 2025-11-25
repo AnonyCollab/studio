@@ -73,7 +73,10 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
     };
 
     const handleCreateFolder = () => {
-        if (!newFolderName.trim()) return;
+        if (!newFolderName.trim()) {
+            setIsCreatingFolder(false);
+            return;
+        }
         addFile({ name: newFolderName, type: 'folder', parentId: currentFolderId });
         setNewFolderName('');
         setIsCreatingFolder(false);
@@ -138,8 +141,32 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                         </div>
                     </div>
                     
-                    {folders.length > 0 && (
+                    {(folders.length > 0 || isCreatingFolder) && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+                            {isCreatingFolder && (
+                                <div className={`p-4 rounded-xl border flex items-center gap-4 transition-all ${cardClass}`}>
+                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
+                                        <Folder size={24} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <Input
+                                            autoFocus
+                                            value={newFolderName}
+                                            onChange={(e) => setNewFolderName(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleCreateFolder();
+                                                if (e.key === 'Escape') {
+                                                    setNewFolderName('');
+                                                    setIsCreatingFolder(false);
+                                                }
+                                            }}
+                                            onBlur={handleCreateFolder}
+                                            placeholder="Folder name"
+                                            className={`font-bold truncate h-auto bg-transparent border-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 text-sm ${textMain}`}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                             {folders.map((folder, i) => (
                                 <div 
                                     key={i} 
@@ -157,7 +184,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                         </div>
                     )}
 
-                    {fileItems.length > 0 || isCreatingFolder ? (
+                    {fileItems.length > 0 ? (
                         <div className={`rounded-2xl border overflow-hidden ${containerClass}`}>
                             <div className="overflow-x-auto">
                                 <div className="min-w-[700px]">
@@ -170,35 +197,14 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                     </div>
                                     
                                     <div className="divide-y divide-white/5">
-                                        {isCreatingFolder && (
-                                            <div className={`grid grid-cols-12 p-4 items-center transition-colors group ${isLight ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'}`}>
-                                                <div className="col-span-5 flex items-center gap-3">
-                                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 text-brand-500`}>
-                                                        <Folder size={20} />
-                                                    </div>
-                                                    <Input
-                                                        autoFocus
-                                                        value={newFolderName}
-                                                        onChange={(e) => setNewFolderName(e.target.value)}
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter') handleCreateFolder();
-                                                            if (e.key === 'Escape') setIsCreatingFolder(false);
-                                                        }}
-                                                        onBlur={() => { if(!newFolderName) setIsCreatingFolder(false); else handleCreateFolder() }}
-                                                        placeholder="New folder name"
-                                                        className={`font-medium truncate h-auto bg-transparent border-0 ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 p-0 ${textMain}`}
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
                                         {fileItems.map((file, idx) => (
-                                            <div key={idx} onClick={() => file.url && setPreviewFile(file)} className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
-                                                <a href={file.url} target="_blank" rel="noopener noreferrer" className="col-span-5 flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                                            <a key={idx} href={file.url} target="_blank" rel="noopener noreferrer" className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
+                                                <div className="col-span-5 flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${getFileColor(file.fileType)}`}>
                                                         {getFileIcon(file.fileType)}
                                                     </div>
                                                     <span className={`font-medium truncate ${textMain}`}>{file.name}</span>
-                                                </a>
+                                                </div>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.fileType || 'File'}</div>
                                                 <div className={`col-span-2 text-sm font-mono ${textMuted}`}>{file.size}</div>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.date}</div>
@@ -209,14 +215,14 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                                         </a>
                                                     )}
                                                 </div>
-                                            </div>
+                                            </a>
                                         ))}
                                     </div>
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        !isCreatingFolder && (
+                        (folders.length === 0 && !isCreatingFolder) && (
                             <div className={`text-center py-16 ${textMuted}`}>
                                 <Folder size={48} className="mx-auto mb-4 opacity-30" />
                                 <p className="text-lg">This folder is empty.</p>
