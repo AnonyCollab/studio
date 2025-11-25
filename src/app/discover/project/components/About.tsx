@@ -33,7 +33,7 @@ export const About: React.FC<AboutProps> = ({ theme, currentUser, onLeaveProject
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
     const cardBg = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
 
-    const canLeave = currentUser.role === 'Member' || currentUser.role === 'Team Lead' || currentUser.role === 'Coordinator';
+    const canLeave = currentUser.role !== 'Owner';
 
     return (
         <div className="w-full h-full flex items-center justify-center p-8 overflow-y-auto custom-scrollbar pb-32">

@@ -3,9 +3,9 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
-import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
+import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut } from 'lucide-react';
 import { DepartmentSheet } from './DepartmentSheet';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store/useStore.tsx';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +65,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         });
     };
 
+    const handleKickMember = (member: Assignee) => {
+        console.log(`Kicking member ${member.name}`);
+        toast({
+            title: "Member Removed",
+            description: `${member.name} has been removed from the project.`,
+        });
+    }
+
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:border-brand-500/50" : "bg-[#18181b]/80 border-white/5 hover:border-brand-500/50";
     const textMain = isLight ? "text-slate-800" : "text-slate-100";
@@ -97,10 +105,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                 <tbody className="divide-y divide-white/5">
                                     {users.map(member => {
                                         const stats = getStats(member.displayName || member.name);
-                                        const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
-                                        const canPromote = currentRoleIndex > 0;
-                                        const canDemote = currentRoleIndex >= 0 && currentRoleIndex < ROLE_HIERARCHY.length - 1;
-                                        const isCurrentUser = authUser?.uid === member.uid;
+                                        const currentUserRoleIndex = ROLE_HIERARCHY.indexOf(currentUser.role);
+                                        const memberRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
+                                        
+                                        const canManage = currentUser.role === 'Owner';
+                                        const isSelf = authUser?.uid === member.uid;
+                                        
+                                        const canPromote = canManage && !isSelf && memberRoleIndex > 0;
+                                        const canDemote = canManage && !isSelf && memberRoleIndex < ROLE_HIERARCHY.length - 1;
 
 
                                         return (
@@ -124,24 +136,25 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                      </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
-                                                    {!isCurrentUser && (
+                                                    {!isSelf && (
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
                                                                 <button onClick={(e) => e.stopPropagation()} className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent align="end" className={`${isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}`}>
                                                                 {canPromote && (
-                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex - 1] }); }}>
+                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[memberRoleIndex - 1] }); }}>
                                                                         <ChevronUp className="mr-2 h-4 w-4 text-emerald-500" />
                                                                         <span>Promote</span>
                                                                     </DropdownMenuItem>
                                                                 )}
                                                                 {canDemote && (
-                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex + 1] }); }}>
+                                                                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[memberRoleIndex + 1] }); }}>
                                                                         <ChevronDown className="mr-2 h-4 w-4 text-rose-500" />
                                                                         <span>Demote</span>
                                                                     </DropdownMenuItem>
                                                                 )}
+                                                                {canManage && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleKickMember(member); }} className="text-red-500"><LogOut className="mr-2 h-4 w-4"/>Kick</DropdownMenuItem>}
                                                                 <DropdownMenuItem><Mail className="mr-2 h-4 w-4" /> Message</DropdownMenuItem>
                                                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddFriend(member); }}>
                                                                     <UserPlus className="mr-2 h-4 w-4" />

@@ -14,7 +14,7 @@ import { DocumentModal } from './DocumentModal/DocumentModal';
 import { Sidebar } from './Sidebar';
 import { MobileViewSheet } from './MobileViewSheet';
 import { CreationSheet } from './CreationSheet';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store/useStore.tsx';
 import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from '../types';
 import { SettingsPage } from './SettingsPage';
 import { useUser } from '@/firebase';
@@ -197,9 +197,7 @@ export const AppContent: React.FC = () => {
     }
   };
 
-  // Stricter loading condition: wait for auth AND for the store to finish loading,
-  // AND for the user role to be determined (i.e., not the initial 'Visitor' state unless they are truly a visitor).
-  const isTrulyLoading = isAuthLoading || isStoreLoading || (currentUser.id === 'guest' && authUser) || (currentUser.role === 'Visitor' && !projectData);
+  const isTrulyLoading = isAuthLoading || isStoreLoading;
 
   if (isTrulyLoading) {
     return (
