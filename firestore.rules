@@ -122,9 +122,10 @@ service cloud.firestore {
 
       // Rules for the members subcollection
       match /members/{userId} {
-        // Allow project members to read other members' info.
-        allow read: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
-
+        // Allow project members to list and read other members' info.
+        // This is a key fix: `list` permission is needed for useCollection.
+        allow list, get: if request.auth != null && exists(/databases/$(database)/documents/projects/$(projectId)/members/$(request.auth.uid));
+        
         // Allow a user to join a project (create their own member doc)
         // or the project owner to add members.
         allow create: if request.auth != null && 
