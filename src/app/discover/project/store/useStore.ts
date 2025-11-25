@@ -6,7 +6,7 @@ import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, 
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc, updateDoc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
 import { errorEmitter, FirestorePermissionError } from '@/firebase';
 
 export interface ExtendedAppState extends AppState {
@@ -21,6 +21,7 @@ export interface ExtendedAppState extends AppState {
   addTask: (task: Partial<TaskNode>) => string;
   updateTask: (id: string, updates: Partial<TaskNode>) => void;
   deleteTask: (id: string) => void;
+  leaveProject?: () => Promise<void>;
   setTasks: (tasks: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => void;
   selectTasks: (ids: string[]) => void;
   setFocusedParentId: (id: string | null) => void;
@@ -231,13 +232,12 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         if (projectData && authUser) {
             if (projectData.owner?.uid === authUser.uid) {
                 userRole = 'Owner';
-            } else if (membersData) {
-                 const memberInfo = membersData.find(m => m.id === authUser.uid);
-                 if (memberInfo) {
-                    userRole = (memberInfo.role || 'Member') as UserRole;
-                 }
+            } else if (membersData?.some(m => m.id === authUser.uid)) {
+                const memberInfo = membersData.find(m => m.id === authUser.uid);
+                userRole = (memberInfo?.role || 'Member') as UserRole;
             }
         }
+        
 
         setState(prev => ({
           ...prev,
@@ -270,11 +270,10 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     }, []);
 
   const updateMember = useCallback((id: string, updates: Partial<Assignee>) => {
-    setState(prev => ({
-        ...prev,
-        members: prev.members.map(m => m.id === id ? { ...m, ...updates } : m)
-    }))
-  }, []);
+    if (!firestore || !projectId) return;
+    const memberRef = doc(firestore, 'projects', projectId, 'members', id);
+    updateDocumentNonBlocking(memberRef, updates);
+  }, [firestore, projectId]);
 
   const setResourcePath = useCallback((path: (string | null)[]) => {
       setState(prev => ({ ...prev, resourcePath: path }));
@@ -407,6 +406,22 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
       });
   }, [firestore, projectId, state.resourcePath]);
 
+  const leaveProject = useCallback(async () => {
+    if (!firestore || !projectId || !authUser) throw new Error("Not initialized");
+
+    const batch = writeBatch(firestore);
+    const projectRef = doc(firestore, 'projects', projectId);
+    const memberRef = doc(firestore, 'projects', projectId, 'members', authUser.uid);
+
+    batch.update(projectRef, {
+      members: arrayRemove(authUser.uid),
+      totalMembers: increment(-1),
+    });
+    batch.delete(memberRef);
+
+    await batch.commit();
+  }, [firestore, projectId, authUser]);
+
   // Dummy/Placeholder functions that need Firestore integration
   const addPost = useCallback((post: Partial<UserPost>) => {}, []);
   const addMember = useCallback((member: Partial<Assignee>) => {}, []);
@@ -449,6 +464,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     updateMember,
     setResourcePath,
     setDrillDownStack,
+    leaveProject,
   };
 };
-
