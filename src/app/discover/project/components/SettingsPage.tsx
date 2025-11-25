@@ -2,8 +2,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Theme, CurrentUser } from '../types';
-import { Palette, Grid as GridIcon, Dot, X, Edit } from 'lucide-react';
+import { Theme } from '../types';
+import { Palette, Edit } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ interface SettingsPageProps {
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
+    // Fetch the store data directly inside the component
     const { currentUser, projectData, updateProject } = useStore();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const { toast } = useToast();
@@ -35,8 +36,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
     const cardClass = isLight ? "bg-white/80 border-black/5" : "bg-[#18181b]/80 border-white/5";
     
-    console.log("Current user role in SettingsPage:", currentUser.role);
-    const isOwner = currentUser.role === 'Owner';
+    // Perform the role check here
+    const isOwner = currentUser?.role === 'Owner';
+    
+    // Console logs for debugging
+    console.log("Current user role in SettingsPage:", currentUser?.role);
+    if(isOwner) {
+        console.log("User is Owner. The 'General' settings field to change the project name should be visible.");
+    }
 
 
     return (
@@ -48,31 +55,28 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
                 </div>
                 
                 {isOwner && (
-                     <>
-                        {console.log("User is Owner, attempting to render General settings.")}
-                        <div className={`p-6 rounded-2xl border shadow-lg mb-8 ${cardClass}`}>
-                            <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${textMain}`}>
-                                <Edit size={20} className="text-brand-500" />
-                                General
-                            </h2>
-                            <div className="space-y-4 max-w-lg">
-                                <div>
-                                    <label htmlFor="project-name" className={`text-sm font-bold block mb-2 ${textMain}`}>Project Name</label>
-                                    <div className="flex items-center gap-2">
-                                    <Input
-                                        id="project-name"
-                                        value={title}
-                                        onChange={(e) => setTitle(e.target.value)}
-                                        className={isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/5 border-white/10'}
-                                    />
-                                    <Button onClick={handleSave} disabled={title === projectData?.title || !title.trim()}>
-                                        Save
-                                    </Button>
-                                    </div>
+                     <div className={`p-6 rounded-2xl border shadow-lg mb-8 ${cardClass}`}>
+                        <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${textMain}`}>
+                            <Edit size={20} className="text-brand-500" />
+                            General
+                        </h2>
+                        <div className="space-y-4 max-w-lg">
+                            <div>
+                                <label htmlFor="project-name" className={`text-sm font-bold block mb-2 ${textMain}`}>Project Name</label>
+                                <div className="flex items-center gap-2">
+                                <Input
+                                    id="project-name"
+                                    value={title}
+                                    onChange={(e) => setTitle(e.target.value)}
+                                    className={isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/5 border-white/10'}
+                                />
+                                <Button onClick={handleSave} disabled={title === projectData?.title || !title.trim()}>
+                                    Save
+                                </Button>
                                 </div>
                             </div>
                         </div>
-                     </>
+                    </div>
                 )}
 
                 <div className={`p-6 rounded-2xl border shadow-lg ${cardClass}`}>
@@ -80,8 +84,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
                         <Palette size={20} className="text-brand-500" />
                         Appearance
                     </h2>
-
-                    {/* This is a placeholder for settings. In a real app, you would have state management here. */}
                     <div className="space-y-6">
                         <div>
                             <label className={`text-sm font-bold block mb-2 ${textMain}`}>Theme</label>
