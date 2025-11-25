@@ -20,6 +20,11 @@ export interface ExtendedAppState extends AppState {
   addTask: (task: Partial<TaskNode>) => string;
   updateTask: (id: string, updates: Partial<TaskNode>) => void;
   deleteTask: (id: string) => void;
+  setTasks: (tasks: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => void;
+  selectTasks: (ids: string[]) => void;
+  setFocusedParentId: (id: string | null) => void;
+  duplicateTask: (id: string) => void;
+  moveTask: (taskId: string, newParentId: string | null) => void;
 }
 
 const createDefaultUser = (authUser: User | null): CurrentUser => {
@@ -219,19 +224,13 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         
         let userRole: UserRole = 'Visitor';
         let teamName: string | undefined = undefined;
-
+    
         if (projectData && membersData) {
-            const member = membersData.find(m => m.id === authUser.uid);
-    
-            if (projectData.owner.uid === authUser.uid) {
+            const memberInfo = membersData.find(m => m.id === authUser.uid);
+            if (projectData.owner?.uid === authUser.uid) {
                 userRole = 'Owner';
-            } else if (member) {
-                userRole = (member.role || 'Member') as UserRole;
-            }
-    
-            const team = membersData.find(m => m.id === member?.teamId);
-            if (team) {
-                teamName = team.name;
+            } else if (memberInfo) {
+                userRole = (memberInfo.role || 'Member') as UserRole;
             }
         }
 
@@ -410,7 +409,9 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
   const addMember = useCallback((member: Partial<Assignee>) => {}, []);
   const setTasks = useCallback((tasksOrUpdater: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => {}, []);
   const selectTasks = useCallback((ids: string[]) => {}, []);
-  const setFocusedParentId = useCallback((id: string | null) => {}, []);
+  const setFocusedParentId = useCallback((id: string | null) => {
+    setState(p => ({ ...p, focusedParentId: id }));
+  }, []);
   const duplicateTask = useCallback((id: string) => {}, []);
   const moveTask = useCallback((taskId: string, newParentId: string | null) => {}, []);
    setDocumentNonBlocking
@@ -438,6 +439,3 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     setResourcePath,
   };
 };
-
-    
-    
