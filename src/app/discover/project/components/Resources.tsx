@@ -137,23 +137,6 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                             <input type="file" id="file-upload-input" className="hidden" onChange={handleFileUpload} />
                         </div>
                     </div>
-
-                    {isCreatingFolder && (
-                        <div className="p-4 rounded-xl border bg-opacity-50 mb-6 flex gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300" style={{ borderColor: isLight ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.1)'}}>
-                            <Folder size={20} className="text-brand-500" />
-                            <Input
-                                autoFocus
-                                value={newFolderName}
-                                onChange={(e) => setNewFolderName(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                                onBlur={() => { if(!newFolderName) setIsCreatingFolder(false); }}
-                                placeholder="New folder name..."
-                                className="bg-transparent border-none focus-visible:ring-0 p-0 h-auto"
-                            />
-                            <Button size="sm" onClick={handleCreateFolder}>Create</Button>
-                            <Button size="sm" variant="ghost" onClick={() => setIsCreatingFolder(false)}>Cancel</Button>
-                        </div>
-                    )}
                     
                     {folders.length > 0 && (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
@@ -174,7 +157,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                         </div>
                     )}
 
-                    {fileItems.length > 0 ? (
+                    {fileItems.length > 0 || isCreatingFolder ? (
                         <div className={`rounded-2xl border overflow-hidden ${containerClass}`}>
                             <div className="overflow-x-auto">
                                 <div className="min-w-[700px]">
@@ -187,8 +170,29 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                     </div>
                                     
                                     <div className="divide-y divide-white/5">
+                                        {isCreatingFolder && (
+                                            <div className={`grid grid-cols-12 p-2 items-center transition-colors group ${isLight ? 'bg-black/5 border-black/5' : 'bg-white/5 border-white/5'}`}>
+                                                <div className="col-span-5 flex items-center gap-3 px-2">
+                                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 text-brand-500`}>
+                                                        <Folder size={20} />
+                                                    </div>
+                                                    <Input
+                                                        autoFocus
+                                                        value={newFolderName}
+                                                        onChange={(e) => setNewFolderName(e.target.value)}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter') handleCreateFolder();
+                                                            if (e.key === 'Escape') setIsCreatingFolder(false);
+                                                        }}
+                                                        onBlur={() => { if(!newFolderName) setIsCreatingFolder(false); else handleCreateFolder() }}
+                                                        placeholder="New folder name"
+                                                        className="h-8 bg-transparent focus-visible:ring-1 focus-visible:ring-brand-500 border-brand-500/50"
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
                                         {fileItems.map((file, idx) => (
-                                            <div key={idx} onClick={() => setPreviewFile(file)} className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
+                                            <div key={idx} onClick={() => file.url && setPreviewFile(file)} className={`grid grid-cols-12 p-4 items-center transition-colors group cursor-pointer ${isLight ? 'hover:bg-black/5 border-black/5' : 'hover:bg-white/5 border-white/5'}`}>
                                                 <div className="col-span-5 flex items-center gap-3">
                                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${getFileColor(file.fileType)}`}>
                                                         {getFileIcon(file.fileType)}
@@ -199,9 +203,11 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                                                 <div className={`col-span-2 text-sm font-mono ${textMuted}`}>{file.size}</div>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.date}</div>
                                                 <div className="col-span-1 flex justify-end">
-                                                    <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()} className={`p-2 rounded opacity-100 md:opacity-0 group-hover:opacity-100 transition-all ${isLight ? 'hover:bg-white shadow-sm' : 'hover:bg-white/10'}`}>
-                                                        <Download size={16} className={textMuted} />
-                                                    </a>
+                                                    {file.url && (
+                                                        <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()} className={`p-2 rounded opacity-100 md:opacity-0 group-hover:opacity-100 transition-all ${isLight ? 'hover:bg-white shadow-sm' : 'hover:bg-white/10'}`}>
+                                                            <Download size={16} className={textMuted} />
+                                                        </a>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -210,7 +216,7 @@ export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
                             </div>
                         </div>
                     ) : (
-                        folders.length === 0 && !isCreatingFolder && (
+                        !isCreatingFolder && (
                             <div className={`text-center py-16 ${textMuted}`}>
                                 <Folder size={48} className="mx-auto mb-4 opacity-30" />
                                 <p className="text-lg">This folder is empty.</p>
