@@ -171,6 +171,18 @@
       },
       "required": ["id", "title", "description", "owner", "createdDate", "lastEditDate"]
     },
+    "ProjectMember": {
+      "title": "Project Member",
+      "description": "Represents a user's membership in a project.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string", "enum": ["owner", "member"] },
+        "joinedAt": { "type": "object" }
+      },
+      "required": ["uid", "displayName", "role", "joinedAt"]
+    },
     "Resource": {
       "title": "Resource",
       "description": "Represents a file or folder within a project's resources section.",
@@ -494,6 +506,14 @@
             "$ref": "#/backend/entities/Project"
           },
           "description": "Stores individual projects for the Discover page."
+        }
+      },
+      {
+        "path": "/projects/{projectId}/members/{userId}",
+        "definition": {
+            "entityName": "ProjectMember",
+            "schema": { "$ref": "#/backend/entities/ProjectMember" },
+            "description": "Stores information about each member of a project."
         }
       },
       {

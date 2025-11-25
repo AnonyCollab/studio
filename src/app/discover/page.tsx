@@ -12,7 +12,7 @@ import { ProjectGrid } from "./components/ProjectGrid";
 import { useTheme } from "@/context/ThemeContext";
 import Link from "next/link";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, doc, setDoc, updateDoc, arrayUnion, increment } from "firebase/firestore";
+import { collection, doc, setDoc, updateDoc, arrayUnion, increment, writeBatch } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { Button } from "@/components/ui/button";
@@ -117,19 +117,47 @@ export default function App() {
       tags: ["new-project"],
     };
 
+    const batch = writeBatch(firestore);
+
     const projectRef = doc(firestore, 'projects', newProjectId);
-    await setDoc(projectRef, newProject);
+    batch.set(projectRef, newProject);
+
+    // Also add the owner to the members subcollection
+    const memberRef = doc(firestore, 'projects', newProjectId, 'members', user.uid);
+    batch.set(memberRef, {
+        uid: user.uid,
+        displayName: user.displayName || "Owner",
+        role: "owner",
+        joinedAt: new Date(),
+    });
+
+    await batch.commit();
 
     router.push(`/discover/${newProjectId}`);
   };
 
   const handleJoinProject = async (projectId: string) => {
     if (!user || !firestore) return;
+    
+    const batch = writeBatch(firestore);
+
+    // 1. Update the main project document
     const projectRef = doc(firestore, 'projects', projectId);
-    await updateDoc(projectRef, {
+    batch.update(projectRef, {
         members: arrayUnion(user.uid),
         totalMembers: increment(1)
     });
+
+    // 2. Add the user to the `members` subcollection
+    const memberRef = doc(firestore, 'projects', projectId, 'members', user.uid);
+    batch.set(memberRef, {
+      uid: user.uid,
+      displayName: user.displayName,
+      role: 'member',
+      joinedAt: new Date()
+    });
+
+    await batch.commit();
   };
 
   useEffect(() => {
