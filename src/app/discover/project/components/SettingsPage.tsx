@@ -1,4 +1,6 @@
 
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Theme, CurrentUser } from '../types';
 import { Palette, Grid as GridIcon, Dot, X, Edit } from 'lucide-react';
@@ -32,6 +34,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
     const textMain = isLight ? "text-slate-800" : "text-slate-100";
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
     const cardClass = isLight ? "bg-white/80 border-black/5" : "bg-[#18181b]/80 border-white/5";
+    
+    console.log("Current user role in SettingsPage:", currentUser.role);
+    const isOwner = currentUser.role === 'Owner';
+
 
     return (
         <div className="w-full h-full p-8 overflow-y-auto custom-scrollbar pb-32 md:pb-24">
@@ -41,29 +47,32 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
                     <p className={textMuted}>Manage your project's appearance and configuration.</p>
                 </div>
                 
-                {currentUser.role === 'Owner' && (
-                     <div className={`p-6 rounded-2xl border shadow-lg mb-8 ${cardClass}`}>
-                        <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${textMain}`}>
-                            <Edit size={20} className="text-brand-500" />
-                            General
-                        </h2>
-                        <div className="space-y-4 max-w-lg">
-                             <div>
-                                <label htmlFor="project-name" className={`text-sm font-bold block mb-2 ${textMain}`}>Project Name</label>
-                                <div className="flex items-center gap-2">
-                                <Input
-                                    id="project-name"
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className={isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/5 border-white/10'}
-                                />
-                                <Button onClick={handleSave} disabled={title === projectData?.title || !title.trim()}>
-                                    Save
-                                </Button>
+                {isOwner && (
+                     <>
+                        {console.log("User is Owner, attempting to render General settings.")}
+                        <div className={`p-6 rounded-2xl border shadow-lg mb-8 ${cardClass}`}>
+                            <h2 className={`text-xl font-bold mb-6 flex items-center gap-2 ${textMain}`}>
+                                <Edit size={20} className="text-brand-500" />
+                                General
+                            </h2>
+                            <div className="space-y-4 max-w-lg">
+                                <div>
+                                    <label htmlFor="project-name" className={`text-sm font-bold block mb-2 ${textMain}`}>Project Name</label>
+                                    <div className="flex items-center gap-2">
+                                    <Input
+                                        id="project-name"
+                                        value={title}
+                                        onChange={(e) => setTitle(e.target.value)}
+                                        className={isLight ? 'bg-slate-100 border-slate-200' : 'bg-white/5 border-white/10'}
+                                    />
+                                    <Button onClick={handleSave} disabled={title === projectData?.title || !title.trim()}>
+                                        Save
+                                    </Button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                     </>
                 )}
 
                 <div className={`p-6 rounded-2xl border shadow-lg ${cardClass}`}>
