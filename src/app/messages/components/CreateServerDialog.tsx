@@ -5,8 +5,8 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
+import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
+import { collection, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateServerDialogProps {
@@ -27,46 +27,50 @@ export function CreateServerDialog({ isOpen, onOpenChange, theme }: CreateServer
     if (!serverName.trim() || !currentUser || !firestore) return;
 
     setIsLoading(true);
-    try {
-      const batch = writeBatch(firestore);
-      
-      const serverRef = doc(collection(firestore, 'servers'));
-      
-      batch.set(serverRef, {
-        name: serverName.trim(),
-        ownerId: currentUser.uid,
-        members: [currentUser.uid],
-        createdAt: serverTimestamp(),
-        iconUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(serverName.trim())}`
-      });
 
-      // Create a default 'general' text channel
-      const generalChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
-      batch.set(generalChannelRef, {
-        name: 'general',
-        type: 'text',
-        serverId: serverRef.id,
-      });
+    const batch = writeBatch(firestore);
+    
+    const serverRef = doc(collection(firestore, 'servers'));
+    const serverData = {
+      name: serverName.trim(),
+      ownerId: currentUser.uid,
+      members: [currentUser.uid],
+      createdAt: serverTimestamp(),
+      iconUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(serverName.trim())}`
+    };
+    batch.set(serverRef, serverData);
 
-      // Create a default 'Lobby' voice channel
-      const lobbyChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
-      batch.set(lobbyChannelRef, {
-        name: 'Lobby',
-        type: 'voice',
-        serverId: serverRef.id,
-      });
-      
-      await batch.commit();
+    const generalChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
+    batch.set(generalChannelRef, {
+      name: 'general',
+      type: 'text',
+      serverId: serverRef.id,
+    });
 
+    const lobbyChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
+    batch.set(lobbyChannelRef, {
+      name: 'Lobby',
+      type: 'voice',
+      serverId: serverRef.id,
+    });
+    
+    batch.commit().then(() => {
       toast({ title: 'Server Created!', description: `${serverName} is ready.` });
       setServerName('');
       onOpenChange(false);
-    } catch (error) {
-      console.error("Error creating server:", error);
-      toast({ title: 'Error', description: 'Failed to create server.', variant: 'destructive' });
-    } finally {
-      setIsLoading(false);
-    }
+    }).catch(error => {
+      // This is the new, detailed error handling.
+      const permissionError = new FirestorePermissionError({
+        path: serverRef.path,
+        operation: 'create',
+        requestResourceData: serverData,
+      });
+      errorEmitter.emit('permission-error', permissionError);
+      console.error("Error creating server, detailed permission error has been emitted.", error);
+      toast({ title: 'Error', description: 'Failed to create server. Check console for details.', variant: 'destructive' });
+    }).finally(() => {
+        setIsLoading(false);
+    });
   };
 
   return (
@@ -105,5 +109,3 @@ export function CreateServerDialog({ isOpen, onOpenChange, theme }: CreateServer
     </Dialog>
   );
 }
-
-    
