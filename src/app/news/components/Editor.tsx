@@ -24,7 +24,6 @@ const darkTheme = {
       ...darkDefaultTheme.colors!.editor,
       background: "#18181b", // Updated to match the task window background
     },
-    // You can also customize other colors here if needed
   },
 } satisfies Theme;
 
@@ -41,40 +40,46 @@ interface EditorProps {
 }
 
 // Our <Editor> component we can reuse later
-export default function Editor({ onChange, initialContent, editable = true, collaborationId }: EditorProps) {
+export default function Editor({ onChange, initialContent, editable, collaborationId }: EditorProps) {
   const { theme } = useTheme();
 
   const initialBlocks: Block[] | undefined = useMemo(() => {
     if (!initialContent) return undefined;
     try {
       return JSON.parse(initialContent) as Block[];
-    } catch (e) {
-      return [{ type: "paragraph", content: initialContent }];
+    } catch(e) {
+        // If parsing fails, treat it as plain text and wrap in a paragraph
+        return [{ type: "paragraph", content: initialContent }];
     }
-  }, [initialContent]);
+  }, [initialContent])
+
+  const collaborationOptions = useMemo(() => {
+    if (!collaborationId) {
+      return undefined;
+    }
+    const doc = new Y.Doc();
+    const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
+
+    if (!host) {
+        console.error("NEXT_PUBLIC_PARTYKIT_HOST is not set in your environment variables.");
+        return undefined;
+    }
+    
+    return {
+      provider: new YPartyKitProvider(host, collaborationId, doc),
+      fragment: doc.getXmlFragment("document-store"),
+      user: {
+        name: "My Username",
+        color: "#" + Math.floor(Math.random() * 16777215).toString(16),
+      },
+      showCursorLabels: "activity",
+    } as const;
+  }, [collaborationId]);
 
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
-    collaboration: useMemo(() => {
-      if (!collaborationId) return undefined;
-      
-      const doc = new Y.Doc();
-      
-      return {
-        provider: new YPartyKitProvider(
-          "blocknote-dev.yousefed.partykit.dev",
-          collaborationId,
-          doc
-        ),
-        fragment: doc.getXmlFragment("document-store"),
-        user: {
-          name: "My Username",
-          color: "#" + Math.floor(Math.random() * 16777215).toString(16),
-        },
-        showCursorLabels: "activity",
-      };
-    }, [collaborationId]),
+    collaboration: collaborationOptions,
   });
 
   // Renders the editor instance using a React component.

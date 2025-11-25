@@ -1,4 +1,6 @@
 
+'use client';
+
 import React, { useMemo, useState } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
 import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
@@ -12,7 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 
-const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member', 'Visitor'];
+const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
 
 interface MembersProps {
     tasks: TaskNode[];
@@ -90,6 +92,9 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                     {users.map(member => {
                                         const stats = getStats(member.displayName || member.name);
                                         const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
+                                        const canPromote = currentRoleIndex > 0;
+                                        const canDemote = currentRoleIndex < ROLE_HIERARCHY.length - 1;
+
 
                                         return (
                                             <tr key={member.id} onClick={() => onViewProfile(member)} className={`transition-colors cursor-pointer ${tableRowBorder}`}>
@@ -117,13 +122,13 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                              <button onClick={(e) => e.stopPropagation()} className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className={`${isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}`}>
-                                                            {currentRoleIndex > 0 && (
+                                                            {canPromote && (
                                                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex - 1] }); }}>
                                                                     <ChevronUp className="mr-2 h-4 w-4 text-emerald-500" />
                                                                     <span>Promote</span>
                                                                 </DropdownMenuItem>
                                                             )}
-                                                            {currentRoleIndex < ROLE_HIERARCHY.length - 2 && ( // -2 because of Visitor
+                                                            {canDemote && (
                                                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[currentRoleIndex + 1] }); }}>
                                                                     <ChevronDown className="mr-2 h-4 w-4 text-rose-500" />
                                                                     <span>Demote</span>
