@@ -1,13 +1,15 @@
 
 'use client';
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, createContext, useContext, ReactNode } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole, Project } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
 import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc, updateDoc, arrayUnion, arrayRemove, increment } from 'firebase/firestore';
 import { errorEmitter, FirestorePermissionError } from '@/firebase';
+import { useParams, useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -169,7 +171,21 @@ const updateCascadingStatus = (tasks: TaskNode[], startTaskId: string): TaskNode
     return currentTasks;
 };
 
-export const useStore = (authUser: User | null, projectId: string | null): ExtendedAppState => {
+const ProjectStoreContext = createContext<ExtendedAppState | null>(null);
+
+export const useStore = (): ExtendedAppState => {
+    const context = useContext(ProjectStoreContext);
+    if (!context) {
+        throw new Error('useStore must be used within a ProjectStoreProvider');
+    }
+    return context;
+};
+
+export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children }) => {
+    const { user: authUser } = useUser();
+    const params = useParams();
+    const projectId = typeof params.projectId === 'string' ? params.projectId : null;
+
     const [state, setState] = useState<AppState>(() => createInitialState(authUser));
     const firestore = useFirestore();
 
@@ -453,7 +469,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
   const duplicateTask = useCallback((id: string) => {}, []);
   const moveTask = useCallback((taskId: string, newParentId: string | null) => {}, []);
    
-  return {
+  const storeValue = useMemo(() => ({
     ...state,
     setCurrentUser,
     setTasks,
@@ -479,7 +495,16 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
     leaveProject,
     updateProject,
     isStoreLoading,
-  };
-};
+  }), [
+      state, setCurrentUser, setTasks, addTask, updateTask, deleteTask, duplicateTask, moveTask, 
+      selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, 
+      addPost, addMember, addFile, updateMember, setResourcePath, setDrillDownStack, 
+      leaveProject, updateProject, isStoreLoading
+  ]);
 
-    
+  return (
+    <ProjectStoreContext.Provider value={storeValue}>
+        {children}
+    </ProjectStoreContext.Provider>
+  )
+};

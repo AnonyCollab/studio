@@ -21,14 +21,13 @@ const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "S
 
 export const CalendarPage: React.FC<CalendarPageProps> = ({ tasks, theme, onAddTask, view, date, setDate, setView, filter = 'All' }) => {
     const { currentUser } = useStore();
+    useEffect(() => {
+        console.log("Current user role in CalendarPage:", currentUser?.role);
+    }, [currentUser]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const scrollRef = useRef<HTMLDivElement>(null);
     const [showMonthToast, setShowMonthToast] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
-
-    useEffect(() => {
-        console.log("Current user role in CalendarPage:", currentUser?.role);
-    }, [currentUser]);
 
     useEffect(() => {
         const checkDesktop = () => setIsDesktop(window.innerWidth >= 1024);

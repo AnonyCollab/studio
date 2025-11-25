@@ -26,10 +26,10 @@ interface MembersProps {
 }
 
 export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers, onViewProfile }) => {
-    const { currentUser: authenticatedUser } = useUser();
+    const { user: authUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
-    const { updateMember, currentUser } = useStore(null);
+    const { updateMember, currentUser } = useStore();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -99,8 +99,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                         const stats = getStats(member.displayName || member.name);
                                         const currentRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
                                         const canPromote = currentRoleIndex > 0;
-                                        const canDemote = currentRoleIndex < ROLE_HIERARCHY.length - 1;
-                                        const isCurrentUser = authenticatedUser?.uid === member.uid;
+                                        const canDemote = currentRoleIndex >= 0 && currentRoleIndex < ROLE_HIERARCHY.length - 1;
+                                        const isCurrentUser = authUser?.uid === member.uid;
 
 
                                         return (

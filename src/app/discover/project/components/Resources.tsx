@@ -31,23 +31,19 @@ const getFileColor = (type?: string) => {
 };
 
 interface ResourcesProps {
-    theme: Theme;
-    viewMode: ResourcesViewMode;
-    files: FileItem[];
 }
 
-export const Resources: React.FC<ResourcesProps> = ({ theme, viewMode }) => {
-    const { files, addFile, resourcePath, setResourcePath, currentUser } = useStore();
+export const Resources: React.FC<ResourcesProps> = () => {
+    const { files, addFile, resourcePath, setResourcePath, currentUser, theme } = useStore();
+    useEffect(() => {
+        console.log("Current user role in ResourcesPage:", currentUser?.role);
+    }, [currentUser]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [newFolderName, setNewFolderName] = useState('');
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
     const [isCreatingFile, setIsCreatingFile] = useState(false);
     
-    useEffect(() => {
-        console.log("Current user role in ResourcesPage:", currentUser?.role);
-    }, [currentUser]);
-
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:bg-white" : "bg-[#18181b]/80 border-white/5 hover:bg-[#202023]";
     const textMain = isLight ? "text-slate-800" : "text-slate-100";

@@ -9,13 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
-interface SettingsPageProps {
-    theme: Theme;
-}
+interface SettingsPageProps {}
 
-export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
+export const SettingsPage: React.FC<SettingsPageProps> = () => {
     // Fetch the store data directly inside the component
-    const { currentUser, projectData, updateProject } = useStore();
+    const { currentUser, projectData, updateProject, theme } = useStore();
+    useEffect(() => {
+        console.log("Current user role in SettingsPage:", currentUser?.role);
+    }, [currentUser]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const { toast } = useToast();
     
@@ -40,7 +41,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ theme }) => {
     const isOwner = currentUser?.role === 'Owner';
     
     // Console logs for debugging
-    console.log("Current user role in SettingsPage:", currentUser?.role);
     if(isOwner) {
         console.log("User is Owner. The 'General' settings field to change the project name should be visible.");
     }

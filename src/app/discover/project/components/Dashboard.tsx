@@ -9,19 +9,14 @@ import {
 import { useStore } from '../store/useStore';
 
 interface DashboardProps {
-    tasks: TaskNode[];
-    theme: Theme;
-    viewMode: DashboardViewMode;
-    setViewMode: (mode: DashboardViewMode) => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ tasks, theme, viewMode, setViewMode }) => {
-    const { currentUser } = useStore(null);
-    const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
-    
+export const Dashboard: React.FC<DashboardProps> = () => {
+    const { currentUser, tasks, theme, dashboardView, setDashboardView } = useStore();
     useEffect(() => {
         console.log("Current user role in Dashboard:", currentUser?.role);
     }, [currentUser]);
+    const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
     // Mock Team Context for Demo
     const currentTeamName = currentUser.teamName || 'Frontend Team';
@@ -377,10 +372,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ tasks, theme, viewMode, se
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
-                                onClick={() => setViewMode(tab.id)}
+                                onClick={() => setDashboardView && setDashboardView(tab.id)}
                                 className={`
                                     flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all
-                                    ${viewMode === tab.id 
+                                    ${dashboardView === tab.id 
                                         ? (isLight ? 'bg-white shadow-sm text-slate-900' : 'bg-white/10 text-white shadow-sm') 
                                         : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white')}
                                 `}
@@ -392,9 +387,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ tasks, theme, viewMode, se
                     </div>
                 </div>
 
-                {viewMode === 'Personal' && renderPersonalTab()}
-                {viewMode === 'Team' && renderTeamTab()}
-                {viewMode === 'Project' && renderProjectTab()}
+                {dashboardView === 'Personal' && renderPersonalTab()}
+                {dashboardView === 'Team' && renderTeamTab()}
+                {dashboardView === 'Project' && renderProjectTab()}
             </div>
         </div>
     );

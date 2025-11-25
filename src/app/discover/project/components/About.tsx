@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useStore } from '../store/useStore';
 
 interface AboutProps {
     theme: Theme;
@@ -23,9 +24,10 @@ interface AboutProps {
 }
 
 export const About: React.FC<AboutProps> = ({ theme, currentUser, onLeaveProject, isLeaving }) => {
+    const { currentUser: storeUser } = useStore();
     useEffect(() => {
-        console.log("Current user role in AboutPage:", currentUser?.role);
-    }, [currentUser]);
+        console.log("Current user role in AboutPage:", storeUser?.role);
+    }, [storeUser]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const textMain = isLight ? "text-slate-800" : "text-slate-100";
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";

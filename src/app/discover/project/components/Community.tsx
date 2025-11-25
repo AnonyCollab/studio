@@ -5,18 +5,14 @@ import { MessageSquare, Heart, Share2, MoreHorizontal, Info } from 'lucide-react
 import { useStore } from '../store/useStore';
 
 interface CommunityProps {
-    theme: Theme;
-    viewMode: CommunityViewMode;
-    posts: UserPost[];
 }
 
-export const Community: React.FC<CommunityProps> = ({ theme, viewMode, posts }) => {
-    const { currentUser } = useStore();
-    const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
-
+export const Community: React.FC<CommunityProps> = () => {
+    const { currentUser, theme, communityView, posts } = useStore();
     useEffect(() => {
         console.log("Current user role in CommunityPage:", currentUser?.role);
     }, [currentUser]);
+    const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     
     const cardClass = isLight ? "bg-white/80 border-black/5" : "bg-[#18181b]/80 border-white/5";
     const textMain = isLight ? "text-slate-800" : "text-slate-100";
@@ -24,19 +20,19 @@ export const Community: React.FC<CommunityProps> = ({ theme, viewMode, posts }) 
     const inputClass = isLight ? "bg-white border-slate-200 text-slate-700" : "bg-[#18181b] border-white/10 text-slate-200";
 
     const displayedPosts = useMemo(() => {
-        if (viewMode === 'All') return posts;
+        if (communityView === 'All') return posts;
         // For specific modes, match the 'type' property or check tags for better coverage
         return posts.filter(p => {
-            if (viewMode === 'Feedback') return p.tags.includes('Feedback') || p.type === 'Feedback';
-            return p.type === viewMode || p.tags.includes(viewMode);
+            if (communityView === 'Feedback') return p.tags.includes('Feedback') || p.type === 'Feedback';
+            return p.type === communityView || p.tags.includes(communityView);
         });
-    }, [viewMode, posts]);
+    }, [communityView, posts]);
 
     return (
         <div className="w-full h-full p-8 overflow-y-auto custom-scrollbar pb-32 md:pb-24">
             <div className="max-w-4xl mx-auto">
                  <div className="mb-8 text-center">
-                    <h1 className={`text-3xl font-bold mb-2 ${textMain}`}>{viewMode === 'All' ? 'Community Feed' : viewMode}</h1>
+                    <h1 className={`text-3xl font-bold mb-2 ${textMain}`}>{communityView === 'All' ? 'Community Feed' : communityView}</h1>
                     <p className={textMuted}>Stay updated with team announcements and discussions.</p>
                 </div>
 
