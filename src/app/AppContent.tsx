@@ -30,15 +30,15 @@ export default function AppContent({ children }: { children: ReactNode }) {
   const showHeader = !isLandingPage && !isProjectPage;
   const showBottomNav = hydrated && isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage;
 
-  const handleCreateProject = () => {
-    window.dispatchEvent(new CustomEvent('create-new-project'));
-  };
+  useEffect(() => {
+    const bodyClass = cn(
+      "font-body antialiased",
+      isLandingPage ? 'landing-page-body' : '',
+      showBottomNav ? 'pb-16' : ''
+    );
+    document.body.className = bodyClass;
+  }, [isLandingPage, showBottomNav]);
 
-  const bodyClassName = cn(
-    "font-body antialiased",
-    isLandingPage ? 'landing-page-body' : '',
-    showBottomNav ? 'pb-16' : '' // Add padding for bottom nav on mobile
-  );
 
   return (
     <html lang="en" className={theme} style={{colorScheme: theme}}>
@@ -47,7 +47,7 @@ export default function AppContent({ children }: { children: ReactNode }) {
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:var(--font-inter)&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
       </head>
-      <body className={bodyClassName}>
+      <body>
         <div className="flex flex-col h-screen">
           {showHeader && <TopNav theme={theme} onSetTheme={setTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
           <div className="relative isolate flex-1 min-h-0">
@@ -65,4 +65,8 @@ export default function AppContent({ children }: { children: ReactNode }) {
       </body>
     </html>
   );
+}
+
+function handleCreateProject() {
+    window.dispatchEvent(new CustomEvent('create-new-project'));
 }
