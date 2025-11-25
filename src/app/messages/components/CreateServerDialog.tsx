@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUser, useFirestore, errorEmitter, FirestorePermissionError } from '@/firebase';
-import { collection, serverTimestamp, writeBatch, doc } from 'firebase/firestore';
+import { collection, serverTimestamp, writeBatch, doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateServerDialogProps {
@@ -28,8 +28,6 @@ export function CreateServerDialog({ isOpen, onOpenChange, theme }: CreateServer
 
     setIsLoading(true);
 
-    const batch = writeBatch(firestore);
-    
     const serverRef = doc(collection(firestore, 'servers'));
     const serverData = {
       name: serverName.trim(),
@@ -38,39 +36,46 @@ export function CreateServerDialog({ isOpen, onOpenChange, theme }: CreateServer
       createdAt: serverTimestamp(),
       iconUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(serverName.trim())}`
     };
-    batch.set(serverRef, serverData);
 
-    const generalChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
-    batch.set(generalChannelRef, {
-      name: 'general',
-      type: 'text',
-      serverId: serverRef.id,
-    });
+    try {
+      // Step 1: Create the server document first and wait for it to complete.
+      await setDoc(serverRef, serverData);
 
-    const lobbyChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
-    batch.set(lobbyChannelRef, {
-      name: 'Lobby',
-      type: 'voice',
-      serverId: serverRef.id,
-    });
-    
-    batch.commit().then(() => {
+      // Step 2: Once the server exists, create the default channels in a new batch.
+      const channelsBatch = writeBatch(firestore);
+      
+      const generalChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
+      channelsBatch.set(generalChannelRef, {
+        name: 'general',
+        type: 'text',
+        serverId: serverRef.id,
+      });
+
+      const lobbyChannelRef = doc(collection(firestore, 'servers', serverRef.id, 'channels'));
+      channelsBatch.set(lobbyChannelRef, {
+        name: 'Lobby',
+        type: 'voice',
+        serverId: serverRef.id,
+      });
+
+      await channelsBatch.commit();
+
       toast({ title: 'Server Created!', description: `${serverName} is ready.` });
       setServerName('');
       onOpenChange(false);
-    }).catch(error => {
-      // This is the new, detailed error handling.
+    } catch (error) {
+      // This will catch errors from either setDoc or the batch commit.
       const permissionError = new FirestorePermissionError({
-        path: serverRef.path,
+        path: serverRef.path, // The initial operation that might fail.
         operation: 'create',
         requestResourceData: serverData,
       });
       errorEmitter.emit('permission-error', permissionError);
       console.error("Error creating server, detailed permission error has been emitted.", error);
       toast({ title: 'Error', description: 'Failed to create server. Check console for details.', variant: 'destructive' });
-    }).finally(() => {
-        setIsLoading(false);
-    });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
