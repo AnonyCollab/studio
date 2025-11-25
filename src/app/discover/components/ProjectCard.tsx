@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import type { User } from 'firebase/auth';
+import { useRouter } from "next/navigation";
 
 export interface Project {
   id: string;
@@ -35,11 +36,16 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project, theme, onJoinProject, user }: ProjectCardProps) {
   const isDark = theme === "dark";
+  const router = useRouter();
   const isMember = user ? project.members?.includes(user.uid) : false;
 
   const handleJoinClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      router.push('/login');
+      return;
+    }
     onJoinProject(project.id);
   };
 
@@ -222,12 +228,10 @@ export function ProjectCard({ project, theme, onJoinProject, user }: ProjectCard
                 </div>
 
                 {/* Join Button */}
-                {user && (
-                    <Button onClick={handleJoinClick} disabled={isMember} className="w-full mt-2">
-                        {isMember ? <Check className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
-                        {isMember ? 'Joined' : 'Join Project'}
-                    </Button>
-                )}
+                <Button onClick={handleJoinClick} disabled={isMember} className="w-full mt-2">
+                    {isMember ? <Check className="w-4 h-4 mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
+                    {isMember ? 'Joined' : 'Join Project'}
+                </Button>
             </div>
         </div>
         </div>
