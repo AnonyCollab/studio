@@ -30,7 +30,12 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
     const isImage = file.fileType?.startsWith('image/');
     const isVideo = file.fileType?.startsWith('video/');
     const isAudio = file.fileType?.startsWith('audio/');
-    const isPdf = file.fileType === 'application/pdf';
+    
+    // Check if the browser can likely embed the file type
+    const canEmbed = file.fileType && (
+        file.fileType.startsWith('text/') ||
+        file.fileType === 'application/pdf'
+    );
 
     const renderPreview = () => {
         if (!file.url) return <p>No preview available.</p>;
@@ -44,14 +49,22 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
         if (isAudio) {
             return <audio src={file.url} controls className="w-full" />;
         }
-        if (isPdf) {
-            return <embed src={file.url} type="application/pdf" className="w-full h-[75vh] rounded-lg border" />;
+        // Use embed for PDFs and other text-based files
+        if (canEmbed) {
+            return <embed src={file.url} type={file.fileType} className="w-full h-[75vh] rounded-lg border" />;
         }
+        // Fallback for file types that cannot be embedded (like .docx, .xlsx)
         return (
             <div className={`flex flex-col items-center justify-center text-center p-8 rounded-lg ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
                 <div className={`mb-4 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>{getFileIcon(file.fileType, 64)}</div>
                 <h3 className={`text-lg font-bold ${isLight ? 'text-gray-800' : 'text-white'}`}>No preview available</h3>
-                <p className={`text-sm ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>This file type cannot be previewed directly.</p>
+                <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>This file type can't be shown here, but you can download it.</p>
+                <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
+                    <Button variant={isLight ? 'default' : 'secondary'} size="lg" className="gap-2">
+                        <Download size={18} />
+                        Download File
+                    </Button>
+                </a>
             </div>
         );
     };
