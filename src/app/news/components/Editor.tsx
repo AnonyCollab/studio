@@ -5,10 +5,8 @@ import { Block, BlockNoteEditor } from "@blocknote/core";
 import {
   BlockNoteView,
   useCreateBlockNote,
-  darkDefaultTheme,
-  lightDefaultTheme,
-  Theme,
 } from "@blocknote/react";
+import { darkDefaultTheme, lightDefaultTheme, Theme } from "@blocknote/mantine";
 import "@blocknote/mantine/style.css";
 import * as Y from "yjs";
 import YPartyKitProvider from "y-partykit/provider";
