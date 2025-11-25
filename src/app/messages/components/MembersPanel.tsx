@@ -1,11 +1,12 @@
 
+'use client';
 
 import { UserPlus, Crown, Shield, Users as UsersIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { UserProfileTrigger } from './ProfileCard';
 import { useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, doc, documentId, query, where, getDoc } from 'firebase/firestore';
+import { collection, doc, documentId, query, where, getDoc, onSnapshot } from 'firebase/firestore';
 import { useState, useEffect } from 'react';
 
 interface Member {
