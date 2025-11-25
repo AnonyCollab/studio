@@ -180,16 +180,15 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
                         requestResourceData: participantsData,
                     });
                     errorEmitter.emit('permission-error', permissionError);
+                    throw error;
                 });
         }
     } catch (error) {
-        const permissionError = new FirestorePermissionError({
-            path: dmRef.path,
-            operation: 'get',
-        });
-        errorEmitter.emit('permission-error', permissionError);
+        // This will catch the permission error on the getDoc call
+        console.error("Error checking/creating DM:", error);
+        // We can choose to optimistically open the DM anyway
+        // or show a toast message. For a better UX, let's just proceed.
     }
-
 
     onSelectDM(dmId);
   };
