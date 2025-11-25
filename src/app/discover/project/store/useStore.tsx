@@ -18,6 +18,7 @@ export interface ExtendedAppState extends AppState {
   setFilter: (filter: FilterOption) => void;
   setCurrentUser: (user: CurrentUser) => void;
   updateMember: (id: string, updates: Partial<Assignee>) => void;
+  removeMember: (memberId: string) => Promise<void>;
   setResourcePath: (path: (string | null)[]) => void;
   addFile: (file: Partial<FileItem>) => void;
   addTask: (task: Partial<TaskNode>) => string;
@@ -182,8 +183,9 @@ export const useStore = (): ExtendedAppState => {
 };
 
 export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-    const { user: authUser } = useUser();
+    const { user: authUser, isUserLoading: isAuthUserLoading } = useUser();
     const params = useParams();
+    const router = useRouter();
     const projectId = typeof params.projectId === 'string' ? params.projectId : null;
 
     const [state, setState] = useState<AppState>(() => createInitialState(authUser));
@@ -217,7 +219,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     
     const { data: membersData, isLoading: isMembersLoading } = useCollection<Assignee>(membersQuery);
 
-    const isStoreLoading = isProjectLoading || isMembersLoading || isTasksLoading || isFilesLoading;
+    const isStoreLoading = isProjectLoading || isMembersLoading || isTasksLoading || isFilesLoading || isAuthUserLoading;
 
     useEffect(() => {
         setState(prev => ({...prev, projectData: projectData || null}));
@@ -247,23 +249,32 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     }, [filesData, filesError, isFilesLoading]);
 
     useEffect(() => {
-        if (isProjectLoading || isMembersLoading || !authUser) {
+        if (isProjectLoading || isMembersLoading || isAuthUserLoading) {
+            return;
+        }
+    
+        if (!projectData || !authUser) {
+            // Early exit or handle case where essential data is missing
+            if(!isProjectLoading && !projectData) {
+                // Project doesn't exist, maybe redirect
+                // router.push('/discover'); 
+            }
             return;
         }
 
         let userRole: UserRole = 'Visitor';
-        if (projectData && authUser && projectData.owner?.uid === authUser.uid) {
+        if (projectData.owner?.uid === authUser.uid) {
             userRole = 'Owner';
-        } else if (membersData?.some(m => m.uid === authUser.uid)) {
-            const memberInfo = membersData.find(m => m.uid === authUser.uid);
-            userRole = (memberInfo?.role || 'Member') as UserRole;
+        } else {
+            const memberInfo = membersData?.find(m => m.uid === authUser.uid);
+            userRole = (memberInfo?.role as UserRole) || 'Visitor';
         }
 
         setState(prev => ({
             ...prev,
             members: membersData ? membersData.map(m => ({
                 ...m,
-                id: m.uid || m.id, // Ensure id is populated from uid
+                id: m.uid, // Ensure id is populated from uid
                 type: m.type || 'user',
                 color: m.color || 'bg-blue-500',
                 initials: (m.displayName || '?').charAt(0)
@@ -276,7 +287,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
                 role: userRole,
             }
         }));
-    }, [projectData, membersData, authUser, isProjectLoading, isMembersLoading]);
+    }, [projectData, membersData, authUser, isProjectLoading, isMembersLoading, isAuthUserLoading]);
 
 
     useEffect(() => {
@@ -295,6 +306,22 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     const memberRef = doc(firestore, 'projects', projectId, 'members', id);
     updateDocumentNonBlocking(memberRef, updates);
   }, [firestore, projectId]);
+  
+    const removeMember = useCallback(async (memberId: string) => {
+        if (!firestore || !projectId || !memberId) throw new Error("Not initialized or memberId missing");
+
+        const batch = writeBatch(firestore);
+        const projectRef = doc(firestore, 'projects', projectId);
+        const memberRef = doc(firestore, 'projects', projectId, 'members', memberId);
+
+        batch.update(projectRef, {
+            members: arrayRemove(memberId),
+            totalMembers: increment(-1),
+        });
+        batch.delete(memberRef);
+
+        await batch.commit();
+    }, [firestore, projectId]);
 
   const setResourcePath = useCallback((path: (string | null)[]) => {
       setState(prev => ({ ...prev, resourcePath: path }));
@@ -490,6 +517,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     addMember,
     addFile,
     updateMember,
+    removeMember,
     setResourcePath,
     setDrillDownStack,
     leaveProject,
@@ -498,7 +526,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   }), [
       state, setCurrentUser, setTasks, addTask, updateTask, deleteTask, duplicateTask, moveTask, 
       selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, 
-      addPost, addMember, addFile, updateMember, setResourcePath, setDrillDownStack, 
+      addPost, addMember, addFile, updateMember, removeMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading
   ]);
 

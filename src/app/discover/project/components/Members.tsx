@@ -29,7 +29,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const { user: authUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
-    const { updateMember, currentUser } = useStore();
+    const { updateMember, currentUser, removeMember } = useStore();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -58,18 +58,19 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     };
 
     const handleAddFriend = (member: Assignee) => {
-        console.log(`Sending friend request to ${member.name}`);
+        console.log(`Sending friend request to ${member.displayName || member.name}`);
         toast({
             title: "Friend Request Sent",
-            description: `A friend request has been sent to ${member.name}.`,
+            description: `A friend request has been sent to ${member.displayName || member.name}.`,
         });
     };
 
     const handleKickMember = (member: Assignee) => {
-        console.log(`Kicking member ${member.name}`);
+        if (!removeMember) return;
+        removeMember(member.id);
         toast({
             title: "Member Removed",
-            description: `${member.name} has been removed from the project.`,
+            description: `${member.displayName || member.name} has been removed from the project.`,
         });
     }
 
