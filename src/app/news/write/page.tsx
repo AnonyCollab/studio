@@ -20,6 +20,7 @@ import { useFirestore, useUser } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { publishArticle } from '@/firebase/non-blocking-updates';
+import { v4 as uuidv4 } from 'uuid';
 
 // Lazily load the editor component
 const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
@@ -34,6 +35,9 @@ export default function WritePage() {
     const { user } = useUser();
     const { toast } = useToast();
     const router = useRouter();
+
+    // Generate a unique ID for this new article's collaboration session
+    const collaborationId = useMemo(() => `article-${uuidv4()}`, []);
 
 
     const handlePublish = async () => {
@@ -64,8 +68,8 @@ export default function WritePage() {
     };
 
     const editorComponent = useMemo(() => {
-        return <Editor onChange={setContent} editable={true}/>;
-    }, []);
+        return <Editor onChange={setContent} editable={true} collaborationId={collaborationId} />;
+    }, [collaborationId]);
 
   return (
     <div className={`min-h-screen flex flex-col items-center w-full ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
@@ -125,5 +129,3 @@ export default function WritePage() {
     </div>
   );
 }
-
-    

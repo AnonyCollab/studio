@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useTheme } from '@/context/ThemeContext';
@@ -66,8 +67,8 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
 
   const editorComponent = useMemo(() => {
       if (!article?.content) return <div className="h-64 w-full bg-muted/50 animate-pulse rounded-lg" />;
-      return <Editor initialContent={article.content} editable={false} />;
-  }, [article?.content]);
+      return <Editor initialContent={article.content} editable={false} collaborationId={article.id} />;
+  }, [article]);
 
   if (isLoading) {
     return (

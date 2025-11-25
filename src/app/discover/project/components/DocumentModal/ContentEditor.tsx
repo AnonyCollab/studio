@@ -13,12 +13,13 @@ interface ContentEditorProps {
   setContent: (content: string) => void;
   isLight: boolean;
   theme: Theme;
+  collaborationId: string;
 }
 
-export function ContentEditor({ content, setContent, theme }: ContentEditorProps) {
+export function ContentEditor({ content, setContent, theme, collaborationId }: ContentEditorProps) {
   const editorComponent = useMemo(() => {
-    return <Editor initialContent={content} onChange={setContent} editable={true} />;
-  }, [content, setContent]);
+    return <Editor initialContent={content} onChange={setContent} editable={true} collaborationId={collaborationId} />;
+  }, [content, setContent, collaborationId]);
 
   return (
     <div>

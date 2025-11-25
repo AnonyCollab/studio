@@ -15,22 +15,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { Block } from "@blocknote/core";
 import { useMemo } from "react";
 
-// Yjs document
-const doc = new Y.Doc();
-
-// PartyKit provider
-const provider = new YPartyKitProvider(
-  "blocknote-dev.yousefed.partykit.dev",
-  "news-feed-collaboration-room",
-  doc
-);
-
-interface EditorProps {
-    onChange?: (value: string) => void;
-    initialContent?: string;
-    editable?: boolean;
-}
-
 // Custom theme for dark mode to match app background
 const darkTheme = {
   ...darkDefaultTheme,
@@ -48,9 +32,15 @@ const customTheme = {
   dark: darkTheme,
 };
 
+interface EditorProps {
+    onChange?: (value: string) => void;
+    initialContent?: string;
+    editable?: boolean;
+    collaborationId: string; // New required prop
+}
 
 // Our <Editor> component we can reuse later
-export default function Editor({ onChange, initialContent, editable = true }: EditorProps) {
+export default function Editor({ onChange, initialContent, editable = true, collaborationId }: EditorProps) {
   const { theme } = useTheme();
 
   const initialBlocks: Block[] | undefined = useMemo(() => {
@@ -66,13 +56,16 @@ export default function Editor({ onChange, initialContent, editable = true }: Ed
     }
   }, [initialContent]);
 
-
   // Creates a new editor instance.
   const editor = useCreateBlockNote({
     initialContent: initialBlocks,
     collaboration: {
-      provider,
-      fragment: doc.getXmlFragment("document-store"),
+      provider: new YPartyKitProvider(
+        "blocknote-dev.yousefed.partykit.dev",
+        collaborationId, // Use the unique ID for the room
+        new Y.Doc() // Create a new Y.Doc for each editor instance
+      ),
+      fragment: new Y.Doc().getXmlFragment("document-store"),
       user: {
         name: "My Username",
         color: "#" + Math.floor(Math.random() * 16777215).toString(16),
