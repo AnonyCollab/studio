@@ -50,7 +50,6 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
 
   // --- Firestore Queries ---
 
-  // Fetch pending friend requests
   const incomingRequestsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return query(collection(firestore, 'friendRequests'), where('receiverId', '==', user.uid), where('status', '==', 'pending'));
@@ -63,7 +62,14 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   }, [firestore, user]);
   const { data: outgoingRequestsData } = useCollection(outgoingRequestsQuery);
 
-  // Fetch user's friends list
+  // New query to find accepted requests that the current user sent
+  const acceptedRequestsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'friendRequests'), where('senderId', '==', user.uid), where('status', '==', 'accepted'));
+  }, [firestore, user]);
+  const { data: acceptedRequestsData } = useCollection(acceptedRequestsQuery);
+
+
   const userDocQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
@@ -78,19 +84,46 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
     return () => unsub();
   }, [userDocQuery]);
 
-  // Fetch friend profiles
   const friendsQuery = useMemoFirebase(() => {
     if (!firestore || friendUIDs.length === 0) return null;
     return query(collection(firestore, 'users'), where(documentId(), 'in', friendUIDs));
   }, [firestore, friendUIDs]);
   const { data: friendsData } = useCollection(friendsQuery);
 
+  // --- Effect to process accepted friend requests ---
+  useEffect(() => {
+    if (!acceptedRequestsData || acceptedRequestsData.length === 0 || !firestore || !user) return;
+
+    const processAcceptedRequests = async () => {
+      const batch = writeBatch(firestore);
+      const userRef = doc(firestore, 'users', user.uid);
+      
+      acceptedRequestsData.forEach(req => {
+        // Add the receiver to the sender's (current user's) friend list
+        batch.update(userRef, { friends: arrayUnion(req.receiverId) });
+        // Delete the request document to prevent re-processing
+        const reqRef = doc(firestore, 'friendRequests', req.id);
+        batch.delete(reqRef);
+      });
+
+      try {
+        await batch.commit();
+      } catch (error) {
+         console.error("Error processing accepted friend requests:", error);
+         // Optionally emit a permission error if needed
+      }
+    };
+
+    processAcceptedRequests();
+  }, [acceptedRequestsData, firestore, user]);
+
+
   // --- Memoized Data Transformation ---
 
   const pendingRequests = useMemo((): PendingRequest[] => {
     const incoming = (incomingRequestsData || []).map(req => ({
       id: req.id,
-      name: 'Unknown User', // Placeholder, will be fetched
+      name: 'Unknown User',
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.senderId}`,
       type: 'incoming' as const,
       senderId: req.senderId,
@@ -99,7 +132,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
 
     const outgoing = (outgoingRequestsData || []).map(req => ({
       id: req.id,
-      name: 'Unknown User', // Placeholder
+      name: 'Unknown User',
       avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${req.receiverId}`,
       type: 'outgoing' as const,
       senderId: req.senderId,
@@ -114,7 +147,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
       id: friend.id,
       name: friend.profile.displayName,
       avatar: friend.profile.photoURL,
-      status: 'online', // TODO: Implement real-time status
+      status: 'online',
       statusType: 'online',
     }));
   }, [friendsData]);
@@ -164,7 +197,6 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   const handleAddFriend = async () => {
     if (!newFriendInput.trim() || !user || !firestore) return;
 
-    // Find user by displayName
     const usersRef = collection(firestore, 'users');
     const q = query(usersRef, where("profile.displayName", "==", newFriendInput.trim()), limit(1));
     
@@ -182,7 +214,6 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
             return;
         }
 
-        // Create friend request
         const friendRequestRef = collection(firestore, 'friendRequests');
         const requestData = {
             senderId: user.uid,
@@ -206,7 +237,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
     }).catch(error => {
         const permissionError = new FirestorePermissionError({
             path: usersRef.path,
-            operation: 'list', // getDocs is a 'list' operation
+            operation: 'list',
         });
         errorEmitter.emit('permission-error', permissionError);
     });
@@ -227,7 +258,6 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
         
         const { senderId, receiverId } = requestDoc.data();
         
-        // Ensure the current user is the receiver
         if (user.uid !== receiverId) {
           toast({ title: 'Error', description: 'You cannot accept this request.', variant: 'destructive' });
           return;
@@ -235,14 +265,11 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
         
         const batch = writeBatch(firestore);
 
-        // 1. Update friend request to 'accepted'
         batch.update(requestRef, { status: 'accepted' });
         
-        // 2. Receiver (current user) adds sender to their own friends list
         const receiverUserRef = doc(firestore, 'users', receiverId);
         batch.update(receiverUserRef, { friends: arrayUnion(senderId) });
 
-        // Commit the batch
         await batch.commit();
 
         toast({ title: 'Friend Added!', description: 'You are now friends.' });
@@ -251,7 +278,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
         console.error("Error accepting friend request: ", error);
         toast({ title: 'Error', description: 'Failed to accept friend request.', variant: 'destructive' });
       }
-    } else { // Decline or Cancel
+    } else { 
         deleteDoc(requestRef)
             .then(() => {
                 toast({ title: 'Request Removed', description: 'The friend request has been removed.' });
@@ -475,9 +502,7 @@ function FriendItem({ friend, isDark, theme, onMessageClick }: { friend: any; is
     game: 'bg-purple-500',
     voice: 'bg-emerald-500',
     offline: 'bg-gray-500',
-  }['online']; // Simplified for now
-
-  // const userProfile = mockUsers[friend.id]; // This would need to be fetched
+  }['online']; 
 
   return (
     <div className={`p-3 rounded-xl flex items-center gap-3 transition-all group ${
@@ -485,7 +510,6 @@ function FriendItem({ friend, isDark, theme, onMessageClick }: { friend: any; is
         ? 'bg-[#131823] border border-white/10 hover:bg-white/5 hover:border-cyan-400/50 hover:shadow-[0_0_20px_rgba(34,211,238,0.15)]' 
         : 'bg-white border border-gray-200 hover:bg-gray-50 hover:border-cyan-500/50 hover:shadow-lg'
     }`}>
-      {/* <UserProfileTrigger user={userProfile} theme={theme}> */}
         <div className="relative">
           <Avatar className={`w-12 h-12 ${isDark ? 'ring-2 ring-white/20' : 'ring-2 ring-gray-200'}`}>
             <AvatarImage src={friend.avatar} />
@@ -495,11 +519,8 @@ function FriendItem({ friend, isDark, theme, onMessageClick }: { friend: any; is
             isDark ? 'border-2 border-[#131823]' : 'border-2 border-white'
           }`} />
         </div>
-      {/* </UserProfileTrigger> */}
       <div className="flex-1 min-w-0">
-        {/* <UserProfileTrigger user={userProfile} theme={theme}> */}
           <p className={`truncate cursor-pointer hover:underline ${isDark ? 'text-[#e5e7eb]' : 'text-gray-900'}`}>{friend.name}</p>
-        {/* </UserProfileTrigger> */}
         <p className={`text-sm truncate ${isDark ? 'text-[#94a3b8]' : 'text-gray-600'}`}>{friend.status}</p>
       </div>
       <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -568,7 +589,3 @@ function PendingFriendItem({ friend, isDark, onAction }: { friend: PendingReques
     </div>
   );
 }
-
-
-    
-    
