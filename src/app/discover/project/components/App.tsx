@@ -18,11 +18,14 @@ import { useStore } from '../store/useStore';
 import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from '../types';
 import { SettingsPage } from './SettingsPage';
 import { useUser } from '@/firebase';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 const App: React.FC = () => {
   const { user: authUser, isUserLoading } = useUser();
   const params = useParams();
+  const router = useRouter();
+  const { toast } = useToast();
   const projectId = typeof params.projectId === 'string' ? params.projectId : null;
 
   const store = useStore(authUser, projectId);
@@ -30,11 +33,13 @@ const App: React.FC = () => {
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
-      posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath
+      posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
   const [viewedProfile, setViewedProfile] = useState<Assignee | null>(null);
+  const [isLeaving, setIsLeaving] = useState(false);
+
 
   // Lifted State for Mobile Overlays & Interactions
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -176,6 +181,21 @@ const App: React.FC = () => {
       setPage('members');
   }
 
+  const handleLeaveProject = async () => {
+    if (!leaveProject) return;
+    setIsLeaving(true);
+    try {
+        await leaveProject();
+        toast({ title: "You have left the project." });
+        router.push('/discover');
+    } catch (error) {
+        console.error("Failed to leave project:", error);
+        toast({ variant: "destructive", title: "Error", description: "Could not leave the project." });
+    } finally {
+        setIsLeaving(false);
+    }
+  };
+
   if (isUserLoading) {
       return <div className="w-screen h-screen flex items-center justify-center bg-[#09090b]">Loading Project...</div>;
   }
@@ -260,7 +280,14 @@ const App: React.FC = () => {
                 />
             )}
             {currentPage === 'profile' && <ProfilePage theme={theme} tasks={store.tasks} member={viewedProfile} onBack={handleBackToMembers}/>}
-            {currentPage === 'about' && <About theme={theme} />}
+            {currentPage === 'about' && (
+                <About 
+                    theme={theme} 
+                    currentUser={currentUser} 
+                    onLeaveProject={handleLeaveProject} 
+                    isLeaving={isLeaving}
+                />
+            )}
             {currentPage === 'settings' && <SettingsPage theme={theme} />}
         </div>
 
