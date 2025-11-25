@@ -5,8 +5,8 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { User } from 'firebase/auth';
-import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from '@/firebase';
-import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc, updateDoc } from 'firebase/firestore';
+import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
+import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -213,36 +213,36 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
 
 
     useEffect(() => {
-      if (isProjectLoading || isMembersLoading || !projectData || !membersData) {
-          return;
-      }
-      
-      let userRole: UserRole = 'Visitor';
-      let teamName: string | undefined = undefined;
-
-      if (authUser) {
-        
-        const member = membersData.find(m => m.id === authUser.uid);
-
-        if (projectData.owner.uid === authUser.uid) {
-            userRole = 'Owner';
-        } else if (member) {
-            userRole = (member.role || 'Member') as UserRole;
+        if (isProjectLoading || isMembersLoading || !authUser) {
+            return;
         }
+        
+        let userRole: UserRole = 'Visitor';
+        let teamName: string | undefined = undefined;
 
-        const team = membersData.find(m => m.id === member?.teamId);
-        if (team) {
-            teamName = team.name;
+        if (projectData && membersData) {
+            const member = membersData.find(m => m.id === authUser.uid);
+    
+            if (projectData.owner.uid === authUser.uid) {
+                userRole = 'Owner';
+            } else if (member) {
+                userRole = (member.role || 'Member') as UserRole;
+            }
+    
+            const team = membersData.find(m => m.id === member?.teamId);
+            if (team) {
+                teamName = team.name;
+            }
         }
 
         setState(prev => ({
           ...prev,
-          members: membersData.map(m => ({
+          members: membersData ? membersData.map(m => ({
               ...m,
               type: m.type || 'user',
               color: m.color || 'bg-blue-500',
               initials: (m.displayName || '?').charAt(0)
-          })),
+          })) : [],
           currentUser: {
             ...prev.currentUser,
             id: authUser.uid,
@@ -252,9 +252,6 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
             teamName: teamName
           }
         }));
-      } else if (!authUser) {
-          setState(prev => ({...prev, currentUser: createDefaultUser(null)}));
-      }
     }, [projectData, membersData, authUser, isProjectLoading, isMembersLoading]);
 
 
@@ -398,6 +395,12 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
         console.log("Folder stored successfully in database! Document ID:", docRef.id);
       })
       .catch(error => {
+        const permissionError = new FirestorePermissionError({
+          path: resourcesCollection.path,
+          operation: 'create',
+          requestResourceData: newFileDoc,
+        });
+        errorEmitter.emit('permission-error', permissionError);
         console.error("Error adding document, emitting permission error:", error);
       });
   }, [firestore, projectId, state.resourcePath]);
@@ -410,7 +413,7 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
   const setFocusedParentId = useCallback((id: string | null) => {}, []);
   const duplicateTask = useCallback((id: string) => {}, []);
   const moveTask = useCallback((taskId: string, newParentId: string | null) => {}, []);
-
+   setDocumentNonBlocking
   return {
     ...state,
     setCurrentUser,
@@ -436,4 +439,5 @@ export const useStore = (authUser: User | null, projectId: string | null): Exten
   };
 };
 
+    
     
