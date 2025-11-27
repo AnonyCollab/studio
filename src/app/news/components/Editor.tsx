@@ -57,9 +57,6 @@ export default function Editor({ onChange, initialContent, editable, collaborati
 
   const collaborationOptions = useMemo(() => {
     if (!collaborationId) return undefined;
-
-    // Create a new Y.Doc for each editor instance to avoid HMR issues.
-    const doc = new Y.Doc();
     
     const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
 
@@ -68,6 +65,9 @@ export default function Editor({ onChange, initialContent, editable, collaborati
         return undefined;
     }
     
+    // Create a new Y.Doc for each editor instance.
+    const doc = new Y.Doc();
+
     return {
       provider: new YPartyKitProvider(host, collaborationId, doc),
       fragment: doc.getXmlFragment("document-store"),
