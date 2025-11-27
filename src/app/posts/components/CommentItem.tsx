@@ -89,7 +89,7 @@ const AuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark:
 
   if (!authorData) {
     return (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
             <p className="text-sm font-medium">Loading...</p>
         </div>
     );
@@ -98,7 +98,7 @@ const AuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark:
   const author = authorData.profile;
 
   return (
-    <div className="flex items-baseline gap-2">
+    <div className="flex items-baseline justify-between">
       <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
       <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
     </div>
@@ -124,7 +124,7 @@ const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, is
                 <AvatarImage src={author.photoURL} />
                 <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
             </Avatar>
-            <div className={`rounded-lg p-2.5 border w-full ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+            <div className={`rounded-lg p-2.5 border w-full ${isDark ? "bg-transparent" : "bg-gray-50"}`}>
                 <div className="flex items-baseline justify-between mb-1">
                     <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
@@ -274,7 +274,7 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
         <div key={reply.id} className="flex items-start gap-3 group/reply">
             <ReplyAuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
             <div className="flex-1 min-w-0">
-            <div className={`rounded-lg p-2.5 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+            <div className={`rounded-lg p-2.5 border ${isDark ? "bg-transparent" : "bg-gray-50"}`}>
                 
                 <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {renderContentWithMentions(reply.content, isDark)}
@@ -312,7 +312,7 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
             </Avatar>
         )}
         <div className="flex-1">
-            <div className={`rounded-lg p-3 border ${isDark ? "bg-[#18181b] border-white/10" : "bg-white border-gray-200"}`}>
+            <div className={`rounded-lg p-3 border ${isDark ? "bg-[#18181b]" : "bg-white border-gray-200"}`}>
               <AuthorInfo authorId={comment.authorId} isDark={isDark} timestamp={comment.timestamp} />
               <p className={`text-sm mt-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {renderContentWithMentions(comment.content, isDark)}
