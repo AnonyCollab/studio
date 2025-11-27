@@ -37,7 +37,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
     // --- Data Selectors ---
 
-    const myTasks = useMemo(() => tasks.filter(t => t.assignee.displayName === currentUser.name), [tasks, currentUser.name]);
+    const myTasks = useMemo(() => tasks.filter(t => t.assignee.displayName === currentUser.displayName), [tasks, currentUser.displayName]);
 
     const teamTasks = useMemo(() => tasks.filter(t => t.assignee.type === 'team' || (t.assignee.type === 'user' && teamMembers.includes(t.assignee.displayName))), [tasks, teamMembers]);
 
@@ -163,7 +163,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             {/* Welcome Banner */}
             <div className="flex items-center justify-between mb-2">
                 <div>
-                    <h2 className={`text-2xl font-bold ${textMain}`}>Good morning, {currentUser.name}.</h2>
+                    <h2 className={`text-2xl font-bold ${textMain}`}>Good morning, {currentUser.displayName}.</h2>
                     <p className={textMuted}>You have {myTasks.filter(t => t.status !== 'Done').length} active tasks on your plate.</p>
                 </div>
                 <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-white/5 border-white/10'}`}>
@@ -416,3 +416,5 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         </div>
     );
 };
+
+    
