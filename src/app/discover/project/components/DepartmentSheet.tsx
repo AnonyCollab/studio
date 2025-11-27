@@ -2,14 +2,15 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Users, Briefcase, PlusCircle, Folder, ArrowLeft, Layers, User } from 'lucide-react';
+import { X, Users, Briefcase, PlusCircle, Folder, ArrowLeft, Layers, User, ChevronUp, ChevronDown, MoreHorizontal, Mail, UserPlus, LogOut } from 'lucide-react';
 import { Assignee, TaskNode, Theme, UserRole } from '../types';
-import { PriorityIcon } from './Plan';
+import { PriorityIcon, StatusBadge } from './Plan';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useStore } from '../store/useStore';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface DepartmentSheetProps {
     item: Assignee | null;
@@ -20,10 +21,13 @@ interface DepartmentSheetProps {
     onClose: () => void;
     onBack?: () => void;
     onSelectTeam: (team: Assignee) => void;
+    onViewProfile: (member: Assignee) => void;
     theme: Theme;
 }
 
 type Tab = 'Overview' | 'Members' | 'Teams' | 'Work' | 'Activity';
+const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
+
 
 const Backdrop: React.FC<{ onClick: () => void, isLight: boolean }> = ({ onClick, isLight }) => {
     const overlayClass = isLight ? "bg-black/20 backdrop-blur-sm" : "bg-black/60 backdrop-blur-sm";
@@ -31,11 +35,11 @@ const Backdrop: React.FC<{ onClick: () => void, isLight: boolean }> = ({ onClick
 };
 
 const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({ 
-    item, members, teams, tasks, onClose, onBack, onSelectTeam, theme
+    item, members, teams, tasks, onClose, onBack, onSelectTeam, onViewProfile, theme
 }) => {
     const [activeTab, setActiveTab] = useState<Tab>('Overview');
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
-    const { addMember, currentUser } = useStore();
+    const { addMember, currentUser, updateMember, removeMember } = useStore();
     const { toast } = useToast();
     const [isCreatingTeam, setIsCreatingTeam] = useState(false);
     const [newTeamName, setNewTeamName] = useState('');
@@ -45,6 +49,8 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
     const textMain = isLight ? "text-slate-900" : "text-white";
     const borderClass = isLight ? "border-slate-100" : "border-white/5";
+    const tableHeaderBg = isLight ? "bg-black/5 text-slate-600" : "bg-white/5 text-slate-400";
+    const tableRowBorder = isLight ? "border-black/5 hover:bg-black/5" : "border-white/5 hover:bg-white/5";
 
     const canManage = currentUser.role === 'Owner';
     
@@ -80,6 +86,23 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
         setIsCreatingTeam(false);
         setNewTeamName('');
     };
+
+    const handleAddFriend = (member: Assignee) => {
+        console.log(`Sending friend request to ${member.name}`);
+        toast({
+            title: "Friend Request Sent",
+            description: `A friend request has been sent to ${member.name}.`,
+        });
+    };
+
+    const handleKickMember = (member: Assignee) => {
+        if (!removeMember) return;
+        removeMember(member.id);
+        toast({
+            title: "Member Removed",
+            description: `${member.name} has been removed from the project.`,
+        });
+    }
 
     return (
         <div className="flex flex-col h-full">
@@ -193,23 +216,57 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
 
                 {activeTab === 'Members' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {[...members].map(member => (
-                                <div key={member.id} className={`p-5 rounded-2xl border flex flex-col gap-4 ${cardClass}`}>
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-14 h-14 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xl shadow-md`}>
-                                            {member.initials}
-                                        </div>
-                                        <div>
-                                            <h4 className={`font-bold text-lg ${textMain}`}>{member.name}</h4>
-                                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400'}`}>
-                                                {member.role || 'Member'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                        <div className={`rounded-xl border overflow-hidden ${isLight ? 'bg-white' : 'bg-black/20'} ${borderClass}`}>
+                            <table className="w-full text-left">
+                                <thead className={tableHeaderBg}>
+                                    <tr>
+                                        <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider">Name</th>
+                                        <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider hidden md:table-cell">Role</th>
+                                        <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {members.map(member => {
+                                        const memberRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
+                                        const canManage = currentUser.role === 'Owner';
+                                        const canPromote = canManage && member.id !== currentUser.id && memberRoleIndex > 0;
+                                        const canDemote = canManage && member.id !== currentUser.id && memberRoleIndex < ROLE_HIERARCHY.length - 1;
+
+                                        return (
+                                            <tr key={member.id} onClick={() => onViewProfile(member)} className={`transition-colors cursor-pointer ${tableRowBorder}`}>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-8 h-8 rounded-full ${member.color || 'bg-slate-500'} flex items-center justify-center text-white font-bold text-xs`}>
+                                                            {member.initials || (member.name || '?').charAt(0)}
+                                                        </div>
+                                                        <span className={`font-bold text-sm ${textMain}`}>{member.name}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 hidden md:table-cell">
+                                                    <span className={`text-xs font-medium px-2 py-0.5 rounded ${member.role === 'Owner' ? 'bg-amber-500/20 text-amber-500' : (isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400')}`}>
+                                                        {member.role}
+                                                    </span>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <button onClick={(e) => e.stopPropagation()} className={`p-2 rounded hover:bg-white/10 ${textMuted}`}><MoreHorizontal size={16} /></button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className={`${isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}`}>
+                                                            {canPromote && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[memberRoleIndex - 1] }); }}><ChevronUp className="mr-2 h-4 w-4 text-emerald-500" /><span>Promote</span></DropdownMenuItem>}
+                                                            {canDemote && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { role: ROLE_HIERARCHY[memberRoleIndex + 1] }); }}><ChevronDown className="mr-2 h-4 w-4 text-rose-500" /><span>Demote</span></DropdownMenuItem>}
+                                                            <DropdownMenuItem><Mail className="mr-2 h-4 w-4" /> Message</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleAddFriend(member); }}><UserPlus className="mr-2 h-4 w-4" /><span>Add Friend</span></DropdownMenuItem>
+                                                            {canManage && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleKickMember(member); }} className="text-red-500"><LogOut className="mr-2 h-4 w-4"/>Kick</DropdownMenuItem>}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                         </div>
                     </div>
                 )}
                  {activeTab === 'Teams' && (
@@ -297,3 +354,4 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
         </>
     );
 };
+
