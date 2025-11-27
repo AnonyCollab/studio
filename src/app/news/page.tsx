@@ -17,7 +17,7 @@ export default function NewsPage() {
 
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'news'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'news', 'articles', 'documents'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
   const { data: articlesData, isLoading } = useCollection<Article>(articlesQuery);
@@ -71,3 +71,5 @@ export default function NewsPage() {
     </div>
   );
 }
+
+    

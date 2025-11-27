@@ -1,6 +1,7 @@
 
 
 
+
 'use client';
     
 import {
@@ -252,10 +253,10 @@ export function deleteReply(firestore: Firestore, postId: string, commentId: str
 
 
 /**
- * Publishes a new article to the 'news' collection.
+ * Publishes a new article to the 'news/articles' subcollection.
  */
 export function publishArticle(firestore: Firestore, article: { title: string; content: string }, user: User) {
-  const articlesCollection = collection(firestore, 'news');
+  const articlesCollection = collection(firestore, 'news', 'articles', 'documents');
   
   const articleData = {
     title: article.title,
@@ -271,3 +272,5 @@ export function publishArticle(firestore: Firestore, article: { title: string; c
 
   return addDocumentNonBlocking(articlesCollection, articleData);
 }
+
+    

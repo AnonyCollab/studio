@@ -51,7 +51,7 @@ service cloud.firestore {
         }
     }
     
-    match /news/{articleId} {
+    match /news/articles/{articleId} {
       allow list: if true;
       allow get: if true;
       allow create: if request.auth != null;
@@ -142,3 +142,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
