@@ -38,14 +38,15 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ tasks, theme, onAddT
 
     // --- Filter Logic ---
     const filteredTasks = useMemo(() => {
-        const currentUserName = 'Alex Chen'; // Mock
-        const currentTeam = 'Frontend Team'; // Mock
+        if (!currentUser) return [];
+        const currentUserName = currentUser.displayName;
+        const currentTeam = currentUser.teamName;
 
         switch(filter) {
             case 'Mine':
-                return tasks.filter(t => t.assignee.name === currentUserName);
+                return tasks.filter(t => t.assignee.displayName === currentUserName);
             case 'Team':
-                return tasks.filter(t => t.assignee.name === currentTeam || t.assignee.type === 'team');
+                return tasks.filter(t => t.assignee.displayName === currentTeam || t.assignee.type === 'team');
             case 'Project':
                 // For Calendar Project view, we generally show everything, 
                 // as "Root only" doesn't make sense in a timeline.
@@ -54,7 +55,7 @@ export const CalendarPage: React.FC<CalendarPageProps> = ({ tasks, theme, onAddT
             default:
                 return tasks;
         }
-    }, [tasks, filter]);
+    }, [tasks, filter, currentUser]);
 
     // --- Helpers ---
 

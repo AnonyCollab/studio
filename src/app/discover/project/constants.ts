@@ -3,7 +3,8 @@ import { TaskNode, Assignee, Priority, Cycle, UserProfile, UserPost, UserArticle
 import { FileText, Link, Image, Video, Archive } from 'lucide-react';
 
 export const MOCK_ASSIGNEES: Assignee[] = [
-  { id: 'u1', displayName: 'Alex Chen', initials: 'AC', color: 'bg-blue-500', type: 'user', role: 'Owner', uid: 'u1' },
+  { id: 'u-unassigned', displayName: 'Unassigned', initials: '?', color: 'bg-slate-600', type: 'user', role: 'Visitor', uid: 'u-unassigned' },
+  { id: 'u1', displayName: 'GarnetGamefowl443', initials: 'AC', color: 'bg-blue-500', type: 'user', role: 'Owner', uid: 'u1' },
   { id: 'u2', displayName: 'Sarah Jones', initials: 'SJ', color: 'bg-pink-500', type: 'user', role: 'Co-Owner', uid: 'u2' },
   { id: 'u3', displayName: 'Mike Ross', initials: 'MR', color: 'bg-yellow-500', type: 'user', role: 'Coordinator', uid: 'u3' },
   { id: 'u4', displayName: 'Jessica Pearson', initials: 'JP', color: 'bg-emerald-500', type: 'user', role: 'Team Lead', uid: 'u4' },
@@ -11,13 +12,12 @@ export const MOCK_ASSIGNEES: Assignee[] = [
   { id: 't1', displayName: 'Frontend Team', initials: 'FE', color: 'bg-indigo-600', type: 'team', uid: 't1' },
   { id: 't2', displayName: 'Design Team', initials: 'DS', color: 'bg-rose-600', type: 'team', uid: 't2' },
   { id: 't3', displayName: 'Backend Team', initials: 'BE', color: 'bg-emerald-600', type: 'team', uid: 't3' },
-  { id: 'u-unassigned', displayName: 'Unassigned', initials: '?', color: 'bg-slate-600', type: 'user', role: 'Visitor', uid: 'u-unassigned' },
 ];
 
 export const MOCK_PROFILE: UserProfile = {
   id: 'u1',
   uid: 'u1',
-  displayName: 'Alex Chen',
+  displayName: 'GarnetGamefowl443',
   initials: 'AC',
   color: 'bg-blue-500',
   type: 'user',

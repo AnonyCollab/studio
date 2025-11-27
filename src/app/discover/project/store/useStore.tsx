@@ -428,13 +428,15 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
         inferredType = 'Milestone';
     }
     
+    const unassignedUser = state.members.find(m => m.displayName === 'Unassigned') || MOCK_ASSIGNEES[0];
+
     const newTask: Omit<TaskNode, 'id'> = {
         title: 'New Item',
         description: 'Click to edit description...',
         status: 'Backlog',
         priority: 'Medium',
         type: inferredType,
-        assignee: MOCK_ASSIGNEES[0],
+        assignee: unassignedUser,
         startDate: new Date().toDateString(),
         dueDate: new Date().toDateString(),
         color: '#eab308',
@@ -455,7 +457,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
 
     setState(prev => ({ ...prev, selectedTaskId: id, isModalOpen: true }));
     return id;
-}, [firestore, projectId, state.tasks]);
+}, [firestore, projectId, state.tasks, state.members]);
 
 
   const addFile = useCallback((file: Partial<FileItem>) => {
