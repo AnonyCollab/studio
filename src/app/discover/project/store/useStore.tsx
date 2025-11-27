@@ -10,6 +10,7 @@ import { collection, doc, query, serverTimestamp, addDoc, writeBatch, deleteDoc,
 import { errorEmitter, FirestorePermissionError } from '@/firebase';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/firebase';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface ExtendedAppState extends AppState {
   focusedParentId: string | null;
@@ -19,6 +20,7 @@ export interface ExtendedAppState extends AppState {
   setCurrentUser: (user: CurrentUser) => void;
   updateMember: (id: string, updates: Partial<Assignee>) => void;
   removeMember: (memberId: string) => Promise<void>;
+  addMember: (member: Partial<Assignee>) => void;
   setResourcePath: (path: (string | null)[]) => void;
   addFile: (file: Partial<FileItem>) => void;
   addTask: (task: Partial<TaskNode>) => string;
@@ -477,9 +479,32 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     await batch.commit();
   }, [firestore, projectId, authUser]);
 
+  const addMember = useCallback((member: Partial<Assignee>) => {
+    if (!firestore || !projectId) return;
+    
+    if (member.type === 'team') {
+        // This is for creating a new department/team
+        const newTeamId = uuidv4();
+        const teamDoc: Assignee = {
+            id: newTeamId,
+            uid: newTeamId,
+            name: member.name || 'New Department',
+            initials: (member.name || 'ND').substring(0, 2).toUpperCase(),
+            type: 'team',
+            color: 'bg-gray-500',
+            role: 'Member' // Teams don't have roles in the same way as users
+        };
+        const memberRef = doc(firestore, 'projects', projectId, 'members', newTeamId);
+        setDocumentNonBlocking(memberRef, teamDoc, {});
+    } else {
+        // Logic for adding a user member
+        // This would involve searching for a user and then adding them.
+        // Currently handled by the InviteDialog.
+    }
+}, [firestore, projectId]);
+  
   // Dummy/Placeholder functions that need Firestore integration
   const addPost = useCallback((post: Partial<UserPost>) => {}, []);
-  const addMember = useCallback((member: Partial<Assignee>) => {}, []);
   const setTasks = useCallback((tasksOrUpdater: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => {
     const newTasks = typeof tasksOrUpdater === 'function' ? tasksOrUpdater(state.tasks) : tasksOrUpdater;
     setState(prev => ({ ...prev, tasks: newTasks }));
@@ -515,9 +540,9 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     setFilter,
     addPost,
     addMember,
+    removeMember,
     addFile,
     updateMember,
-    removeMember,
     setResourcePath,
     setDrillDownStack,
     leaveProject,
@@ -526,7 +551,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   }), [
       state, setCurrentUser, setTasks, addTask, updateTask, deleteTask, duplicateTask, moveTask, 
       selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, 
-      addPost, addMember, addFile, updateMember, removeMember, setResourcePath, setDrillDownStack, 
+      addPost, addMember, removeMember, addFile, updateMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading
   ]);
 

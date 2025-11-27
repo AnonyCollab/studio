@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
-import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut } from 'lucide-react';
+import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut, PlusCircle } from 'lucide-react';
 import { DepartmentSheet } from './DepartmentSheet';
 import { useStore } from '../store/useStore.tsx';
 import {
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
+import { Button } from '@/components/ui/button';
 
 const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
 
@@ -33,7 +34,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const { user: authUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
-    const { updateMember, currentUser, removeMember } = useStore();
+    const { updateMember, currentUser, removeMember, addMember } = useStore();
     const { toast } = useToast();
 
     useEffect(() => {
@@ -77,6 +78,22 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
             description: `${member.displayName || member.name} has been removed from the project.`,
         });
     }
+
+    const handleCreateDepartment = () => {
+        if (!addMember) return;
+        const departmentName = prompt("Enter new department name:");
+        if (departmentName && departmentName.trim() !== '') {
+            addMember({
+                name: departmentName,
+                type: 'team',
+            });
+            toast({
+                title: "Department Created",
+                description: `The "${departmentName}" department has been created.`
+            });
+        }
+    };
+
 
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:border-brand-500/50" : "bg-[#18181b]/80 border-white/5 hover:border-brand-500/50";
@@ -202,7 +219,15 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                     </div>
 
                     <div>
-                        <h2 className={`text-sm font-bold uppercase tracking-wider mb-4 ${textMuted}`}>Departments</h2>
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className={`text-sm font-bold uppercase tracking-wider ${textMuted}`}>Departments</h2>
+                            {currentUser.role === 'Owner' && (
+                                <Button variant="outline" size="sm" onClick={handleCreateDepartment}>
+                                    <PlusCircle className="mr-2 h-4 w-4" />
+                                    Create Department
+                                </Button>
+                            )}
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {teams.map(team => (
                                 <div 
