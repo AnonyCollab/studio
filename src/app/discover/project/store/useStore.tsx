@@ -492,7 +492,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
             initials: (member.name || 'NT').substring(0, 2).toUpperCase(),
             type: 'team',
             color: member.color || 'bg-gray-500',
-            role: 'Member',
+            role: 'Member', // Teams are just members for now
             parentId: member.parentId || null
         };
         const memberRef = doc(firestore, 'projects', projectId, 'members', newTeamId);
