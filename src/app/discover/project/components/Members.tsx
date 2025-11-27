@@ -11,6 +11,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
@@ -49,11 +53,11 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         };
     };
 
-    const getTeamDetails = (teamName: string) => {
+    const getTeamDetails = (team: Assignee) => {
         return {
-            lead: allMembers.find(m => m.role === 'Team Lead'),
-            members: allMembers.filter(m => m.role === 'Member'),
-            tasks: tasks.filter(t => t.assignee.name === teamName)
+            lead: allMembers.find(m => m.role === 'Team Lead' && m.team === team.name),
+            members: allMembers.filter(m => m.role === 'Member' && m.team === team.name),
+            tasks: tasks.filter(t => t.assignee.name === team.name)
         };
     };
 
@@ -81,7 +85,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const tableHeaderBg = isLight ? "bg-black/5 text-slate-600" : "bg-white/5 text-slate-400";
     const tableRowBorder = isLight ? "border-black/5 hover:bg-black/5" : "border-white/5 hover:bg-white/5";
 
-    const teamDetails = selectedTeam ? getTeamDetails(selectedTeam.name) : { lead: undefined, members: [], tasks: [] };
+    const teamDetails = selectedTeam ? getTeamDetails(selectedTeam) : { lead: undefined, members: [], tasks: [] };
 
     return (
         <>
@@ -99,6 +103,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                     <tr>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider">Name</th>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider hidden md:table-cell">Active Tasks</th>
+                                        <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider hidden sm:table-cell">Department</th>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider">Role</th>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider text-right">Actions</th>
                                     </tr>
@@ -131,6 +136,11 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                         {stats.inProgress}
                                                     </span>
                                                 </td>
+                                                <td className="px-6 py-4 hidden sm:table-cell">
+                                                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${member.team ? 'bg-blue-500/20 text-blue-300' : (isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400')}`}>
+                                                        {member.team || 'Unassigned'}
+                                                     </span>
+                                                </td>
                                                 <td className="px-6 py-4">
                                                      <span className={`text-xs font-medium px-2 py-0.5 rounded ${member.role === 'Owner' ? 'bg-amber-500/20 text-amber-500' : (isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400')}`}>
                                                         {member.role}
@@ -154,6 +164,24 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                                         <ChevronDown className="mr-2 h-4 w-4 text-rose-500" />
                                                                         <span>Demote</span>
                                                                     </DropdownMenuItem>
+                                                                )}
+                                                                 {canManage && (
+                                                                    <DropdownMenuSub>
+                                                                        <DropdownMenuSubTrigger>
+                                                                            <Briefcase className="mr-2 h-4 w-4" />
+                                                                            <span>Assign Department</span>
+                                                                        </DropdownMenuSubTrigger>
+                                                                        <DropdownMenuPortal>
+                                                                            <DropdownMenuSubContent>
+                                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { team: undefined }); }}>Unassigned</DropdownMenuItem>
+                                                                                {teams.map(team => (
+                                                                                    <DropdownMenuItem key={team.id} onClick={(e) => { e.stopPropagation(); updateMember(member.id, { team: team.name }); }}>
+                                                                                        {team.name}
+                                                                                    </DropdownMenuItem>
+                                                                                ))}
+                                                                            </DropdownMenuSubContent>
+                                                                        </DropdownMenuPortal>
+                                                                    </DropdownMenuSub>
                                                                 )}
                                                                 {canManage && <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleKickMember(member); }} className="text-red-500"><LogOut className="mr-2 h-4 w-4"/>Kick</DropdownMenuItem>}
                                                                 <DropdownMenuItem><Mail className="mr-2 h-4 w-4" /> Message</DropdownMenuItem>

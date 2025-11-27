@@ -41,6 +41,7 @@ export interface Assignee {
   color: string;
   type?: 'user' | 'team';
   role?: UserRole;
+  team?: string; // e.g., 'Frontend Team'
   uid?: string; // Add this to align with member data
 }
 
@@ -213,5 +214,3 @@ export interface AIActionResponse {
   description: string;
   priority: Priority;
 }
-
-    
