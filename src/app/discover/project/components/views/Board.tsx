@@ -366,7 +366,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         startMouse: { x: number, y: number };
         draggedIds: string[];
         initialPositions: Record<string, {x: number, y: number}>;
-    }>({ potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {} });
+        minY: number | null;
+    }>({ potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {}, minY: null });
 
     const selectRef = useRef<{
         isSelecting: boolean;
@@ -421,6 +422,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         if (dragRef.current.isDragging && !isReadOnly) {
             const dx = (mouseX - dragRef.current.startMouse.x) / effectiveScale;
             const dy = (mouseY - dragRef.current.startMouse.y) / effectiveScale;
+            const minY = dragRef.current.minY;
 
             setLocalTasks(prev => prev.map(t => {
                 if (dragRef.current.draggedIds.includes(t.id)) {
@@ -430,8 +432,14 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                         let newY = initial.y + dy;
                         
                         newX = Math.max(0, Math.min(MAX_CANVAS_WIDTH - CARD_WIDTH, newX));
-                        newY = Math.max(newY, CENTRAL_Y + (focusedParentId ? 200 : PROJECT_ROOT_HEIGHT_BUFFER));
-
+                        
+                        // Apply minY constraint if it exists for this drag operation
+                        if (minY !== null) {
+                            newY = Math.max(newY, minY);
+                        } else {
+                            newY = Math.max(newY, CENTRAL_Y + (focusedParentId ? 200 : PROJECT_ROOT_HEIGHT_BUFFER));
+                        }
+                        
                         return { ...t, position: { x: newX, y: newY } };
                     }
                 }
@@ -522,7 +530,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 });
             }
             
-            dragRef.current = { potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {} };
+            dragRef.current = { potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {}, minY: null };
 
             if (selectRef.current.isSelecting) {
                 const { startX, startY, currentX, currentY } = selectRef.current;
@@ -607,14 +615,25 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             if (t) initialPositions[id] = { ...t.position };
         });
 
+        // Determine minY boundary for Goals
+        let minY: number | null = null;
+        if (task.type === 'Goal' && task.parentId) {
+            const parentMilestone = tasksRef.current.find(t => t.id === task.parentId && t.type === 'Milestone');
+            if (parentMilestone) {
+                const milestoneHeight = cardHeights[parentMilestone.id] || 160;
+                minY = parentMilestone.position.y + milestoneHeight + 40; // 40px buffer
+            }
+        }
+
         dragRef.current = {
             potentialDrag: true,
             isDragging: false,
             startMouse: { x: e.clientX, y: e.clientY },
             draggedIds: draggedIds,
-            initialPositions
+            initialPositions,
+            minY: minY,
         };
-    }, [onSelectTasks, focusedParentId, isReadOnly]);
+    }, [onSelectTasks, focusedParentId, isReadOnly, cardHeights]);
 
     const handleConnectStart = useCallback((e: React.MouseEvent, taskId: string, offsetX: number, offsetY: number) => {
         if (isReadOnly) return;
@@ -741,23 +760,19 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                         const isProjectRoot = task.id === PROJECT_ROOT_ID;
                         const isCentralRoot = (focusedParentId && task.id === focusedParentId) || isProjectRoot;
                         
-                        if (!isCentralRoot && task.type !== 'Milestone') return null;
+                        if (task.type !== 'Milestone' || isCentralRoot) return null;
                         
-                        const lineColor = getStructuralColor(task.type);
-                        const posY = isCentralRoot ? CENTRAL_Y : task.position.y;
                         const height = cardHeights[task.id] || 160;
-                        const centerY = posY + height / 2;
+                        const boundaryY = task.position.y + height + 20; // 20px below the card
 
                         return (
                             <div 
-                                key={`line-${task.id}`}
-                                className="absolute h-1 -translate-y-1/2"
+                                key={`boundary-${task.id}`}
+                                className="absolute h-px bg-red-500 opacity-50"
                                 style={{ 
-                                    top: centerY, 
+                                    top: boundaryY, 
                                     left: 0, 
-                                    width: MAX_CANVAS_WIDTH, 
-                                    backgroundColor: lineColor, 
-                                    opacity: isLight ? 0.2 : 0.3 
+                                    width: MAX_CANVAS_WIDTH,
                                 }}
                             />
                         );
