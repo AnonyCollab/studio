@@ -372,12 +372,59 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
 
   const deleteTask = useCallback((id: string) => {
     if (!firestore || !projectId) return;
-    const taskRef = doc(firestore, 'projects', projectId, 'tasks', id);
-    deleteDocumentNonBlocking(taskRef);
-     setState(prev => {
-        const tasks = prev.tasks.filter(t => t.id !== id);
-        return { ...prev, tasks };
-     });
+
+    setState(prev => {
+        const tasksToDelete = new Set<string>();
+        const queue = [id];
+        tasksToDelete.add(id);
+
+        // Recursively find all children
+        while (queue.length > 0) {
+            const currentId = queue.shift()!;
+            const task = prev.tasks.find(t => t.id === currentId);
+            if (task && task.childrenIds) {
+                task.childrenIds.forEach(childId => {
+                    if (!tasksToDelete.has(childId)) {
+                        tasksToDelete.add(childId);
+                        queue.push(childId);
+                    }
+                });
+            }
+        }
+
+        // Perform Firestore deletions in a batch
+        const batch = writeBatch(firestore);
+        tasksToDelete.forEach(taskId => {
+            const taskRef = doc(firestore, 'projects', projectId, 'tasks', taskId);
+            batch.delete(taskRef);
+        });
+
+        // Non-blocking commit
+        batch.commit().catch(error => {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `batch delete on tasks`,
+                operation: 'delete'
+            }));
+        });
+
+        // Update local state immediately
+        const newTasks = prev.tasks.filter(t => !tasksToDelete.has(t.id));
+        
+        // Also remove the deleted task ID from its former parent
+        const deletedTask = prev.tasks.find(t => t.id === id);
+        if (deletedTask?.parentId) {
+            return {
+                ...prev,
+                tasks: newTasks.map(t => 
+                    t.id === deletedTask.parentId
+                        ? { ...t, childrenIds: t.childrenIds?.filter(childId => childId !== id) }
+                        : t
+                ),
+            };
+        }
+
+        return { ...prev, tasks: newTasks };
+    });
   }, [firestore, projectId]);
 
   const selectTask = useCallback((id: string | null, openModal: boolean = true) => {

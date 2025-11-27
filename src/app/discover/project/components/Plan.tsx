@@ -234,24 +234,25 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
 
   // Filter Logic
   const filteredTasks = useMemo(() => {
-      const currentUserName = currentUser.name;
-      const currentTeam = currentUser.teamName;
+    if (!currentUser) return [];
+    const currentUserName = currentUser.displayName;
+    const currentTeam = currentUser.teamName;
 
-      switch(filter) {
-          case 'Mine':
-              return tasks.filter((t: TaskNode) => t.assignee.name === currentUserName);
-          case 'Team':
-              return tasks.filter((t: TaskNode) => t.assignee.name === currentTeam || t.assignee.type === 'team');
-          case 'Project':
-              if (focusedParentId) {
-                  return tasks.filter((t: TaskNode) => t.parentId === focusedParentId || t.id === focusedParentId);
-              }
-              return tasks.filter((t: TaskNode) => !t.parentId);
-          case 'All':
-              return tasks;
-          default:
-              return tasks;
-      }
+    switch(filter) {
+        case 'Mine':
+            return tasks.filter((t: TaskNode) => t.assignee?.displayName === currentUserName);
+        case 'Team':
+            return tasks.filter((t: TaskNode) => t.assignee?.displayName === currentTeam || t.assignee?.type === 'team');
+        case 'Project':
+            if (focusedParentId) {
+                return tasks.filter((t: TaskNode) => t.parentId === focusedParentId || t.id === focusedParentId);
+            }
+            return tasks.filter((t: TaskNode) => !t.parentId);
+        case 'All':
+            return tasks;
+        default:
+            return tasks;
+    }
   }, [tasks, filter, focusedParentId, currentUser]);
 
   const canvasTasks = useMemo(() => {
