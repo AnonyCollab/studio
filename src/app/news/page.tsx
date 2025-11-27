@@ -17,8 +17,7 @@ export default function NewsPage() {
 
   const articlesQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    // Corrected path to query the 'documents' subcollection
-    return query(collection(firestore, 'news', 'articles', 'documents'), orderBy('createdAt', 'desc'));
+    return query(collection(firestore, 'articles'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
   const { data: articlesData, isLoading } = useCollection<Article>(articlesQuery);
@@ -72,3 +71,5 @@ export default function NewsPage() {
     </div>
   );
 }
+
+    

@@ -2,6 +2,7 @@
 
 
 
+
 'use client';
     
 import {
@@ -253,10 +254,10 @@ export function deleteReply(firestore: Firestore, postId: string, commentId: str
 
 
 /**
- * Publishes a new article to the 'news/articles' subcollection.
+ * Publishes a new article to the 'articles' collection.
  */
 export function publishArticle(firestore: Firestore, article: { title: string; content: string }, user: User) {
-  const articlesCollection = collection(firestore, 'news', 'articles', 'documents');
+  const articlesCollection = collection(firestore, 'articles');
   
   const articleData = {
     title: article.title,

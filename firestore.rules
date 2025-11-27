@@ -16,8 +16,7 @@ service cloud.firestore {
 
     // Users can be read by anyone. Writes are restricted to the owner of the document.
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow list: if request.auth != null;
+      allow read, list: if request.auth != null;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
     
@@ -51,7 +50,7 @@ service cloud.firestore {
         }
     }
     
-    match /news/articles/documents/{articleId} {
+    match /articles/{articleId} {
       allow read, list: if true;
       allow create: if request.auth != null;
       allow update, delete: if request.auth != null && request.auth.uid == resource.data.authorId;
@@ -141,3 +140,5 @@ service cloud.firestore {
     }
   }
 }
+
+    
