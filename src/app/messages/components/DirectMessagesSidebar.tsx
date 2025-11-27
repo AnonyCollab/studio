@@ -43,10 +43,11 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
 
   const dmsQuery = useMemoFirebase(() => {
     if (!firestore || !currentUser) return null;
+    // The orderBy was causing a composite index requirement with the array-contains filter.
+    // Removing it to simplify the query and rely on client-side sorting if needed.
     return query(
         collection(firestore, 'dms'), 
-        where('participants', 'array-contains', currentUser.uid),
-        orderBy('updatedAt', 'desc')
+        where('participants', 'array-contains', currentUser.uid)
       );
   }, [firestore, currentUser]);
 
@@ -105,7 +106,13 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
           };
         })
       );
-      setDmConversations(conversations.filter(Boolean) as DMConversation[]);
+      // Manually sort by timestamp descending after fetching
+      const sortedConversations = (conversations.filter(Boolean) as DMConversation[]).sort((a, b) => {
+        const dateA = dmsData.find(d => d.id === a.id)?.updatedAt?.toMillis() || 0;
+        const dateB = dmsData.find(d => d.id === b.id)?.updatedAt?.toMillis() || 0;
+        return dateB - dateA;
+      });
+      setDmConversations(sortedConversations);
     };
 
     fetchConversations();
