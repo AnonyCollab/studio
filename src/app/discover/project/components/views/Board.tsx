@@ -366,8 +366,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         startMouse: { x: number, y: number };
         draggedIds: string[];
         initialPositions: Record<string, {x: number, y: number}>;
-        minY: number | null;
-    }>({ potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {}, minY: null });
+        maxY: number | null; // Changed from minY to maxY
+    }>({ potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {}, maxY: null });
+
 
     const selectRef = useRef<{
         isSelecting: boolean;
@@ -422,7 +423,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         if (dragRef.current.isDragging && !isReadOnly) {
             const dx = (mouseX - dragRef.current.startMouse.x) / effectiveScale;
             const dy = (mouseY - dragRef.current.startMouse.y) / effectiveScale;
-            const minY = dragRef.current.minY;
+            const maxY = dragRef.current.maxY;
 
             setLocalTasks(prev => prev.map(t => {
                 if (dragRef.current.draggedIds.includes(t.id)) {
@@ -433,12 +434,14 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                         
                         newX = Math.max(0, Math.min(MAX_CANVAS_WIDTH - CARD_WIDTH, newX));
                         
-                        // Apply minY constraint if it exists for this drag operation
-                        if (minY !== null) {
-                            newY = Math.max(newY, minY);
-                        } else {
-                            newY = Math.max(newY, CENTRAL_Y + (focusedParentId ? 200 : PROJECT_ROOT_HEIGHT_BUFFER));
+                        const cardHeight = cardHeights[t.id] || 160;
+
+                        if (maxY !== null) {
+                            newY = Math.min(newY, maxY - cardHeight - 20); // 20px buffer above the line
                         }
+                        
+                        // General minimum Y boundary
+                        newY = Math.max(newY, CENTRAL_Y + (focusedParentId ? 200 : PROJECT_ROOT_HEIGHT_BUFFER));
                         
                         return { ...t, position: { x: newX, y: newY } };
                     }
@@ -523,14 +526,15 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 
             if (dragRef.current.isDragging) {
                 dragRef.current.draggedIds.forEach(id => {
-                    const task = localTasks.find(t => t.id === id);
+                    const task = tasksRef.current.find(t => t.id === id); // Use ref for latest position
                     if (task) {
                         onUpdateTask(id, { position: task.position });
                     }
                 });
             }
             
-            dragRef.current = { potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {}, minY: null };
+            dragRef.current = { potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {}, maxY: null };
+
 
             if (selectRef.current.isSelecting) {
                 const { startX, startY, currentX, currentY } = selectRef.current;
@@ -581,7 +585,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             canvas.removeEventListener('touchmove', handleTouchMove);
             if (rAF.current) cancelAnimationFrame(rAF.current);
         };
-    }, [effectiveScale, onSelectTasks, activeTool, focusedParentId, isReadOnly, cardHeights, localTasks, onUpdateTask, onUpdateTaskConnections]);
+    }, [effectiveScale, onSelectTasks, activeTool, focusedParentId, isReadOnly, cardHeights, onUpdateTask, onUpdateTaskConnections]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if (activeTool === 'pointer' && !e.defaultPrevented) onSelectTasks([]);
@@ -615,23 +619,22 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             if (t) initialPositions[id] = { ...t.position };
         });
 
-        // Determine minY boundary for Goals
-        let minY: number | null = null;
+        // Determine maxY boundary for Goals
+        let maxY: number | null = null;
         if (task.type === 'Goal' && task.parentId) {
             const parentMilestone = tasksRef.current.find(t => t.id === task.parentId && t.type === 'Milestone');
             if (parentMilestone) {
-                const milestoneHeight = cardHeights[parentMilestone.id] || 160;
-                minY = parentMilestone.position.y + milestoneHeight + 40; // 40px buffer
+                maxY = parentMilestone.position.y;
             }
         }
-
+        
         dragRef.current = {
             potentialDrag: true,
             isDragging: false,
             startMouse: { x: e.clientX, y: e.clientY },
             draggedIds: draggedIds,
             initialPositions,
-            minY: minY,
+            maxY: maxY,
         };
     }, [onSelectTasks, focusedParentId, isReadOnly, cardHeights]);
 
@@ -762,8 +765,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                         
                         if (task.type !== 'Milestone' || isCentralRoot) return null;
                         
-                        const height = cardHeights[task.id] || 160;
-                        const boundaryY = task.position.y + height + 20; // 20px below the card
+                        const boundaryY = task.position.y - 20; // 20px above the card
 
                         return (
                             <div 
