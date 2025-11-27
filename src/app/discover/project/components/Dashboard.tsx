@@ -13,11 +13,13 @@ interface DashboardProps {
 
 export const Dashboard: React.FC<DashboardProps> = () => {
     const { currentUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading, members } = useStore();
+    
     useEffect(() => {
         console.log("Current user role in Dashboard:", currentUser?.role);
         console.log("Tasks in Dashboard:", tasks);
         console.log("Is loading:", isStoreLoading);
     }, [currentUser, tasks, isStoreLoading]);
+    
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
     // Get current user's team name, or default if not available
@@ -27,14 +29,14 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         // For now, we consider all users to be part of the team for the 'Team Pulse' view
         return (members || [])
             .filter(m => m.type === 'user')
-            .map(m => m.name);
+            .map(m => m.displayName);
     }, [members]);
 
     // --- Data Selectors ---
 
-    const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser.name), [tasks, currentUser.name]);
+    const myTasks = useMemo(() => tasks.filter(t => t.assignee.displayName === currentUser.name), [tasks, currentUser.name]);
 
-    const teamTasks = useMemo(() => tasks.filter(t => t.assignee.type === 'team'), [tasks]);
+    const teamTasks = useMemo(() => tasks.filter(t => t.assignee.type === 'team' || (t.assignee.type === 'user' && teamMembers.includes(t.assignee.displayName))), [tasks, teamMembers]);
 
     const projectTasks = tasks;
 
@@ -233,8 +235,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         };
 
         const workload = teamMembers.map(member => ({
-            name: member,
-            count: teamTasks.filter(t => t.assignee.name === member).filter(t => t.status !== 'Done').length,
+            displayName: member,
+            count: teamTasks.filter(t => t.assignee.displayName === member).filter(t => t.status !== 'Done').length,
             initials: member.split(' ').map(n => n[0]).join('')
         }));
 
@@ -277,12 +279,12 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                         <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Member Workload</h3>
                         <div className="space-y-4">
                             {workload.map(m => (
-                                <div key={m.name} className="flex items-center justify-between">
+                                <div key={m.displayName} className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
                                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white bg-gradient-to-br from-brand-400 to-blue-600`}>
                                             {m.initials}
                                         </div>
-                                        <span className={`text-sm font-bold ${textMain}`}>{m.name}</span>
+                                        <span className={`text-sm font-bold ${textMain}`}>{m.displayName}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 w-24 h-2 bg-slate-800/20 rounded-full overflow-hidden">
