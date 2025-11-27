@@ -481,14 +481,14 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
 
   const addMember = useCallback((member: Partial<Assignee>) => {
     if (!firestore || !projectId) return;
-    
+
     if (member.type === 'team') {
-        // This is for creating a new department/team
         const newTeamId = uuidv4();
         const teamDoc: Assignee = {
             id: newTeamId,
             uid: newTeamId,
             name: member.name || 'New Department',
+            displayName: member.name || 'New Department',
             initials: (member.name || 'ND').substring(0, 2).toUpperCase(),
             type: 'team',
             color: 'bg-gray-500',
@@ -497,11 +497,9 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
         const memberRef = doc(firestore, 'projects', projectId, 'members', newTeamId);
         setDocumentNonBlocking(memberRef, teamDoc, {});
     } else {
-        // Logic for adding a user member
-        // This would involve searching for a user and then adding them.
-        // Currently handled by the InviteDialog.
+        // Logic for adding a user member is handled elsewhere (e.g. InviteDialog)
     }
-}, [firestore, projectId]);
+  }, [firestore, projectId]);
   
   // Dummy/Placeholder functions that need Firestore integration
   const addPost = useCallback((post: Partial<UserPost>) => {}, []);
