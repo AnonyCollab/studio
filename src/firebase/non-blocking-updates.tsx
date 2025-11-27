@@ -1,8 +1,4 @@
 
-
-
-
-
 'use client';
     
 import {
@@ -273,5 +269,3 @@ export function publishArticle(firestore: Firestore, article: { title: string; c
 
   return addDocumentNonBlocking(articlesCollection, articleData);
 }
-
-    
