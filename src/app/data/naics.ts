@@ -318,30 +318,39 @@ export interface Industry {
     return null;
   };
   
-  // NEW: Helper function to find industry details by name
+  // Helper function to find industry details by name
   export const findIndustryByName = (
     name: string | undefined | null
   ): { industry: Industry | null; subSector: SubSector | null; sector: SectorWithSubSectors | null } | null => {
     if (!name) return null;
-    const nameLower = name.toLowerCase();
+    const nameLower = name.toLowerCase().trim();
     for (const sector of detailedSectorsData) {
-      if (sector.name.toLowerCase() === nameLower) {
-        return { sector, subSector: null, industry: null };
-      }
       for (const subSector of sector.subSectors) {
-        if (subSector.name.toLowerCase() === nameLower) {
-          return { sector, subSector, industry: null };
-        }
         if (subSector.industries) {
           for (const industry of subSector.industries) {
-            if (industry.name.toLowerCase() === nameLower) {
+            // Use includes for more flexible matching
+            if (industry.name.toLowerCase().includes(nameLower)) {
               return { sector, subSector, industry };
             }
           }
         }
+        // Fallback to subsector name if no industry matches
+        if (subSector.name.toLowerCase().includes(nameLower)) {
+          return { sector, subSector, industry: subSector.industries[0] || null }; // Return first industry as a guess
+        }
+      }
+      // Fallback to sector name
+      if (sector.name.toLowerCase().includes(nameLower)) {
+        const firstSubSector = sector.subSectors[0];
+        if (firstSubSector && firstSubSector.industries[0]) {
+            return { sector, subSector: firstSubSector, industry: firstSubSector.industries[0] };
+        }
+        return { sector, subSector: null, industry: null };
       }
     }
     return null;
   };
   
       
+
+    
