@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plan } from './Plan';
-import { Dashboard } from './Dashboard';
+import { Dashboard } from './Dashboard/page';
 import { Header } from './Header';
 import { CalendarPage } from './CalendarPage';
 import { Members } from './Members';
