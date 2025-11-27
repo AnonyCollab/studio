@@ -26,7 +26,7 @@ export type UserRole = 'Visitor' | 'Member' | 'Team Lead' | 'Coordinator' | 'Co-
 
 export interface CurrentUser {
     id: string;
-    name: string;
+    displayName: string;
     initials: string;
     role: UserRole;
     avatarColor: string;
@@ -35,8 +35,7 @@ export interface CurrentUser {
 
 export interface Assignee {
   id: string;
-  name: string;
-  displayName?: string;
+  displayName: string;
   initials: string;
   color: string;
   type?: 'user' | 'team';
@@ -185,7 +184,7 @@ export interface Document extends TaskNode {
   createdAt: string;
 }
 
-export type Theme = 'Light' | 'Dark' | 'Sephiroa' | 'Green' | 'Blue';
+export type Theme = 'light' | 'dark' | 'Sephiroa' | 'Green' | 'Blue';
 export type BackgroundType = 'Dots' | 'Grid' | 'None';
 export type FilterOption = 'All' | 'Mine' | 'Team' | 'Project';
 

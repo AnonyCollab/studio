@@ -66,7 +66,7 @@ export function PropertiesSection({
     return undefined;
   };
 
-  const currentAssignee = members.find(a => a.displayName === properties.assign) || members.find(a => a.name === 'Unassigned');
+  const currentAssignee = members.find(a => a.displayName === properties.assign) || members.find(a => a.displayName === 'Unassigned');
   const currentCycle = INITIAL_CYCLES.find(c => c.id === properties.cycleId);
   
   const parentTask = properties.parentId ? tasks.find(t => t.id === properties.parentId) : null;
@@ -122,8 +122,8 @@ export function PropertiesSection({
                 <AssigneePickerModal 
                     currentAssignee={properties.assign}
                     onClose={() => setShowAssigneePicker(false)}
-                    onSelect={(name) => {
-                        updateProperty('assign', name);
+                    onSelect={(displayName) => {
+                        updateProperty('assign', displayName);
                         setShowAssigneePicker(false);
                     }}
                     position={window.innerWidth >= 1024 ? getAssigneeModalPosition() : undefined}
