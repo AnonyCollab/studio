@@ -17,7 +17,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     // Ensure currentUser has both name and displayName for consistency
     const currentUser = useMemo(() => ({
         ...storeUser,
-        displayName: storeUser.displayName,
+        displayName: storeUser.displayName || storeUser.name,
     }), [storeUser]);
 
     useEffect(() => {
@@ -35,11 +35,10 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     const currentTeamName = currentUser.teamName || '';
 
     const teamMembers = useMemo(() => {
-        // For now, we consider all users to be part of the team for the 'Team Pulse' view
-        return (members || [])
-            .filter(m => m.type === 'user')
-            .map(m => m.displayName);
+        if (!members) return [];
+        return members.filter(m => m.type === 'user').map(m => m.displayName);
     }, [members]);
+
 
     // --- Data Selectors (FIXED LOGIC) ---
 
@@ -100,54 +99,67 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
     // --- Widgets ---
 
-    const StatCard = ({ label, value, icon: Icon, color, subtext }: any) => (
-        <div className={`p-5 rounded-2xl border flex items-center justify-between transition-all ${cardClass}`}>
-            <div>
-                <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${textMuted}`}>{label}</p>
-                <h3 className={`text-3xl font-bold ${textMain}`}>{value}</h3>
-                {subtext && <p className={`text-xs mt-1 ${textMuted}`}>{subtext}</p>}
+    const StatCard = ({ label, value, icon: Icon, color, subtext }: any) => {
+        console.log(`Rendering StatCard: ${label} = ${value}`);
+        return (
+            <div className={`p-5 rounded-2xl border flex items-center justify-between transition-all ${cardClass}`}>
+                <div>
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-1 ${textMuted}`}>{label}</p>
+                    <h3 className={`text-3xl font-bold ${textMain}`}>{value}</h3>
+                    {subtext && <p className={`text-xs mt-1 ${textMuted}`}>{subtext}</p>}
+                </div>
+                <div className={`p-3 rounded-xl ${color}`}>
+                    <Icon size={24} />
+                </div>
             </div>
-            <div className={`p-3 rounded-xl ${color}`}>
-                <Icon size={24} />
-            </div>
-        </div>
-    );
+        );
+    }
 
-    const TaskListWidget = ({ title, tasks, emptyMsg }: { title: string, tasks: TaskNode[], emptyMsg: string }) => (
-        <div className={`p-6 rounded-2xl border flex flex-col h-full ${containerClass} backdrop-blur-xl shadow-xl`}>
-            <div className="flex items-center justify-between mb-6">
-                <h3 className={`text-lg font-bold flex items-center gap-2 ${textMain}`}>
-                    {title}
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${isLight ? 'bg-black/5 text-black' : 'bg-white/10 text-white'}`}>{tasks.length}</span>
-                </h3>
-            </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2 min-h-[200px]">
-                {tasks.length === 0 && (
-                    <div className={`flex flex-col items-center justify-center h-full text-center opacity-50 ${textMuted}`}>
-                        <CheckCircle2 size={32} className="mb-2" />
-                        <p>{emptyMsg}</p>
-                    </div>
-                )}
-                {tasks.map(t => (
-                    <div key={t.id} className={`p-3 rounded-xl border group transition-all cursor-pointer ${isLight ? 'bg-white border-slate-100 hover:border-brand-300' : 'bg-white/5 border-white/5 hover:border-brand-500/50'}`}>
-                        <div className="flex justify-between items-start mb-2">
-                            <div className="flex flex-col">
-                                <span className={`text-[10px] font-mono opacity-50 ${textMain}`}>{t.id}</span>
-                                <span className={`text-sm font-bold line-clamp-1 ${textMain}`}>{t.title}</span>
-                            </div>
-                            <PriorityIcon priority={t.priority} />
+    const TaskListWidget = ({ title, tasks, emptyMsg }: { title: string, tasks: TaskNode[], emptyMsg: string }) => {
+        console.log(`Rendering TaskListWidget: ${title} with ${tasks.length} tasks.`);
+        return (
+            <div className={`p-6 rounded-2xl border flex flex-col h-full ${containerClass} backdrop-blur-xl shadow-xl`}>
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className={`text-lg font-bold flex items-center gap-2 ${textMain}`}>
+                        {title}
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${isLight ? 'bg-black/5 text-black' : 'bg-white/10 text-white'}`}>{tasks.length}</span>
+                    </h3>
+                </div>
+                <div className="flex-1 overflow-y-auto custom-scrollbar space-y-3 pr-2 min-h-[200px]">
+                    {tasks.length === 0 && (
+                        <div className={`flex flex-col items-center justify-center h-full text-center opacity-50 ${textMuted}`}>
+                            <CheckCircle2 size={32} className="mb-2" />
+                            <p>{emptyMsg}</p>
                         </div>
-                        <div className="flex items-center justify-between mt-2">
-                            <StatusBadge status={t.status} />
-                            <div className={`text-[10px] font-mono flex items-center gap-1 ${textMuted}`}>
-                                <Clock size={10} /> {t.dueDate}
+                    )}
+                    {tasks.map((t, index) => {
+                        console.log(`  - Rendering task item ${index + 1}/${tasks.length}: ${t.title} (ID: ${t.id})`);
+                        if (!t.assignee) {
+                           console.error(`  - ERROR: Task ${t.id} has no assignee!`, t);
+                           return <div key={t.id} className="text-red-500">Error: Task has no assignee.</div>;
+                        }
+                        return (
+                            <div key={t.id} className={`p-3 rounded-xl border group transition-all cursor-pointer ${isLight ? 'bg-white border-slate-100 hover:border-brand-300' : 'bg-white/5 border-white/5 hover:border-brand-500/50'}`}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex flex-col">
+                                        <span className={`text-[10px] font-mono opacity-50 ${textMain}`}>{t.id}</span>
+                                        <span className={`text-sm font-bold line-clamp-1 ${textMain}`}>{t.title}</span>
+                                    </div>
+                                    <PriorityIcon priority={t.priority} />
+                                </div>
+                                <div className="flex items-center justify-between mt-2">
+                                    <StatusBadge status={t.status} />
+                                    <div className={`text-[10px] font-mono flex items-center gap-1 ${textMuted}`}>
+                                        <Clock size={10} /> {t.dueDate}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                ))}
+                        );
+                    })}
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
 
     const DistributionChart = ({ data, title, type = 'status' }: { data: any, title: string, type?: 'status' | 'priority' }) => {
         const total = Object.values(data).reduce((a: any, b: any) => a + b, 0) as number;
@@ -188,76 +200,85 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
     // --- Tab Content Renderers ---
 
-    const renderPersonalTab = () => (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
-            {/* Welcome Banner */}
-            <div className="flex items-center justify-between mb-2">
-                <div>
-                    <h2 className={`text-2xl font-bold ${textMain}`}>Good morning, {currentUser.displayName}.</h2>
-                    <p className={textMuted}>You have {myTasks.filter(t => t.status !== 'Done').length} active tasks on your plate.</p>
+    const renderPersonalTab = () => {
+        console.log("Executing renderPersonalTab function.");
+        const tasksInProgress = myTasks.filter(t => t.status === 'In Progress');
+        const tasksInBacklog = myTasks.filter(t => t.status === 'Backlog');
+        console.log(`Tasks for 'Focus for Today': ${tasksInProgress.length}`);
+        console.log(`Tasks for 'Up Next / Backlog': ${tasksInBacklog.length}`);
+        
+        return (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
+                {console.log("Rendering PersonalTab JSX")}
+                {/* Welcome Banner */}
+                <div className="flex items-center justify-between mb-2">
+                    <div>
+                        <h2 className={`text-2xl font-bold ${textMain}`}>Good morning, {currentUser.displayName}.</h2>
+                        <p className={textMuted}>You have {myTasks.filter(t => t.status !== 'Done').length} active tasks on your plate.</p>
+                    </div>
+                    <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-white/5 border-white/10'}`}>
+                        <Zap size={18} className="text-yellow-500" />
+                        <span className={`text-sm font-bold ${textMain}`}>Productivity Score: 92%</span>
+                    </div>
                 </div>
-                <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-xl border ${isLight ? 'bg-white border-slate-200' : 'bg-white/5 border-white/10'}`}>
-                    <Zap size={18} className="text-yellow-500" />
-                    <span className={`text-sm font-bold ${textMain}`}>Productivity Score: 92%</span>
+
+                {/* Metrics */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <StatCard
+                        label="My Tasks"
+                        value={myTasks.length}
+                        icon={Target}
+                        color="bg-brand-500/20 text-brand-500"
+                        subtext={`${tasksInProgress.length} in progress`}
+                    />
+                    <StatCard
+                        label="Completed"
+                        value={`${getCompletionRate(myTasks)}%`}
+                        icon={CheckCircle2}
+                        color="bg-emerald-500/20 text-emerald-500"
+                        subtext="Last 30 days"
+                    />
+                    <StatCard
+                        label="Approaching Deadlines"
+                        value={getUpcomingDeadlines(myTasks).length}
+                        icon={Clock}
+                        color="bg-orange-500/20 text-orange-500"
+                        subtext="Due within 48h"
+                    />
                 </div>
-            </div>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard
-                    label="My Tasks"
-                    value={myTasks.length}
-                    icon={Target}
-                    color="bg-brand-500/20 text-brand-500"
-                    subtext={`${myTasks.filter(t => t.status === 'In Progress').length} in progress`}
-                />
-                <StatCard
-                    label="Completed"
-                    value={`${getCompletionRate(myTasks)}%`}
-                    icon={CheckCircle2}
-                    color="bg-emerald-500/20 text-emerald-500"
-                    subtext="Last 30 days"
-                />
-                <StatCard
-                    label="Approaching Deadlines"
-                    value={getUpcomingDeadlines(myTasks).length}
-                    icon={Clock}
-                    color="bg-orange-500/20 text-orange-500"
-                    subtext="Due within 48h"
-                />
-            </div>
-
-            {/* Workspace Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
-                <TaskListWidget
-                    title="Focus for Today"
-                    tasks={myTasks.filter(t => t.status === 'In Progress')}
-                    emptyMsg="No active tasks. Pull from backlog?"
-                />
-                <TaskListWidget
-                    title="Up Next / Backlog"
-                    tasks={myTasks.filter(t => t.status === 'Backlog')}
-                    emptyMsg="You're all caught up!"
-                />
-                <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
-                    <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Recent Activity</h3>
-                    <div className="space-y-4">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="flex gap-3 items-start">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isLight ? 'bg-slate-100' : 'bg-white/10'}`}>
-                                    <Layers size={14} className={textMuted} />
+                {/* Workspace Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+                    <TaskListWidget
+                        title="Focus for Today"
+                        tasks={tasksInProgress}
+                        emptyMsg="No active tasks. Pull from backlog?"
+                    />
+                    <TaskListWidget
+                        title="Up Next / Backlog"
+                        tasks={tasksInBacklog}
+                        emptyMsg="You're all caught up!"
+                    />
+                    <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
+                        <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Recent Activity</h3>
+                        <div className="space-y-4">
+                            {[1, 2, 3].map(i => (
+                                <div key={i} className="flex gap-3 items-start">
+                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isLight ? 'bg-slate-100' : 'bg-white/10'}`}>
+                                        <Layers size={14} className={textMuted} />
+                                    </div>
+                                    <div>
+                                        <p className={`text-sm ${textMain}`}>Moved <span className="font-bold">Task-{100 + i}</span> to <span className="text-brand-500">In Review</span></p>
+                                        <p className={`text-xs ${textMuted}`}>2 hours ago</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className={`text-sm ${textMain}`}>Moved <span className="font-bold">Task-{100 + i}</span> to <span className="text-brand-500">In Review</span></p>
-                                    <p className={`text-xs ${textMuted}`}>2 hours ago</p>
-                                </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    }
 
     const renderTeamTab = () => {
         const statusData = {
@@ -450,3 +471,5 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         </div>
     );
 };
+
+    
