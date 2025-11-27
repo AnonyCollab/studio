@@ -1,8 +1,10 @@
 
+'use client';
+
 import React, { useState, useMemo } from 'react';
-import { X, Users, Trophy, Briefcase, MoreHorizontal, Crown, Mail, Activity, Layout, Clock, CheckCircle2, AlertCircle, PlusCircle } from 'lucide-react';
-import { Assignee, TaskNode, Theme, HistoryEntry } from '../types';
-import { StatusBadge, PriorityIcon } from './Plan';
+import { X, Users, Briefcase, PlusCircle } from 'lucide-react';
+import { Assignee, TaskNode, Theme, UserRole } from '../types';
+import { PriorityIcon } from './Plan';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useStore } from '../store/useStore';
@@ -20,20 +22,24 @@ interface DepartmentSheetProps {
 
 type Tab = 'Overview' | 'Members' | 'Teams' | 'Work' | 'Activity';
 
-export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({ 
-    department, members, teams, tasks, isOpen, onClose, theme 
-}) => {
-    if (!isOpen || !department) return null;
 
+// Moved Backdrop outside of the main component
+const Backdrop: React.FC<{ onClick: () => void, isLight: boolean }> = ({ onClick, isLight }) => {
+    const overlayClass = isLight ? "bg-black/20 backdrop-blur-sm" : "bg-black/60 backdrop-blur-sm";
+    return <div className={`fixed inset-0 z-[150] ${overlayClass} animate-in fade-in duration-300`} onClick={onClick} />;
+};
+
+// Moved Content outside of the main component
+const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({ 
+    department, members, teams, tasks, onClose, theme
+}) => {
     const [activeTab, setActiveTab] = useState<Tab>('Overview');
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const { addMember, currentUser } = useStore();
     const { toast } = useToast();
     const [isCreatingTeam, setIsCreatingTeam] = useState(false);
     const [newTeamName, setNewTeamName] = useState('');
-    
-    // Styles
-    const overlayClass = isLight ? "bg-black/20 backdrop-blur-sm" : "bg-black/60 backdrop-blur-sm";
+
     const sheetClass = isLight ? "bg-white text-slate-900" : "bg-[#18181b] text-white border-white/10";
     const cardClass = isLight ? "bg-slate-50 border-slate-200" : "bg-white/5 border-white/5";
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
@@ -42,26 +48,16 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({
 
     const canManage = currentUser.role === 'Owner';
     
-    // Derived Data
     const stats = {
         total: tasks.length,
         done: tasks.filter(t => t.status === 'Done').length,
         inProgress: tasks.filter(t => t.status === 'In Progress').length,
         blocked: tasks.filter(t => t.priority === 'Critical').length
     };
-
     const completionRate = stats.total > 0 ? Math.round((stats.done / stats.total) * 100) : 0;
 
     const teamActivity = useMemo(() => {
-        const entries: (HistoryEntry & { taskTitle: string })[] = [];
-        tasks.forEach(t => {
-            if (t.history) {
-                t.history.forEach(h => {
-                    entries.push({ ...h, taskTitle: t.title });
-                });
-            }
-        });
-        return entries.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return []; // Placeholder
     }, [tasks]);
 
     const handleCreateTeam = () => {
@@ -85,13 +81,8 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({
         setNewTeamName('');
     };
 
-    const Backdrop = () => (
-        <div className={`fixed inset-0 z-[150] ${overlayClass} animate-in fade-in duration-300`} onClick={onClose} />
-    );
-
-    const Content = () => (
+    return (
         <div className="flex flex-col h-full">
-            {/* Header */}
             <div className={`flex flex-col md:flex-row md:items-center justify-between px-6 py-6 border-b flex-shrink-0 gap-4 ${borderClass}`}>
                 <div className="flex items-center gap-4">
                     <div className={`w-16 h-16 rounded-2xl ${department.color} flex items-center justify-center text-white font-bold text-2xl shadow-xl`}>
@@ -113,7 +104,6 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({
                 </div>
             </div>
 
-            {/* Tabs */}
             <div className={`px-6 pt-2 border-b flex gap-6 overflow-x-auto ${borderClass}`}>
                 {['Overview', 'Members', 'Teams', 'Work', 'Activity'].map(tab => (
                     <button
@@ -131,10 +121,8 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar bg-opacity-50">
-                
                 {activeTab === 'Overview' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-8">
-                        {/* Stats Grid */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className={`p-4 rounded-xl border flex flex-col gap-1 ${cardClass}`}>
                                 <span className={`text-xs font-bold uppercase ${textMuted}`}>Active Tasks</span>
@@ -201,24 +189,21 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({
                 {activeTab === 'Members' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {[...members].map(member => {
-                                const memberTasks = tasks.filter(t => t.assignee.name === member.name && t.status === 'In Progress');
-                                return (
-                                    <div key={member.name} className={`p-5 rounded-2xl border flex flex-col gap-4 ${cardClass}`}>
-                                        <div className="flex items-center gap-4">
-                                            <div className={`w-14 h-14 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xl shadow-md`}>
-                                                {member.initials}
-                                            </div>
-                                            <div>
-                                                <h4 className={`font-bold text-lg ${textMain}`}>{member.name}</h4>
-                                                <span className={`text-xs font-medium px-2 py-0.5 rounded ${isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400'}`}>
-                                                    {member.role || 'Member'}
-                                                </span>
-                                            </div>
+                            {[...members].map(member => (
+                                <div key={member.name} className={`p-5 rounded-2xl border flex flex-col gap-4 ${cardClass}`}>
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-14 h-14 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xl shadow-md`}>
+                                            {member.initials}
+                                        </div>
+                                        <div>
+                                            <h4 className={`font-bold text-lg ${textMain}`}>{member.name}</h4>
+                                            <span className={`text-xs font-medium px-2 py-0.5 rounded ${isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400'}`}>
+                                                {member.role || 'Member'}
+                                            </span>
                                         </div>
                                     </div>
-                                );
-                            })}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 )}
@@ -255,28 +240,33 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = ({
                         </div>
                     </div>
                  )}
-
-
             </div>
         </div>
     );
+};
+
+
+export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
+    const { isOpen, onClose, department, theme } = props;
+    const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
+    const sheetClass = isLight ? "bg-white text-slate-900" : "bg-[#18181b] text-white border-white/10";
+
+    if (!isOpen || !department) return null;
 
     return (
         <>
-            <Backdrop />
+            <Backdrop onClick={onClose} isLight={isLight} />
             
-            {/* Mobile Bottom Sheet */}
             <div className={`lg:hidden fixed inset-x-0 bottom-0 z-[160] rounded-t-3xl h-[92vh] flex flex-col shadow-2xl transition-transform animate-in slide-in-from-bottom-full ${sheetClass}`}>
                 <div className="w-full flex items-center justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
                     <div className={`w-12 h-1.5 rounded-full ${isLight ? 'bg-slate-300' : 'bg-white/20'}`} />
                 </div>
-                <Content />
+                <Content {...props} department={department} />
             </div>
 
-            {/* Desktop Full Screen Modal */}
             <div className="hidden lg:flex fixed inset-0 z-[160] items-center justify-center p-8 pointer-events-none">
                 <div className={`w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl border pointer-events-auto flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 ${sheetClass}`}>
-                    <Content />
+                    <Content {...props} department={department} />
                 </div>
             </div>
         </>
