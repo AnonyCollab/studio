@@ -66,9 +66,11 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
   }, [articleData]);
 
   const editorComponent = useMemo(() => {
-      if (!article?.content) return <div className="h-64 w-full bg-muted/50 animate-pulse rounded-lg" />;
+      if (isLoading || !article?.content) {
+          return <div className="h-96 w-full bg-muted/20 animate-pulse rounded-lg mt-8" />;
+      }
       return <Editor initialContent={article.content} editable={false} collaborationId={article.id} />;
-  }, [article]);
+  }, [isLoading, article]);
 
   if (isLoading) {
     return (
