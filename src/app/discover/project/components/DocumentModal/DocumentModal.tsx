@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link, History, MessageCircle } from 'lucide-react';
+import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle } from 'lucide-react';
 import { DocumentHeader } from './DocumentHeader';
 import { PropertiesSection } from './PropertiesSection';
 import { ContentEditor } from './ContentEditor';
@@ -10,7 +10,7 @@ import { ResourcePickerModal } from './ResourcePickerModal';
 import { breakDownTask } from '@/ai/flows/breakDownTaskFlow';
 import { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem } from '../../types';
 import { StatusBadge } from '../Plan';
-import { useStore } from '../../store/useStore';
+import { useStore } from '../../store/useStore.tsx';
 import { FilePreview } from '../FilePreview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -205,8 +205,6 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const iconHover = isLight ? "hover:bg-black/5 text-slate-400 hover:text-black" : "hover:bg-white/10 text-slate-500 hover:text-white";
   const borderClass = isLight ? "border-slate-100" : "border-white/5";
   const badgeBlocked = isLight ? "bg-slate-50 border-slate-100 text-slate-600" : "bg-slate-900/20 border-slate-800 text-slate-300";
-  const activeTabClass = isLight ? "bg-blue-100 text-blue-700" : "bg-blue-500/20 text-blue-300";
-  const inactiveTabClass = isLight ? "text-slate-500 hover:text-slate-800" : "text-slate-400 hover:text-slate-200";
 
   const renderResources = () => (
     <div className="space-y-2">
@@ -250,14 +248,26 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
         {(task.history || []).length === 0 && <div className={`text-xs italic ${textMuted}`}>No activity yet.</div>}
     </div>
   );
-
-  const renderCommentAndActivityTabs = () => (
+  
+ const renderCommentAndActivityTabs = () => (
     <Tabs defaultValue="comments" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="comments" className={isLight ? "" : "data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-300"}>
+        <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 border-b rounded-none mb-4">
+            <TabsTrigger 
+                value="comments" 
+                className={isLight 
+                    ? "data-[state=active]:border-brand-500 data-[state=active]:text-brand-600 border-b-2 border-transparent rounded-none" 
+                    : "data-[state=active]:border-brand-400 data-[state=active]:text-brand-400 border-b-2 border-transparent rounded-none"
+                }
+            >
                 <MessageCircle size={14} className="mr-2"/> Comments
             </TabsTrigger>
-            <TabsTrigger value="activity" className={isLight ? "" : "data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-300"}>
+            <TabsTrigger 
+                value="activity" 
+                className={isLight 
+                    ? "data-[state=active]:border-brand-500 data-[state=active]:text-brand-600 border-b-2 border-transparent rounded-none" 
+                    : "data-[state=active]:border-brand-400 data-[state=active]:text-brand-400 border-b-2 border-transparent rounded-none"
+                }
+            >
                 <History size={14} className="mr-2"/> Activity
             </TabsTrigger>
         </TabsList>
@@ -385,12 +395,12 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                         
                         <div className={`mt-12 border-t pt-8 ${borderClass}`}>
                              <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
-                                <Link size={14} /> Attached Resources
+                                <LinkIcon size={14} /> Attached Resources
                             </h3>
                             {renderResources()}
                         </div>
                         
-                        <div className={`mt-12 border-t pt-8 pb-24 lg:pb-0 ${borderClass}`}>
+                        <div className={`mt-12 pt-8 pb-24 lg:pb-0`}>
                            {renderCommentAndActivityTabs()}
                         </div>
                     </div>

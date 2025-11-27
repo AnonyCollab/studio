@@ -332,9 +332,46 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
 
   const updateTask = useCallback((id: string, updates: Partial<TaskNode>) => {
     if (!firestore || !projectId) return;
-    const taskRef = doc(firestore, 'projects', projectId, 'tasks', id);
-    updateDocumentNonBlocking(taskRef, updates);
 
+    const originalTask = state.tasks.find(t => t.id === id);
+    if (!originalTask) return;
+
+    const taskRef = doc(firestore, 'projects', projectId, 'tasks', id);
+
+    let historyMessage = '';
+    const updatedKeys = Object.keys(updates);
+    if (updatedKeys.length === 1) {
+        const key = updatedKeys[0] as keyof TaskNode;
+        const oldValue = originalTask[key];
+        const newValue = updates[key];
+        if (oldValue !== newValue) {
+            if (key === 'assignee') {
+                historyMessage = `changed assignee to **${(newValue as Assignee).displayName}**`;
+            } else if (key === 'status') {
+                historyMessage = `changed status from **${oldValue}** to **${newValue}**`;
+            } else if (key === 'priority') {
+                historyMessage = `changed priority from **${oldValue}** to **${newValue}**`;
+            } else if (key === 'dueDate' || key === 'startDate') {
+                historyMessage = `updated ${key} to **${newValue}**`;
+            }
+        }
+    }
+
+    const finalUpdates = { ...updates };
+    if (historyMessage) {
+        const newHistoryEntry: HistoryEntry = {
+            id: uuidv4(),
+            date: new Date().toISOString(),
+            user: state.currentUser.displayName || 'System',
+            action: historyMessage,
+            type: 'update',
+        };
+        finalUpdates.history = arrayUnion(newHistoryEntry);
+    }
+    
+    updateDocumentNonBlocking(taskRef, finalUpdates);
+
+    // Apply cascading updates locally for immediate UI feedback
      setState(prev => {
         let tempTasks = prev.tasks.map(t => t.id === id ? { ...t, ...updates } : t);
         if (updates.startDate || updates.dueDate || updates.status) {
@@ -343,7 +380,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
         }
         return { ...prev, tasks: tempTasks };
     });
-  }, [firestore, projectId]);
+  }, [firestore, projectId, state.tasks, state.currentUser.displayName]);
 
   const onUpdateTaskConnections = useCallback((startId: string, targetId: string) => {
     if (!firestore || !projectId) return;
