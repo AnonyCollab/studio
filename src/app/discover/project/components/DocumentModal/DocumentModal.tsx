@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link, History } from 'lucide-react';
+import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link, History, MessageCircle } from 'lucide-react';
 import { DocumentHeader } from './DocumentHeader';
 import { PropertiesSection } from './PropertiesSection';
 import { ContentEditor } from './ContentEditor';
@@ -12,6 +12,8 @@ import { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem } from '..
 import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore';
 import { FilePreview } from '../FilePreview';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 
 interface DocumentModalProps {
   task: TaskNode;
@@ -80,8 +82,8 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       currentUser.role === 'Owner' || 
       currentUser.role === 'Coordinator' || 
       (currentUser.role === 'Team Lead' && task.assignee.type === 'team') || 
-      (currentUser.role === 'Member' && task.assignee.name === currentUser.name) ||
-      (currentUser.role === 'Member' && task.assignee.name === 'Unassigned')
+      (currentUser.role === 'Member' && task.assignee.name === currentUser.displayName) ||
+      (currentUser.role === 'Member' && task.assignee.displayName === 'Unassigned')
   );
 
   const isReadOnly = !canEdit;
@@ -203,6 +205,8 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const iconHover = isLight ? "hover:bg-black/5 text-slate-400 hover:text-black" : "hover:bg-white/10 text-slate-500 hover:text-white";
   const borderClass = isLight ? "border-slate-100" : "border-white/5";
   const badgeBlocked = isLight ? "bg-slate-50 border-slate-100 text-slate-600" : "bg-slate-900/20 border-slate-800 text-slate-300";
+  const activeTabClass = isLight ? "bg-blue-100 text-blue-700" : "bg-blue-500/20 text-blue-300";
+  const inactiveTabClass = isLight ? "text-slate-500 hover:text-slate-800" : "text-slate-400 hover:text-slate-200";
 
   const renderResources = () => (
     <div className="space-y-2">
@@ -246,6 +250,34 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
         {(task.history || []).length === 0 && <div className={`text-xs italic ${textMuted}`}>No activity yet.</div>}
     </div>
   );
+
+  const renderCommentAndActivityTabs = () => (
+    <Tabs defaultValue="comments" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="comments" className={isLight ? "" : "data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-300"}>
+                <MessageCircle size={14} className="mr-2"/> Comments
+            </TabsTrigger>
+            <TabsTrigger value="activity" className={isLight ? "" : "data-[state=active]:bg-blue-500/20 data-[state=active]:text-blue-300"}>
+                <History size={14} className="mr-2"/> Activity
+            </TabsTrigger>
+        </TabsList>
+        <TabsContent value="comments" className="mt-4">
+            <CommentsSection 
+                comments={task.comments || []} 
+                addComment={(c) => {
+                    if(currentUser?.role === 'Visitor') return;
+                    const currentComments = task.comments || [];
+                    onUpdate(task.id, { comments: [...currentComments, c] } as any);
+                }}
+                isLight={isLight}
+            />
+        </TabsContent>
+        <TabsContent value="activity" className="mt-4 px-2">
+            {renderActivity()}
+        </TabsContent>
+    </Tabs>
+  );
+
 
   const getSubtasksLabel = () => {
       if (task.type === 'Milestone') return 'Goals';
@@ -351,34 +383,15 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                             </div>
                         )}
                         
-                        {/* Activity & Resources Tabs */}
-                        <div className={`mt-12 border-t pt-8 pb-24 lg:pb-0 ${borderClass}`}>
-                            <div className="grid grid-cols-2 gap-8">
-                                <div>
-                                    <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
-                                        <Link size={14} /> Attached Resources
-                                    </h3>
-                                    {renderResources()}
-                                </div>
-                                <div>
-                                    <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
-                                        <History size={14} /> Activity Log
-                                    </h3>
-                                    {renderActivity()}
-                                </div>
-                            </div>
+                        <div className={`mt-12 border-t pt-8 ${borderClass}`}>
+                             <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
+                                <Link size={14} /> Attached Resources
+                            </h3>
+                            {renderResources()}
                         </div>
-
+                        
                         <div className={`mt-12 border-t pt-8 pb-24 lg:pb-0 ${borderClass}`}>
-                            <CommentsSection 
-                                comments={task.comments || []} 
-                                addComment={(c) => {
-                                    if(currentUser?.role === 'Visitor') return;
-                                    const currentComments = task.comments || [];
-                                    onUpdate(task.id, { comments: [...currentComments, c] } as any);
-                                }}
-                                isLight={isLight}
-                            />
+                           {renderCommentAndActivityTabs()}
                         </div>
                     </div>
 
@@ -410,8 +423,8 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                             {renderResources()}
                         </MobileSection>
 
-                        <MobileSection title="Activity" isLight={isLight}>
-                            {renderActivity()}
+                        <MobileSection title="Comments & Activity" isLight={isLight}>
+                            {renderCommentAndActivityTabs()}
                         </MobileSection>
 
                         {!isMilestone && (
@@ -434,18 +447,6 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                                 </div>
                             </MobileSection>
                         )}
-
-                        <MobileSection title="Comments" isLight={isLight}>
-                            <CommentsSection 
-                                comments={task.comments || []} 
-                                addComment={(c) => {
-                                    if(currentUser?.role === 'Visitor') return;
-                                    const currentComments = task.comments || [];
-                                    onUpdate(task.id, { comments: [...currentComments, c] } as any);
-                                }}
-                                isLight={isLight}
-                            />
-                        </MobileSection>
                     </div>
                 </div>
             </div>
