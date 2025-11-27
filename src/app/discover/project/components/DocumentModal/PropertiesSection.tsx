@@ -66,7 +66,7 @@ export function PropertiesSection({
     return undefined;
   };
 
-  const currentAssignee = members.find(a => a.name === properties.assign) || members.find(a => a.name === 'Unassigned');
+  const currentAssignee = members.find(a => a.displayName === properties.assign) || members.find(a => a.name === 'Unassigned');
   const currentCycle = INITIAL_CYCLES.find(c => c.id === properties.cycleId);
   
   const parentTask = properties.parentId ? tasks.find(t => t.id === properties.parentId) : null;
@@ -114,7 +114,7 @@ export function PropertiesSection({
                 <div className={`w-6 h-6 ${currentAssignee?.type === 'team' ? 'rounded-md' : 'rounded-full'} ${currentAssignee?.color} flex items-center justify-center text-xs text-white font-bold shadow-sm`}>
                 {currentAssignee?.initials}
                 </div>
-                <span className={`text-sm flex-1 ${inputClass}`}>{properties.assign}</span>
+                <span className={`text-sm flex-1 ${inputClass}`}>{currentAssignee?.displayName || properties.assign}</span>
                 <ChevronDown size={14} className={labelClass} />
             </button>
 

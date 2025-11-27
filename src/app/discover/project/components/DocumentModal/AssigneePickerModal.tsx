@@ -25,22 +25,22 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
         {members.filter(a => a.type === 'user').map(assignee => (
             <button
                 key={assignee.id}
-                onClick={() => onSelect(assignee.name)}
+                onClick={() => onSelect(assignee.displayName || assignee.name)}
                 className={`w-full flex items-center gap-3 px-3 py-2 transition-colors rounded-lg ${itemHover}`}
             >
                 <div className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center text-[10px] text-white font-bold ${assignee.color}`}>{assignee.initials}</div>
-                <span className={`text-sm truncate ${textMain} ${currentAssignee === assignee.name ? 'font-bold' : ''}`}>{assignee.name}</span>
+                <span className={`text-sm truncate ${textMain} ${currentAssignee === (assignee.displayName || assignee.name) ? 'font-bold' : ''}`}>{assignee.displayName || assignee.name}</span>
             </button>
         ))}
         <div className={`px-3 py-2 mt-1 text-xs font-bold uppercase tracking-wider border-t ${isLight ? 'border-slate-100' : 'border-gray-700'} ${labelClass}`}>Teams</div>
         {members.filter(a => a.type === 'team').map(team => (
             <button
                 key={team.id}
-                onClick={() => onSelect(team.name)}
+                onClick={() => onSelect(team.displayName || team.name)}
                 className={`w-full flex items-center gap-3 px-3 py-2 transition-colors rounded-lg ${itemHover}`}
             >
                 <div className={`w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center text-[10px] text-white font-bold ${team.color}`}>{team.initials}</div>
-                <span className={`text-sm truncate ${textMain} ${currentAssignee === team.name ? 'font-bold' : ''}`}>{team.name}</span>
+                <span className={`text-sm truncate ${textMain} ${currentAssignee === (team.displayName || team.name) ? 'font-bold' : ''}`}>{team.displayName || team.name}</span>
             </button>
         ))}
     </div>
@@ -72,12 +72,12 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
                         {members.filter(a => a.type === 'user').map(assignee => (
                             <button
                                 key={assignee.id}
-                                onClick={() => onSelect(assignee.name)}
+                                onClick={() => onSelect(assignee.displayName || assignee.name)}
                                 className={`w-full flex items-center gap-4 p-3 rounded-xl transition-colors ${isLight ? 'bg-slate-50 active:bg-slate-200' : 'bg-white/5 active:bg-white/10'}`}
                             >
                                 <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center text-sm text-white font-bold ${assignee.color}`}>{assignee.initials}</div>
-                                <span className="text-lg font-medium">{assignee.name}</span>
-                                {currentAssignee === assignee.name && <div className="ml-auto w-2 h-2 rounded-full bg-brand-500" />}
+                                <span className="text-lg font-medium">{assignee.displayName || assignee.name}</span>
+                                {currentAssignee === (assignee.displayName || assignee.name) && <div className="ml-auto w-2 h-2 rounded-full bg-brand-500" />}
                             </button>
                         ))}
                     </div>
@@ -88,12 +88,12 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
                         {members.filter(a => a.type === 'team').map(team => (
                             <button
                                 key={team.id}
-                                onClick={() => onSelect(team.name)}
+                                onClick={() => onSelect(team.displayName || team.name)}
                                 className={`w-full flex items-center gap-4 p-3 rounded-xl transition-colors ${isLight ? 'bg-slate-50 active:bg-slate-200' : 'bg-white/5 active:bg-white/10'}`}
                             >
                                 <div className={`w-10 h-10 rounded-md flex-shrink-0 flex items-center justify-center text-sm text-white font-bold ${team.color}`}>{team.initials}</div>
-                                <span className="text-lg font-medium">{team.name}</span>
-                                {currentAssignee === team.name && <div className="ml-auto w-2 h-2 rounded-full bg-brand-500" />}
+                                <span className="text-lg font-medium">{team.displayName || team.name}</span>
+                                {currentAssignee === (team.displayName || team.name) && <div className="ml-auto w-2 h-2 rounded-full bg-brand-500" />}
                             </button>
                         ))}
                     </div>
