@@ -378,9 +378,14 @@
           "type": "string",
           "format": "date-time",
           "description": "Timestamp for when the conversation was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp for the last activity in the conversation."
         }
       },
-      "required": ["participants", "createdAt"]
+      "required": ["participants", "createdAt", "updatedAt"]
     },
     "Message": {
       "title": "Message",

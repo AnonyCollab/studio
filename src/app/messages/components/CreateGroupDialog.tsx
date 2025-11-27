@@ -73,6 +73,7 @@ export function CreateGroupDialog({ isOpen, onOpenChange, theme }: CreateGroupDi
       groupAvatar: `https://api.dicebear.com/7.x/shapes/svg?seed=${groupName.trim()}`,
       participants,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(), // Add updatedAt for sorting
       lastMessage: null,
     };
     

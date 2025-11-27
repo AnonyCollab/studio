@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { useState, useMemo, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, doc, getDoc, orderBy } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DMConversation {
@@ -43,7 +43,11 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
 
   const dmsQuery = useMemoFirebase(() => {
     if (!firestore || !currentUser) return null;
-    return query(collection(firestore, 'dms'), where('participants', 'array-contains', currentUser.uid));
+    return query(
+        collection(firestore, 'dms'), 
+        where('participants', 'array-contains', currentUser.uid),
+        orderBy('updatedAt', 'desc')
+      );
   }, [firestore, currentUser]);
 
   const { data: dmsData } = useCollection(dmsQuery);
