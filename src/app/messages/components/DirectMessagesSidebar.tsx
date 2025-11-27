@@ -45,7 +45,8 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
     if (!firestore || !currentUser) return null;
     return query(
         collection(firestore, 'dms'), 
-        where('participants', 'array-contains', currentUser.uid)
+        where('participants', 'array-contains', currentUser.uid),
+        orderBy('updatedAt', 'desc')
       );
   }, [firestore, currentUser]);
 
