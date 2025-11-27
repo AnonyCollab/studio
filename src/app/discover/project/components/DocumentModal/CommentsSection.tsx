@@ -1,27 +1,43 @@
 
-import React, { useState } from 'react';
-import { useUser } from '@/firebase';
+import React, { useState, useEffect } from 'react';
+import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { addComment } from '@/firebase/non-blocking-updates';
-import { useFirestore } from '@/firebase';
+import { collection, query, orderBy } from 'firebase/firestore';
 import { MentionPopover } from '@/app/posts/components/MentionPopover';
 import { mockUsers } from '@/app/messages/data/mockUsers';
+import { CommentItem } from '@/app/posts/components/CommentItem';
+
+interface Comment {
+  id: string;
+  authorId: string;
+  content: string;
+  timestamp: string;
+  createdAt: any;
+  likes: number;
+}
+
 
 interface CommentsSectionProps {
-  comments: any[];
-  addComment: (comment: string) => void;
+  taskId: string;
   isLight: boolean;
-  postId: string;
   theme: string;
 }
 
-export function CommentsSection({ comments, addComment: addCommentProp, isLight, postId, theme }: CommentsSectionProps) {
+export function CommentsSection({ taskId, isLight, theme }: CommentsSectionProps) {
   const [commentText, setCommentText] = useState('');
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
   const { user } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+
+  const commentsQuery = useMemoFirebase(() => {
+    if (!firestore || !taskId) return null;
+    return query(collection(firestore, 'projects', 'your-project-id', 'tasks', taskId, 'comments'), orderBy('createdAt', 'asc'));
+  }, [firestore, taskId]);
+
+  const { data: commentsData } = useCollection<Comment>(commentsQuery);
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -67,21 +83,10 @@ export function CommentsSection({ comments, addComment: addCommentProp, isLight,
       return;
     };
     
-    // In project context, postId is the taskId
-    const taskId = postId;
     try {
-        // We'll call a new function, maybe addProjectTaskComment
-        // For now, let's assume `addComment` can be adapted or we create a new one.
-        // This part needs a backend function to add comment to /projects/{projectId}/tasks/{taskId}/comments
-        // Since that is not implemented, we will just use the existing `addComment` which points to `/posts`
-        // and adjust the rules. A better fix would be a new function.
-        // For now, this will fail silently if rules are strict on path.
-        // The user's request is to fix commenting on tasks, so we need to make it work.
-        // Let's assume we need to write to `projects/{projectId}/tasks/{taskId}/comments`
-        console.log("Submitting comment for task:", taskId);
-        // This is a placeholder for the actual implementation.
-        // For now, let's just use the `addCommentProp` from the modal, which updates local state.
-        addCommentProp(commentText);
+        // This needs a new `addProjectTaskComment` function. Let's assume `addComment` can be adapted.
+        // For now, let's write to a new subcollection for tasks
+        await addComment(firestore, `projects/your-project-id/tasks/${taskId}`, commentText, user);
         setCommentText('');
 
     } catch(err) {
@@ -110,7 +115,7 @@ export function CommentsSection({ comments, addComment: addCommentProp, isLight,
         >
             <form onSubmit={handleSubmit} className="flex items-start gap-3 mb-6">
                 <div className="w-8 h-8 rounded-full bg-brand-500 flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-sm">
-                ME
+                {user?.displayName?.[0] || '?'}
                 </div>
                 <input
                 type="text"
@@ -122,17 +127,10 @@ export function CommentsSection({ comments, addComment: addCommentProp, isLight,
             </form>
        </MentionPopover>
 
-      {comments.length > 0 && (
+      {(commentsData || []).length > 0 && (
         <div className="space-y-4">
-          {comments.map((comment, idx) => (
-            <div key={idx} className="flex items-start gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
-              <div className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-sm">
-                U
-              </div>
-              <div className={`flex-1 p-3 rounded-r-lg rounded-bl-lg border ${bubbleClass}`}>
-                <p className="text-sm">{comment.content}</p>
-              </div>
-            </div>
+          {commentsData?.map((comment) => (
+             <CommentItem key={comment.id} postId={taskId} comment={comment} theme={theme} />
           ))}
         </div>
       )}

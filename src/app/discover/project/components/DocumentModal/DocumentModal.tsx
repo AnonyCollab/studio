@@ -333,15 +333,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
 
             <div className="mt-6">
                 {activeTab === 'comments' && (
-                     <CommentsSection 
-                        comments={task.comments || []} 
-                        addComment={(c) => {
-                            if(currentUser?.role === 'Visitor') return;
-                            const currentComments = task.comments || [];
-                            onUpdate(task.id, { comments: [...currentComments, c] } as any);
-                        }}
+                    <CommentsSection
+                        taskId={task.id}
                         isLight={isLight}
-                        postId={task.id}
                         theme={theme}
                     />
                 )}
