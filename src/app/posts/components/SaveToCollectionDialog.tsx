@@ -5,6 +5,9 @@ import { useState, ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import {
@@ -180,6 +183,12 @@ export function SaveToCollectionDialog({
          {isCreating ? (
             <Dialog open={isCreating} onOpenChange={(open) => !open && setIsCreating(false)}>
               <DialogContent className="sm:max-w-[425px] p-0 gap-0 border-none">
+                 <DialogHeader className="p-4 border-b">
+                    <DialogTitle>Create New Collection</DialogTitle>
+                    <DialogDescription className="sr-only">
+                        Enter details for your new collection.
+                    </DialogDescription>
+                 </DialogHeader>
                 <CreateCollection
                   isOpen={isCreating}
                   onClose={() => setIsCreating(false)}

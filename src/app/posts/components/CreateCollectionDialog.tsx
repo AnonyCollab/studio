@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -38,11 +38,11 @@ export function CreateCollection({
       <SheetContent side="bottom" className="h-auto p-0 rounded-t-2xl">
         <div className="flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-neutral-200">
+          <SheetHeader className="p-4 border-b border-neutral-200 flex flex-row items-center justify-between">
             <button onClick={handleClose} className="text-neutral-600">
               <ChevronLeft className="w-6 h-6" />
             </button>
-            <div>New Collection</div>
+            <SheetTitle className="text-base">New Collection</SheetTitle>
             <Button
               onClick={handleCreate}
               variant="ghost"
@@ -51,7 +51,7 @@ export function CreateCollection({
             >
               Create
             </Button>
-          </div>
+          </SheetHeader>
 
           {/* Form */}
           <div className="p-4 space-y-6">
