@@ -17,7 +17,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     // Ensure currentUser has both name and displayName for consistency
     const currentUser = useMemo(() => ({
         ...storeUser,
-        name: storeUser.displayName,
+        displayName: storeUser.displayName,
     }), [storeUser]);
 
     useEffect(() => {
@@ -44,18 +44,31 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     // --- Data Selectors (FIXED LOGIC) ---
 
     const myTasks = useMemo(() => {
-        if (!currentUser) return [];
-        return tasks.filter(t => t.assignee.id === currentUser.id);
+        if (!currentUser || !tasks) return [];
+        console.log(`Filtering for "My Tasks". Current user ID: ${currentUser.id}`);
+        const filtered = tasks.filter(t => t.assignee.id === currentUser.id);
+        console.log(`Found ${filtered.length} tasks assigned to the current user.`);
+        if (filtered.length > 0) {
+            console.log("Sample 'My Task' assignee object:", filtered[0].assignee);
+        }
+        return filtered;
     }, [tasks, currentUser]);
 
     const teamTasks = useMemo(() => {
-        if (!currentTeamName) return [];
+        if (!currentTeamName || !tasks || !members) return [];
+        console.log(`Filtering for "Team Tasks". Current team name: ${currentTeamName}`);
         const teamMemberIds = members.filter(m => m.department === currentTeamName).map(m => m.id);
+        console.log(`Found ${teamMemberIds.length} members in the team:`, teamMemberIds);
         
-        return tasks.filter(t => 
+        const filtered = tasks.filter(t => 
             t.assignee.id === currentTeamName || // Assigned to the team directly
             teamMemberIds.includes(t.assignee.id) // Assigned to a member of the team
         );
+        console.log(`Found ${filtered.length} tasks for the team.`);
+        if (filtered.length > 0) {
+            console.log("Sample 'Team Task' assignee object:", filtered[0].assignee);
+        }
+        return filtered;
     }, [tasks, members, currentTeamName]);
 
     const projectTasks = tasks;
@@ -388,6 +401,10 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         { id: 'Team', label: 'Team Pulse', icon: Users },
         { id: 'Project', label: 'Project Overview', icon: Briefcase },
     ];
+    
+    console.log("--- Dashboard Render ---");
+    console.log(`Rendering with ${myTasks.length} personal tasks, ${teamTasks.length} team tasks.`);
+    console.log("------------------------");
 
     // Show loading state while data is being fetched
     if (isStoreLoading) {
@@ -426,9 +443,9 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                     </div>
                 </div>
 
-                {dashboardView === 'Personal' && renderPersonalTab()}
-                {dashboardView === 'Team' && renderTeamTab()}
-                {dashboardView === 'Project' && renderProjectTab()}
+                {viewMode === 'Personal' && renderPersonalTab()}
+                {viewMode === 'Team' && renderTeamTab()}
+                {viewMode === 'Project' && renderProjectTab()}
             </div>
         </div>
     );
