@@ -21,6 +21,7 @@ import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
 
@@ -36,8 +37,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const { user: authUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     
-    // New: History stack for drill-down
     const [drilldownHistory, setDrilldownHistory] = useState<Assignee[]>([]);
+    const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
     
     const { updateMember, currentUser, removeMember, addMember } = useStore();
     const { toast } = useToast();
@@ -50,6 +51,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
 
     const allMembers = initialMembers;
     const departments = allMembers.filter(m => m.type === 'team' && !m.parentId);
+    const userMembers = allMembers.filter(m => m.type === 'user');
 
     const getStats = (assigneeName: string) => {
         const relevantTasks = tasks.filter(t => {
@@ -57,7 +59,6 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
             if (!assignee) return false;
             
             if (assignee.type === 'team') {
-                 // Include tasks assigned to the team itself OR any of its members/sub-teams
                 const memberIds = allMembers.filter(m => m.department === assignee.id || m.id === assignee.id).map(m => m.name);
                 return memberIds.includes(t.assignee.name);
             }
@@ -77,15 +78,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         if (type === 'team') {
             return allMembers.filter(m => m.type === 'team' && m.parentId === parentId);
         }
-        // Get users assigned to a department/team
         return allMembers.filter(m => m.type === 'user' && m.department === parentId);
     }
     
     const handleAddFriend = (member: Assignee) => {
-        console.log(`Sending friend request to ${member.displayName || member.name}`);
+        console.log(`Sending friend request to ${member.displayName}`);
         toast({
             title: "Friend Request Sent",
-            description: `A friend request has been sent to ${member.displayName || member.name}.`,
+            description: `A friend request has been sent to ${member.displayName}.`,
         });
     };
 
@@ -94,7 +94,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         removeMember(member.id);
         toast({
             title: "Member Removed",
-            description: `${member.displayName || member.name} has been removed from the project.`,
+            description: `${member.displayName} has been removed from the project.`,
         });
     }
 
@@ -107,8 +107,9 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
 
         addMember({
             name: newDepartmentName,
+            displayName: newDepartmentName,
             type: 'team',
-            color: 'bg-gray-500' // Default color
+            color: 'bg-gray-500'
         });
         toast({
             title: "Department Created",
@@ -125,6 +126,18 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const handleGoBack = () => {
         setDrilldownHistory(prev => prev.slice(0, -1));
     }
+    
+    const handleBulkAssign = (departmentId: string | null) => {
+        const departmentName = departmentId ? allMembers.find(m => m.id === departmentId)?.displayName : undefined;
+        selectedMembers.forEach(memberId => {
+            updateMember(memberId, { department: departmentName });
+        });
+        toast({
+            title: 'Members Assigned',
+            description: `${selectedMembers.length} members have been assigned.`,
+        });
+        setSelectedMembers([]);
+    };
 
     const currentItem = drilldownHistory.length > 0 ? drilldownHistory[drilldownHistory.length - 1] : null;
 
@@ -150,6 +163,18 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                             <table className="w-full text-left">
                                 <thead className={tableHeaderBg}>
                                     <tr>
+                                        <th className="px-6 py-3 w-12">
+                                           <Checkbox
+                                                checked={selectedMembers.length === userMembers.length && userMembers.length > 0}
+                                                onCheckedChange={(checked) => {
+                                                    if (checked) {
+                                                        setSelectedMembers(userMembers.map(m => m.id));
+                                                    } else {
+                                                        setSelectedMembers([]);
+                                                    }
+                                                }}
+                                            />
+                                        </th>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider">Name</th>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider hidden md:table-cell">Active Tasks</th>
                                         <th className="px-6 py-3 text-xs font-bold uppercase tracking-wider hidden sm:table-cell">Department</th>
@@ -158,8 +183,31 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {allMembers.filter(m => m.type === 'user').map(member => {
-                                        const stats = getStats(member.displayName || member.name);
+                                     {selectedMembers.length > 0 && (
+                                        <tr className={isLight ? 'bg-blue-50' : 'bg-blue-900/20'}>
+                                            <td colSpan={6} className="px-6 py-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className={`text-sm font-bold ${isLight ? 'text-blue-800' : 'text-blue-200'}`}>{selectedMembers.length} selected</span>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline" size="sm">Assign to Team</Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent>
+                                                            <DropdownMenuItem onClick={() => handleBulkAssign(null)}>Unassigned</DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            {departments.map(dept => (
+                                                                <DropdownMenuItem key={dept.id} onClick={() => handleBulkAssign(dept.id)}>
+                                                                    {dept.displayName}
+                                                                </DropdownMenuItem>
+                                                            ))}
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                    {userMembers.map(member => {
+                                        const stats = getStats(member.displayName);
                                         const currentUserRoleIndex = ROLE_HIERARCHY.indexOf(currentUser.role);
                                         const memberRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
                                         
@@ -169,15 +217,22 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                         const canPromote = canManage && !isSelf && memberRoleIndex > 0;
                                         const canDemote = canManage && !isSelf && memberRoleIndex < ROLE_HIERARCHY.length - 1;
 
-
                                         return (
-                                            <tr key={member.id} onClick={() => onViewProfile(member)} className={`transition-colors cursor-pointer ${tableRowBorder}`}>
+                                            <tr key={member.id} className={`transition-colors ${tableRowBorder}`}>
                                                 <td className="px-6 py-4">
+                                                    <Checkbox 
+                                                        checked={selectedMembers.includes(member.id)}
+                                                        onCheckedChange={(checked) => {
+                                                            setSelectedMembers(prev => checked ? [...prev, member.id] : prev.filter(id => id !== member.id));
+                                                        }}
+                                                    />
+                                                </td>
+                                                <td className="px-6 py-4 cursor-pointer" onClick={() => onViewProfile(member)}>
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-full ${member.color || 'bg-slate-500'} flex items-center justify-center text-white font-bold text-xs`}>
                                                             {member.initials || (member.displayName || '?').charAt(0)}
                                                         </div>
-                                                        <span className={`font-bold text-sm ${textMain}`}>{member.displayName || member.name}</span>
+                                                        <span className={`font-bold text-sm ${textMain}`}>{member.displayName}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 hidden md:table-cell">
@@ -224,8 +279,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                                             <DropdownMenuSubContent>
                                                                                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { department: undefined }); }}>Unassigned</DropdownMenuItem>
                                                                                 {departments.map(dept => (
-                                                                                    <DropdownMenuItem key={dept.id} onClick={(e) => { e.stopPropagation(); updateMember(member.id, { department: dept.name }); }}>
-                                                                                        {dept.name}
+                                                                                    <DropdownMenuItem key={dept.id} onClick={(e) => { e.stopPropagation(); updateMember(member.id, { department: dept.displayName }); }}>
+                                                                                        {dept.displayName}
                                                                                     </DropdownMenuItem>
                                                                                 ))}
                                                                             </DropdownMenuSubContent>
@@ -262,8 +317,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {departments.map(dept => {
-                                const deptStats = getStats(dept.name);
-                                const deptMembers = getSubItems(dept.name, 'user');
+                                const deptStats = getStats(dept.displayName);
+                                const deptMembers = getSubItems(dept.displayName, 'user');
                                 const subTeamsCount = getSubItems(dept.id, 'team').length;
 
                                 return (
@@ -290,7 +345,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                             </div>
                                         </div>
                                         <div>
-                                            <h3 className={`font-bold text-lg mb-1 ${textMain}`}>{dept.name}</h3>
+                                            <h3 className={`font-bold text-lg mb-1 ${textMain}`}>{dept.displayName}</h3>
                                             <div className={`flex items-center gap-4 text-xs ${textMuted}`}>
                                                  <span className="flex items-center gap-1.5"><Users size={14}/> {deptMembers.length} Members</span>
                                                  <span className="flex items-center gap-1.5"><Layers size={14}/> {subTeamsCount} Teams</span>
@@ -337,13 +392,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
 
             <DepartmentSheet 
                 item={currentItem}
-                members={currentItem ? getSubItems(currentItem.name, 'user') : []}
+                members={currentItem ? getSubItems(currentItem.displayName, 'user') : []}
                 teams={currentItem ? getSubItems(currentItem.id, 'team') : []}
-                tasks={currentItem ? tasks.filter(t => t.assignee.name === currentItem.name) : []}
+                tasks={currentItem ? tasks.filter(t => t.assignee.name === currentItem.displayName) : []}
                 isOpen={!!currentItem}
                 onClose={() => setDrilldownHistory([])}
                 onBack={drilldownHistory.length > 1 ? handleGoBack : undefined}
                 onSelectTeam={handleDrillDown}
+                onViewProfile={onViewProfile}
                 theme={theme}
             />
         </>

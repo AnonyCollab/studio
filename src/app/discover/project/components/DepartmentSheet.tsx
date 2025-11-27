@@ -75,23 +75,24 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
 
         addMember({
             name: newTeamName,
+            displayName: newTeamName,
             type: 'team',
             color: 'bg-teal-500',
             parentId: item.id
         });
         toast({
             title: "Team Created",
-            description: `The "${newTeamName}" team has been created in ${item.name}.`
+            description: `The "${newTeamName}" team has been created in ${item.displayName}.`
         });
         setIsCreatingTeam(false);
         setNewTeamName('');
     };
 
     const handleAddFriend = (member: Assignee) => {
-        console.log(`Sending friend request to ${member.name}`);
+        console.log(`Sending friend request to ${member.displayName}`);
         toast({
             title: "Friend Request Sent",
-            description: `A friend request has been sent to ${member.name}.`,
+            description: `A friend request has been sent to ${member.displayName}.`,
         });
     };
 
@@ -100,7 +101,7 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
         removeMember(member.id);
         toast({
             title: "Member Removed",
-            description: `${member.name} has been removed from the project.`,
+            description: `${member.displayName} has been removed from the project.`,
         });
     }
 
@@ -117,7 +118,7 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
                         {item.initials}
                     </div>
                     <div>
-                        <h2 className={`text-3xl font-bold ${textMain}`}>{item.name}</h2>
+                        <h2 className={`text-3xl font-bold ${textMain}`}>{item.displayName}</h2>
                         <div className={`flex items-center gap-3 mt-1 text-sm ${textMuted}`}>
                             <span className="flex items-center gap-1"><Users size={14} /> {members.length} Members</span>
                             <span className="w-1 h-1 rounded-full bg-current opacity-50" />
@@ -202,7 +203,7 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
                                             <div className={`w-8 h-8 rounded-full ${m.color} flex items-center justify-center text-white font-bold text-xs`}>
                                                 {m.initials}
                                             </div>
-                                            <span className={`text-sm font-medium ${textMain}`}>{m.name}</span>
+                                            <span className={`text-sm font-medium ${textMain}`}>{m.displayName}</span>
                                         </div>
                                     ))}
                                     {members.length > 5 && (
@@ -237,9 +238,9 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <div className={`w-8 h-8 rounded-full ${member.color || 'bg-slate-500'} flex items-center justify-center text-white font-bold text-xs`}>
-                                                            {member.initials || (member.name || '?').charAt(0)}
+                                                            {member.initials || (member.displayName || '?').charAt(0)}
                                                         </div>
-                                                        <span className={`font-bold text-sm ${textMain}`}>{member.name}</span>
+                                                        <span className={`font-bold text-sm ${textMain}`}>{member.displayName}</span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 hidden md:table-cell">
@@ -287,7 +288,7 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
                                                 <div className={`w-10 h-10 rounded-lg ${team.color} flex items-center justify-center text-white font-bold`}>
                                                     {team.initials}
                                                 </div>
-                                                <h4 className={`font-bold ${textMain}`}>{team.name}</h4>
+                                                <h4 className={`font-bold ${textMain}`}>{team.displayName}</h4>
                                             </div>
                                              <div className="flex -space-x-2">
                                                 {/* Placeholder for member icons */}
@@ -354,4 +355,3 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
         </>
     );
 };
-
