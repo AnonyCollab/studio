@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { addComment } from '@/firebase/non-blocking-updates';
@@ -36,8 +36,13 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
   const { toast } = useToast();
 
   const commentsQuery = useMemoFirebase(() => {
-    if (!firestore || !projectId || !taskId) return null;
-    return query(collection(firestore, 'projects', projectId, 'tasks', taskId, 'comments'), orderBy('createdAt', 'asc'));
+    if (!firestore || !projectId || !taskId) {
+      console.log('CommentsSection: Skipping query because firestore, projectId, or taskId is missing.', { firestore, projectId, taskId });
+      return null;
+    }
+    const path = `projects/${projectId}/tasks/${taskId}/comments`;
+    console.log(`DEBUG: Constructing comments query for path: ${path}`);
+    return query(collection(firestore, path), orderBy('createdAt', 'asc'));
   }, [firestore, projectId, taskId]);
 
   const { data: commentsData } = useCollection<Comment>(commentsQuery);
