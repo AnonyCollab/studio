@@ -2,7 +2,7 @@
 'use client';
 import React, { useMemo } from 'react';
 import { Theme, DashboardViewMode } from '../../types';
-import { Target, Users, Briefcase } from 'lucide-react';
+import { Target, Users, Briefcase, Zap, Layers } from 'lucide-react';
 import { useStore } from '../../store/useStore.tsx';
 import { MyFocusView } from './views/MyFocus';
 import { TeamPulseView } from './views/TeamPulse';

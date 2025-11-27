@@ -3,7 +3,7 @@
 import React, { useMemo } from 'react';
 import { TaskNode } from '../../../types';
 import { StatusBadge, PriorityIcon } from '../../Plan';
-import { CheckCircle2, Clock, Target, Zap } from 'lucide-react';
+import { CheckCircle2, Clock, Target, Zap, Layers } from 'lucide-react';
 import { useStore } from '../../../store/useStore';
 
 export const MyFocusView = () => {
@@ -133,7 +133,22 @@ export const MyFocusView = () => {
                     tasks={tasksInBacklog}
                     emptyMsg="You're all caught up!"
                 />
-                {/* Activity widget can be added back here if needed */}
+                <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
+                    <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Recent Activity</h3>
+                    <div className="space-y-4">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="flex gap-3 items-start">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isLight ? 'bg-slate-100' : 'bg-white/10'}`}>
+                                    <Layers size={14} className={textMuted} />
+                                </div>
+                                <div>
+                                    <p className={`text-sm ${textMain}`}>Moved <span className="font-bold">Task-{100 + i}</span> to <span className="text-brand-500">In Review</span></p>
+                                    <p className={`text-xs ${textMuted}`}>2 hours ago</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );
