@@ -62,53 +62,76 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
+    console.log("useCollection DEBUG: useEffect triggered. Query object:", memoizedTargetRefOrQuery);
     if (!memoizedTargetRefOrQuery) {
+      console.log("useCollection DEBUG: No query provided. Resetting state.");
       setData(null);
       setIsLoading(false);
       setError(null);
       return;
     }
-
+    
+    const path: string =
+          memoizedTargetRefOrQuery.type === 'collection'
+            ? (memoizedTargetRefOrQuery as CollectionReference).path
+            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
+    
+    console.log(`useCollection DEBUG: Setting up snapshot listener for path: ${path}`);
     setIsLoading(true);
     setError(null);
 
-    // Directly use memoizedTargetRefOrQuery as it's assumed to be the final query
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
+        console.log(`useCollection DEBUG: Snapshot received for path: ${path}. Document count: ${snapshot.size}`);
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
           results.push({ ...(doc.data() as T), id: doc.id });
         }
+        console.log("useCollection DEBUG: Successfully processed data.", results);
         setData(results);
         setError(null);
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // This logic extracts the path from either a ref or a query
-        const path: string =
-          memoizedTargetRefOrQuery.type === 'collection'
-            ? (memoizedTargetRefOrQuery as CollectionReference).path
-            : (memoizedTargetRefOrQuery as unknown as InternalQuery)._query.path.canonicalString()
-
+        console.log(`useCollection DEBUG: onSnapshot error callback triggered for path: ${path}`);
+        console.error("useCollection DEBUG: Raw Firestore error object:", error);
+        
         const contextualError = new FirestorePermissionError({
           operation: 'list',
           path,
         })
+        console.log("useCollection DEBUG: Created contextual permission error.");
 
         setError(contextualError)
+        console.log("useCollection DEBUG: Set local error state.");
+        
         setData(null)
+        console.log("useCollection DEBUG: Cleared local data state.");
+        
         setIsLoading(false)
+        console.log("useCollection DEBUG: Set loading state to false.");
 
         // trigger global error propagation
+        console.log("useCollection DEBUG: Emitting global 'permission-error' event.");
         errorEmitter.emit('permission-error', contextualError);
+        console.log("useCollection DEBUG: Global 'permission-error' event emitted.");
       }
     );
 
-    return () => unsubscribe();
-  }, [memoizedTargetRefOrQuery]); // Re-run if the target query/reference changes.
+    console.log(`useCollection DEBUG: Subscription created for ${path}.`);
+
+    return () => {
+        console.log(`useCollection DEBUG: Unsubscribing from snapshot listener for path: ${path}`);
+        unsubscribe();
+    };
+  }, [memoizedTargetRefOrQuery]);
+  
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
+    console.warn("useCollection WARNING: The provided query was not memoized with useMemoFirebase. This can lead to infinite loops.", memoizedTargetRefOrQuery);
+    throw new Error('A query passed to useCollection was not properly memoized using useMemoFirebase');
   }
+
+  console.log("useCollection DEBUG: Hook is returning state. Is loading:", isLoading, "Has error:", !!error, "Has data:", !!data);
   return { data, isLoading, error };
 }

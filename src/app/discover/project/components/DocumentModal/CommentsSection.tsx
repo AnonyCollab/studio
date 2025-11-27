@@ -35,17 +35,27 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
   const firestore = useFirestore();
   const { toast } = useToast();
 
+  console.log("CommentsSection DEBUG: Component rendered. Props:", { taskId, projectId, isLight });
+
   const commentsQuery = useMemoFirebase(() => {
+    console.log("CommentsSection DEBUG: useMemoFirebase for commentsQuery is running.");
     if (!firestore || !projectId || !taskId) {
-      console.log('CommentsSection: Skipping query because firestore, projectId, or taskId is missing.', { firestore, projectId, taskId });
+      console.log('CommentsSection DEBUG: Skipping query because firestore, projectId, or taskId is missing.', { firestore, projectId, taskId });
       return null;
     }
     const path = `projects/${projectId}/tasks/${taskId}/comments`;
-    console.log("DEBUG: Constructing comments query for path:", path);
+    console.log("CommentsSection DEBUG: Constructing comments query for path:", path);
     return query(collection(firestore, path), orderBy('createdAt', 'asc'));
   }, [firestore, projectId, taskId]);
 
-  const { data: commentsData } = useCollection<Comment>(commentsQuery);
+  const { data: commentsData, isLoading, error } = useCollection<Comment>(commentsQuery);
+
+  useEffect(() => {
+    console.log("CommentsSection DEBUG: useCollection hook update received.", {isLoading, hasError: !!error, dataCount: commentsData?.length});
+    if (error) {
+        console.error("CommentsSection DEBUG: Error received from useCollection:", error);
+    }
+  }, [commentsData, isLoading, error]);
 
   const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const text = e.target.value;
@@ -86,17 +96,22 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("CommentsSection DEBUG: handleSubmit triggered.");
     if (!commentText.trim() || !user || !firestore || !projectId) {
+      console.warn("CommentsSection DEBUG: Submission aborted. Missing required data.", { hasComment: !!commentText.trim(), hasUser: !!user, hasFirestore: !!firestore, hasProjectId: !!projectId });
       if (!user) toast({ variant: "destructive", title: "Authentication required" });
       return;
     };
     
     try {
-        await addComment(firestore, `projects/${projectId}/tasks/${taskId}`, commentText, user, true);
+        const parentPath = `projects/${projectId}/tasks/${taskId}`;
+        console.log("CommentsSection DEBUG: Calling addComment with path:", parentPath);
+        await addComment(firestore, parentPath, commentText, user, true);
+        console.log("CommentsSection DEBUG: addComment call finished.");
         setCommentText('');
 
     } catch(err) {
-        console.error("Error adding comment: ", err);
+        console.error("CommentsSection DEBUG: Error in handleSubmit:", err);
         toast({ variant: "destructive", title: "Error", description: "Failed to add comment." });
     }
   };
@@ -106,9 +121,6 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
   const inputClass = isLight 
     ? "bg-white border-slate-200 text-slate-700 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-200" 
     : "bg-[#252525] border-gray-700 text-gray-300 placeholder-gray-600 focus:border-gray-500";
-  const bubbleClass = isLight 
-    ? "bg-slate-50 border-slate-200 text-slate-700" 
-    : "bg-[#252525] border-gray-800 text-gray-300";
 
   return (
     <div>
@@ -133,11 +145,15 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
             </form>
        </MentionPopover>
 
-      {(commentsData || []).length > 0 && (
+      {(commentsData || []).length > 0 ? (
         <div className="space-y-4">
           {commentsData?.map((comment) => (
              <CommentItem key={comment.id} postId={taskId} comment={comment} theme={theme} isTaskComment={true} projectId={projectId} />
           ))}
+        </div>
+      ) : (
+        <div className={`text-center text-sm italic ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+          {isLoading ? 'Loading comments...' : 'No comments yet. Start the conversation!'}
         </div>
       )}
     </div>

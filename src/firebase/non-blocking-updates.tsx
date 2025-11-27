@@ -129,6 +129,7 @@ export function addPost(firestore: Firestore, postData: any, user: User | null) 
  * Can also be used for task comments by providing a full path.
  */
 export function addComment(firestore: Firestore, parentPath: string, commentText: string, user: User, isTaskComment: boolean = false) {
+    console.log("addComment DEBUG: Function called with path:", parentPath);
     const commentsCollection = collection(firestore, parentPath, 'comments');
     const parentRef = doc(firestore, parentPath);
 
@@ -147,12 +148,15 @@ export function addComment(firestore: Firestore, parentPath: string, commentText
     
     // Only increment comment count for posts, not tasks
     if (!isTaskComment) {
+        console.log("addComment DEBUG: This is a post comment, incrementing count.");
         batch.update(parentRef, { comments: increment(1) });
+    } else {
+        console.log("addComment DEBUG: This is a task comment, not incrementing count.");
     }
     
     // Non-blocking commit
     batch.commit().catch(error => {
-        console.error("DEBUG: Batch write failed in addComment.", { path: parentRef.path, error });
+        console.error("addComment DEBUG: Batch write failed in addComment.", { path: parentRef.path, error });
         const permissionError = new FirestorePermissionError({
             path: `batch write to ${parentRef.path} and ${newCommentRef.path}`,
             operation: 'write',
