@@ -43,8 +43,6 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
 
   const dmsQuery = useMemoFirebase(() => {
     if (!firestore || !currentUser) return null;
-    // The orderBy was causing a composite index requirement with the array-contains filter.
-    // Removing it to simplify the query and rely on client-side sorting if needed.
     return query(
         collection(firestore, 'dms'), 
         where('participants', 'array-contains', currentUser.uid)
@@ -265,3 +263,5 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
     </div>
   );
 }
+
+    
