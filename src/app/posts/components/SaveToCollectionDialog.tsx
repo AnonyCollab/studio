@@ -28,50 +28,6 @@ interface Collection {
   isSaved: boolean;
 }
 
-const mockCollections: Collection[] = [
-    {
-      id: "1",
-      name: "All Posts",
-      isPrivate: false,
-      thumbnailUrl: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe",
-      itemCount: 142,
-      isSaved: false,
-    },
-    {
-      id: "2",
-      name: "Design Inspo",
-      isPrivate: true,
-      thumbnailUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64",
-      itemCount: 38,
-      isSaved: true,
-    },
-    {
-      id: "3",
-      name: "Travel",
-      isPrivate: false,
-      thumbnailUrl: "https://images.unsplash.com/photo-1488646953014-85cb44e25828",
-      itemCount: 67,
-      isSaved: false,
-    },
-    {
-      id: "4",
-      name: "Food & Recipes",
-      isPrivate: true,
-      thumbnailUrl: "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
-      itemCount: 24,
-      isSaved: false,
-    },
-    {
-      id: "5",
-      name: "Architecture",
-      isPrivate: false,
-      thumbnailUrl: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2",
-      itemCount: 15,
-      isSaved: false,
-    },
-  ];
-
-
 interface SaveToCollectionDialogProps {
   children: ReactNode;
   postTitle: string;
@@ -87,7 +43,7 @@ export function SaveToCollectionDialog({
 }: SaveToCollectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [collections, setCollections] = useState<Collection[]>(mockCollections);
+  const [collections, setCollections] = useState<Collection[]>([]); // Removed mock data
   const isMobile = useIsMobile();
   const isDark = theme === "dark";
 
