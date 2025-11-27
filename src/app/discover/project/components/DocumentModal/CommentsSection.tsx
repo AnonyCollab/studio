@@ -23,7 +23,7 @@ interface Comment {
 interface CommentsSectionProps {
   taskId: string;
   isLight: boolean;
-  theme: string;
+  theme: any;
   projectId: string | null;
 }
 
@@ -133,7 +133,7 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
                 type="text"
                 placeholder="Add a comment..."
                 value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
+                onChange={(e: any) => setCommentText(e.target.value)}
                 className={`flex-1 border rounded-lg px-4 py-2 outline-none transition-all shadow-sm ${inputClass}`}
                 />
             </form>
