@@ -36,18 +36,19 @@ interface DirectMessagesSidebarProps {
 export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView, activeView, theme }: DirectMessagesSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const isDark = theme === 'dark';
-  const { user: currentUser } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const [dmConversations, setDmConversations] = useState<DMConversation[]>([]);
 
   const dmsQuery = useMemoFirebase(() => {
-    if (!firestore || !currentUser) return null;
+    // CRITICAL: Do not run the query until auth state is resolved.
+    if (isUserLoading || !firestore || !currentUser) return null;
     return query(
         collection(firestore, 'dms'), 
         where('participants', 'array-contains', currentUser.uid)
       );
-  }, [firestore, currentUser]);
+  }, [firestore, currentUser, isUserLoading]);
 
   const { data: dmsData } = useCollection(dmsQuery);
 
@@ -263,5 +264,3 @@ export function DirectMessagesSidebar({ selectedDM, onSelectDM, onSelectHomeView
     </div>
   );
 }
-
-    

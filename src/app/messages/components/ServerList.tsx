@@ -1,5 +1,4 @@
 
-
 import { Home, Plus, Users, Gamepad2, Music, Code } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState } from 'react';
@@ -107,5 +106,3 @@ export function ServerList({ servers, selectedServer, onSelectServer, theme }: S
     </TooltipProvider>
   );
 }
-
-    

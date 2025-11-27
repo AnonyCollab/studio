@@ -40,7 +40,7 @@ interface FriendsPageProps {
 const getDmId = (uid1: string, uid2: string) => [uid1, uid2].sort().join('_');
 
 export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [newFriendInput, setNewFriendInput] = useState('');
@@ -51,21 +51,21 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   // --- Firestore Queries ---
 
   const incomingRequestsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (isUserLoading || !firestore || !user) return null;
     return query(collection(firestore, 'friendRequests'), where('receiverId', '==', user.uid), where('status', '==', 'pending'));
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
   const { data: incomingRequestsData } = useCollection(incomingRequestsQuery);
   
   const outgoingRequestsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (isUserLoading || !firestore || !user) return null;
     return query(collection(firestore, 'friendRequests'), where('senderId', '==', user.uid), where('status', '==', 'pending'));
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
   const { data: outgoingRequestsData } = useCollection(outgoingRequestsQuery);
 
   const userDocRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
+    if (isUserLoading || !firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
 
   // Step 1: Get the current user's friend UIDs
   const [friendUIDs, setFriendUIDs] = useState<string[]>([]);
@@ -82,10 +82,10 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
 
   // Step 2: Use the friend UIDs to query only the friend documents
   const friendsQuery = useMemoFirebase(() => {
-    if (!firestore || friendUIDs.length === 0) return null;
+    if (isUserLoading || !firestore || friendUIDs.length === 0) return null;
     // This query fetches documents where the document ID is in the friendUIDs array.
     return query(collection(firestore, 'users'), where(documentId(), 'in', friendUIDs));
-  }, [firestore, friendUIDs]);
+  }, [firestore, friendUIDs, isUserLoading]);
 
   const { data: friendsData } = useCollection(friendsQuery);
 

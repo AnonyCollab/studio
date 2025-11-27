@@ -27,13 +27,14 @@ function MessagesAppContent() {
   const { theme, setTheme } = useTheme();
   const isMobile = useIsMobile();
   const searchParams = useSearchParams();
-  const { user: currentUser } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const firestore = useFirestore();
 
   const serversQuery = useMemoFirebase(() => {
-    if (!firestore || !currentUser) return null;
+    // CRITICAL: Do not run the query until auth state is resolved.
+    if (isUserLoading || !firestore || !currentUser) return null;
     return query(collection(firestore, 'servers'), where('members', 'array-contains', currentUser.uid));
-  }, [firestore, currentUser]);
+  }, [firestore, currentUser, isUserLoading]);
 
   const { data: serversData } = useCollection(serversQuery);
 
