@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X } from 'lucide-react';
 import { Assignee } from '../../types';
@@ -23,7 +24,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
         <div className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${labelClass}`}>Users</div>
         {members.filter(a => a.type === 'user').map(assignee => (
             <button
-                key={assignee.name}
+                key={assignee.id}
                 onClick={() => onSelect(assignee.name)}
                 className={`w-full flex items-center gap-3 px-3 py-2 transition-colors rounded-lg ${itemHover}`}
             >
@@ -34,7 +35,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
         <div className={`px-3 py-2 mt-1 text-xs font-bold uppercase tracking-wider border-t ${isLight ? 'border-slate-100' : 'border-gray-700'} ${labelClass}`}>Teams</div>
         {members.filter(a => a.type === 'team').map(team => (
             <button
-                key={team.name}
+                key={team.id}
                 onClick={() => onSelect(team.name)}
                 className={`w-full flex items-center gap-3 px-3 py-2 transition-colors rounded-lg ${itemHover}`}
             >
@@ -70,7 +71,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
                     <div className="space-y-2">
                         {members.filter(a => a.type === 'user').map(assignee => (
                             <button
-                                key={assignee.name}
+                                key={assignee.id}
                                 onClick={() => onSelect(assignee.name)}
                                 className={`w-full flex items-center gap-4 p-3 rounded-xl transition-colors ${isLight ? 'bg-slate-50 active:bg-slate-200' : 'bg-white/5 active:bg-white/10'}`}
                             >
@@ -86,7 +87,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
                     <div className="space-y-2">
                         {members.filter(a => a.type === 'team').map(team => (
                             <button
-                                key={team.name}
+                                key={team.id}
                                 onClick={() => onSelect(team.name)}
                                 className={`w-full flex items-center gap-4 p-3 rounded-xl transition-colors ${isLight ? 'bg-slate-50 active:bg-slate-200' : 'bg-white/5 active:bg-white/10'}`}
                             >
