@@ -236,7 +236,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
 
   const renderActivity = () => (
       <div className="space-y-3 pl-2 border-l border-dashed border-white/10">
-        {(task.history || []).slice(0, 5).map(h => (
+        {(task.history || []).slice().reverse().map(h => (
             <div key={h.id} className="relative">
                 <div className="absolute -left-[13px] top-1.5 w-2 h-2 rounded-full bg-slate-500" />
                 <p className={`text-xs ${textMain}`}>
@@ -251,22 +251,24 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   
  const renderCommentAndActivityTabs = () => (
     <Tabs defaultValue="comments" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-transparent p-0 border-b rounded-none mb-4">
+        <TabsList className="bg-transparent p-0 border-b rounded-none mb-4 gap-6">
             <TabsTrigger 
                 value="comments" 
-                className={isLight 
-                    ? "data-[state=active]:border-brand-500 data-[state=active]:text-brand-600 border-b-2 border-transparent rounded-none" 
-                    : "data-[state=active]:border-brand-400 data-[state=active]:text-brand-400 border-b-2 border-transparent rounded-none"
-                }
+                className={`bg-transparent p-0 pb-2 text-sm font-medium border-b-2 rounded-none transition-colors
+                    ${isLight 
+                        ? 'text-slate-500 data-[state=active]:text-brand-600 data-[state=active]:border-brand-600 border-transparent hover:text-slate-800' 
+                        : 'text-slate-400 data-[state=active]:text-brand-400 data-[state=active]:border-brand-400 border-transparent hover:text-white'
+                    }`}
             >
                 <MessageCircle size={14} className="mr-2"/> Comments
             </TabsTrigger>
             <TabsTrigger 
                 value="activity" 
-                className={isLight 
-                    ? "data-[state=active]:border-brand-500 data-[state=active]:text-brand-600 border-b-2 border-transparent rounded-none" 
-                    : "data-[state=active]:border-brand-400 data-[state=active]:text-brand-400 border-b-2 border-transparent rounded-none"
-                }
+                 className={`bg-transparent p-0 pb-2 text-sm font-medium border-b-2 rounded-none transition-colors
+                    ${isLight 
+                        ? 'text-slate-500 data-[state=active]:text-brand-600 data-[state=active]:border-brand-600 border-transparent hover:text-slate-800' 
+                        : 'text-slate-400 data-[state=active]:text-brand-400 data-[state=active]:border-brand-400 border-transparent hover:text-white'
+                    }`}
             >
                 <History size={14} className="mr-2"/> Activity
             </TabsTrigger>
