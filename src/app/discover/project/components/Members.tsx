@@ -34,7 +34,10 @@ interface MembersProps {
 export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers, onViewProfile }) => {
     const { user: authUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
-    const [selectedDepartment, setSelectedDepartment] = useState<Assignee | null>(null);
+    
+    // New: History stack for drill-down
+    const [drilldownHistory, setDrilldownHistory] = useState<Assignee[]>([]);
+    
     const { updateMember, currentUser, removeMember, addMember } = useStore();
     const { toast } = useToast();
     const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
@@ -46,8 +49,6 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
 
     const allMembers = initialMembers;
     const departments = allMembers.filter(m => m.type === 'team' && !m.parentId);
-    const teams = allMembers.filter(m => m.type === 'team' && m.parentId);
-    const users = allMembers.filter(m => m.type === 'user');
 
     const getStats = (name: string) => {
         const userTasks = tasks.filter(t => t.assignee.name === name);
@@ -58,14 +59,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         };
     };
 
-    const getDepartmentDetails = (dept: Assignee) => {
-        return {
-            teams: teams.filter(t => t.parentId === dept.id),
-            members: users.filter(u => u.department === dept.name),
-            tasks: tasks.filter(t => t.assignee.name === dept.name)
-        };
-    };
-
+    const getSubItems = (parentId: string | null | undefined, type: 'team' | 'user') => {
+        if (type === 'team') {
+            return allMembers.filter(m => m.type === 'team' && m.parentId === parentId);
+        }
+        // Get users assigned to a department/team
+        return allMembers.filter(m => m.type === 'user' && m.department === parentId);
+    }
+    
     const handleAddFriend = (member: Assignee) => {
         console.log(`Sending friend request to ${member.displayName || member.name}`);
         toast({
@@ -103,6 +104,16 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         setNewDepartmentName('');
     };
 
+    const handleDrillDown = (item: Assignee) => {
+        setDrilldownHistory(prev => [...prev, item]);
+    };
+
+    const handleGoBack = () => {
+        setDrilldownHistory(prev => prev.slice(0, -1));
+    }
+
+    const currentItem = drilldownHistory.length > 0 ? drilldownHistory[drilldownHistory.length - 1] : null;
+
 
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:border-brand-500/50" : "bg-[#18181b]/80 border-white/5 hover:border-brand-500/50";
@@ -110,8 +121,6 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
     const tableHeaderBg = isLight ? "bg-black/5 text-slate-600" : "bg-white/5 text-slate-400";
     const tableRowBorder = isLight ? "border-black/5 hover:bg-black/5" : "border-white/5 hover:bg-white/5";
-
-    const departmentDetails = selectedDepartment ? getDepartmentDetails(selectedDepartment) : { teams: [], members: [], tasks: [] };
 
     return (
         <>
@@ -135,7 +144,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
-                                    {users.map(member => {
+                                    {allMembers.filter(m => m.type === 'user').map(member => {
                                         const stats = getStats(member.displayName || member.name);
                                         const currentUserRoleIndex = ROLE_HIERARCHY.indexOf(currentUser.role);
                                         const memberRoleIndex = ROLE_HIERARCHY.indexOf(member.role || 'Member');
@@ -241,7 +250,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                             {departments.map(dept => (
                                 <div 
                                     key={dept.id} 
-                                    onClick={() => setSelectedDepartment(dept)}
+                                    onClick={() => handleDrillDown(dept)}
                                     className={`p-6 rounded-2xl border shadow-lg backdrop-blur-sm flex items-center justify-between cursor-pointer active:scale-[0.98] ${cardClass}`}
                                 >
                                     <div className="flex items-center gap-4">
@@ -285,12 +294,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
             </div>
 
             <DepartmentSheet 
-                department={selectedDepartment}
-                members={departmentDetails.members}
-                teams={departmentDetails.teams}
-                tasks={departmentDetails.tasks}
-                isOpen={!!selectedDepartment}
-                onClose={() => setSelectedDepartment(null)}
+                item={currentItem}
+                members={currentItem ? getSubItems(currentItem.name, 'user') : []}
+                teams={currentItem ? getSubItems(currentItem.id, 'team') : []}
+                tasks={currentItem ? tasks.filter(t => t.assignee.name === currentItem.name) : []}
+                isOpen={!!currentItem}
+                onClose={() => setDrilldownHistory([])}
+                onBack={drilldownHistory.length > 1 ? handleGoBack : undefined}
+                onSelectTeam={handleDrillDown}
                 theme={theme}
             />
         </>

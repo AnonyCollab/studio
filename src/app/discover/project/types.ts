@@ -41,7 +41,7 @@ export interface Assignee {
   color: string;
   type?: 'user' | 'team';
   role?: UserRole;
-  department?: string; // e.g., 'Frontend Team'
+  department?: string; // This is the ID of the parent department/team
   parentId?: string | null; // For linking teams to departments
   uid: string; // Add this to align with member data
 }

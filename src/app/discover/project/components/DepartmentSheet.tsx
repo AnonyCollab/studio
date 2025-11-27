@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Users, Briefcase, PlusCircle, Folder } from 'lucide-react';
+import { X, Users, Briefcase, PlusCircle, Folder, ArrowLeft } from 'lucide-react';
 import { Assignee, TaskNode, Theme, UserRole } from '../types';
 import { PriorityIcon } from './Plan';
 import { Button } from '@/components/ui/button';
@@ -11,12 +11,14 @@ import { useStore } from '../store/useStore';
 import { useToast } from '@/hooks/use-toast';
 
 interface DepartmentSheetProps {
-    department: Assignee | null;
-    members: Assignee[]; // Members of this team
-    teams: Assignee[]; // Teams under this department
-    tasks: TaskNode[]; // Tasks assigned to this team context
+    item: Assignee | null;
+    members: Assignee[]; // Members of this team/dept
+    teams: Assignee[]; // Teams under this dept
+    tasks: TaskNode[]; // Tasks assigned to this context
     isOpen: boolean;
     onClose: () => void;
+    onBack?: () => void;
+    onSelectTeam: (team: Assignee) => void;
     theme: Theme;
 }
 
@@ -27,8 +29,8 @@ const Backdrop: React.FC<{ onClick: () => void, isLight: boolean }> = ({ onClick
     return <div className={`fixed inset-0 z-[150] ${overlayClass} animate-in fade-in duration-300`} onClick={onClick} />;
 };
 
-const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({ 
-    department, members, teams, tasks, onClose, theme
+const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({ 
+    item, members, teams, tasks, onClose, onBack, onSelectTeam, theme
 }) => {
     const [activeTab, setActiveTab] = useState<Tab>('Overview');
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
@@ -58,7 +60,7 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
     }, [tasks]);
 
     const handleCreateTeam = () => {
-        if (!addMember || !newTeamName.trim() || !department) {
+        if (!addMember || !newTeamName.trim() || !item) {
             setIsCreatingTeam(false);
             setNewTeamName('');
             return;
@@ -68,11 +70,11 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
             name: newTeamName,
             type: 'team',
             color: 'bg-teal-500',
-            parentId: department.id
+            parentId: item.id
         });
         toast({
             title: "Team Created",
-            description: `The "${newTeamName}" team has been created in ${department.name}.`
+            description: `The "${newTeamName}" team has been created in ${item.name}.`
         });
         setIsCreatingTeam(false);
         setNewTeamName('');
@@ -82,11 +84,16 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
         <div className="flex flex-col h-full">
             <div className={`flex flex-col md:flex-row md:items-center justify-between px-6 py-6 border-b flex-shrink-0 gap-4 ${borderClass}`}>
                 <div className="flex items-center gap-4">
-                    <div className={`w-16 h-16 rounded-2xl ${department.color} flex items-center justify-center text-white font-bold text-2xl shadow-xl`}>
-                        {department.initials}
+                     {onBack && (
+                        <button onClick={onBack} className={`p-2 rounded-full -ml-2 transition-colors ${isLight ? 'hover:bg-slate-100' : 'hover:bg-white/10'}`}>
+                            <ArrowLeft size={24} />
+                        </button>
+                    )}
+                    <div className={`w-16 h-16 rounded-2xl ${item.color} flex items-center justify-center text-white font-bold text-2xl shadow-xl`}>
+                        {item.initials}
                     </div>
                     <div>
-                        <h2 className={`text-3xl font-bold ${textMain}`}>{department.name}</h2>
+                        <h2 className={`text-3xl font-bold ${textMain}`}>{item.name}</h2>
                         <div className={`flex items-center gap-3 mt-1 text-sm ${textMuted}`}>
                             <span className="flex items-center gap-1"><Users size={14} /> {members.length} Members</span>
                             <span className="w-1 h-1 rounded-full bg-current opacity-50" />
@@ -214,7 +221,7 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
                          )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {teams.map(team => (
-                                <div key={team.id} className={`p-4 rounded-xl border ${cardClass}`}>
+                                <div key={team.id} onClick={() => onSelectTeam(team)} className={`p-4 rounded-xl border cursor-pointer ${cardClass}`}>
                                     <h4 className={`font-bold ${textMain}`}>{team.name}</h4>
                                 </div>
                             ))}
@@ -244,11 +251,11 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
 
 
 export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
-    const { isOpen, onClose, department, theme } = props;
+    const { isOpen, onClose, item, theme } = props;
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
     const sheetClass = isLight ? "bg-white text-slate-900" : "bg-[#18181b] text-white border-white/10";
 
-    if (!isOpen || !department) return null;
+    if (!isOpen || !item) return null;
 
     return (
         <>
@@ -258,12 +265,12 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
                 <div className="w-full flex items-center justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
                     <div className={`w-12 h-1.5 rounded-full ${isLight ? 'bg-slate-300' : 'bg-white/20'}`} />
                 </div>
-                <Content {...props} department={department} />
+                <Content {...props} item={item} />
             </div>
 
             <div className="hidden lg:flex fixed inset-0 z-[160] items-center justify-center p-8 pointer-events-none">
                 <div className={`w-full max-w-6xl h-[90vh] rounded-3xl shadow-2xl border pointer-events-auto flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 ${sheetClass}`}>
-                    <Content {...props} department={department} />
+                    <Content {...props} item={item} />
                 </div>
             </div>
         </>
