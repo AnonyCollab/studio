@@ -6,7 +6,6 @@ import { ArticleCard } from './components/ArticleCard';
 import { CategoryNav } from './components/CategoryNav';
 import { TrendingTopics } from './components/TrendingTopics';
 import type { Article } from './data';
-import { useRouter } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useMemo } from 'react';
@@ -14,7 +13,6 @@ import { formatDistanceToNow } from 'date-fns';
 
 export default function NewsPage() {
   const { theme } = useTheme();
-  const router = useRouter();
   const firestore = useFirestore();
 
   const articlesQuery = useMemoFirebase(() => {
@@ -52,7 +50,6 @@ export default function NewsPage() {
                   key={featuredArticle.id} 
                   article={{...featuredArticle, author: { name: featuredArticle.authorName, image: featuredArticle.authorImage}, featured: true }} 
                   theme={theme}
-                  onClick={() => router.push(`/news/${featuredArticle.id}`)}
                 />
               )}
               {regularArticles.map((article) => (
@@ -60,7 +57,6 @@ export default function NewsPage() {
                   key={article.id} 
                   article={{...article, author: { name: article.authorName, image: article.authorImage}, featured: false}} 
                   theme={theme}
-                  onClick={() => router.push(`/news/${article.id}`)}
                 />
               ))}
             </div>
