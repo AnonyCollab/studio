@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DocumentHeader } from './DocumentHeader';
@@ -13,8 +13,6 @@ import type { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem, Stat
 import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore.tsx';
 import { FilePreview } from '../FilePreview';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-
 
 interface DocumentModalProps {
   task: TaskNode;
@@ -62,6 +60,10 @@ const getFileIcon = (type?: string) => {
     if (type.includes('pdf')) return <FileText size={16} />;
     return <FileText size={16} />;
 };
+
+// Runtime constants to replace compile-time types
+const STATUS_VALUES: Status[] = ['Backlog', 'In Progress', 'Review', 'Done'];
+const PRIORITY_VALUES: Priority[] = ['Low', 'Medium', 'High', 'Critical'];
 
 
 export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme }) => {
@@ -258,10 +260,10 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     const parts = action.split(/\*\*(.*?)\*\*/g);
     return parts.map((part, index) => {
         if (index % 2 !== 0) { // Text between **
-            if (Object.values(Status).includes(part as Status)) {
+            if (STATUS_VALUES.includes(part as Status)) {
                 return <strong key={index} className={getStatusColorClass(part)}>{part}</strong>;
             }
-            if (Object.values(Priority).includes(part as Priority)) {
+            if (PRIORITY_VALUES.includes(part as Priority)) {
                 return <strong key={index} className={getPriorityColorClass(part)}>{part}</strong>;
             }
             if (members.some(m => m.displayName === part)) {
@@ -285,7 +287,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                     <p className={`text-sm ${textMain}`}>
                         <strong className="text-purple-400 cursor-pointer hover:underline">{h.user}</strong> {renderActivityText(h.action)}
                     </p>
-                    <p className={`text-xs opacity-70 ${textMuted}`}>{new Date(h.date).toLocaleString()}</p>
+                    <p className={`text-sm opacity-70 ${textMuted}`}>{new Date(h.date).toLocaleString()}</p>
                 </div>
             </div>
         ))}
@@ -311,17 +313,17 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                                 onClick={() => setActiveTab(tab.id)}
                                 className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors
                                     ${isActive
-                                        ? (isLight ? 'text-blue-600' : 'text-blue-400')
+                                        ? 'text-blue-400'
                                         : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white')
                                     }
                                 `}
                             >
-                                <Icon size={14} /> {tab.label}
+                                <Icon size={14} className={isActive ? 'text-blue-400' : ''} /> {tab.label}
                             </button>
                              {isActive && (
                                 <motion.div
                                     layoutId="underline"
-                                    className={`absolute bottom-0 left-0 right-0 h-0.5 ${isLight ? 'bg-blue-600' : 'bg-blue-400'}`}
+                                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400"
                                 />
                              )}
                          </div>
@@ -425,7 +427,6 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                                 properties={properties}
                                 updateProperty={handleUpdateProperty}
                                 isLight={isLight}
-                                allowedTypes={allowedTypes}
                                 members={members}
                             />
                         </div>
