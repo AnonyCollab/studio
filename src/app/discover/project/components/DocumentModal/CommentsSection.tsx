@@ -1,4 +1,6 @@
 
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
@@ -22,9 +24,10 @@ interface CommentsSectionProps {
   taskId: string;
   isLight: boolean;
   theme: string;
+  projectId: string | null;
 }
 
-export function CommentsSection({ taskId, isLight, theme }: CommentsSectionProps) {
+export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsSectionProps) {
   const [commentText, setCommentText] = useState('');
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
@@ -33,9 +36,9 @@ export function CommentsSection({ taskId, isLight, theme }: CommentsSectionProps
   const { toast } = useToast();
 
   const commentsQuery = useMemoFirebase(() => {
-    if (!firestore || !taskId) return null;
-    return query(collection(firestore, 'projects', 'your-project-id', 'tasks', taskId, 'comments'), orderBy('createdAt', 'asc'));
-  }, [firestore, taskId]);
+    if (!firestore || !projectId || !taskId) return null;
+    return query(collection(firestore, 'projects', projectId, 'tasks', taskId, 'comments'), orderBy('createdAt', 'asc'));
+  }, [firestore, projectId, taskId]);
 
   const { data: commentsData } = useCollection<Comment>(commentsQuery);
 
@@ -78,15 +81,13 @@ export function CommentsSection({ taskId, isLight, theme }: CommentsSectionProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentText.trim() || !user || !firestore) {
+    if (!commentText.trim() || !user || !firestore || !projectId) {
       if (!user) toast({ variant: "destructive", title: "Authentication required" });
       return;
     };
     
     try {
-        // This needs a new `addProjectTaskComment` function. Let's assume `addComment` can be adapted.
-        // For now, let's write to a new subcollection for tasks
-        await addComment(firestore, `projects/your-project-id/tasks/${taskId}`, commentText, user);
+        await addComment(firestore, `projects/${projectId}/tasks/${taskId}`, commentText, user, true);
         setCommentText('');
 
     } catch(err) {
@@ -130,7 +131,7 @@ export function CommentsSection({ taskId, isLight, theme }: CommentsSectionProps
       {(commentsData || []).length > 0 && (
         <div className="space-y-4">
           {commentsData?.map((comment) => (
-             <CommentItem key={comment.id} postId={taskId} comment={comment} theme={theme} />
+             <CommentItem key={comment.id} postId={taskId} comment={comment} theme={theme} isTaskComment={true} projectId={projectId} />
           ))}
         </div>
       )}

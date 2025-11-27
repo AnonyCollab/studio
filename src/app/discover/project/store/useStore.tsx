@@ -37,6 +37,7 @@ export interface ExtendedAppState extends AppState {
   drillDownStack: string[];
   setDrillDownStack: (stack: string[] | ((prev: string[]) => string[])) => void;
   projectData: Project | null;
+  projectId: string | null;
   updateProject: (updates: Partial<Project>) => void;
   isStoreLoading: boolean;
 }
@@ -81,6 +82,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     resourcePath: [null], // Start at the root
     drillDownStack: [],
     projectData: null,
+    projectId: null,
 });
 
 // Helper to bubble up date changes from children to parents (Epic -> Goal -> Milestone)
@@ -227,8 +229,8 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     const isStoreLoading = isProjectLoading || isMembersLoading || isTasksLoading || isFilesLoading || isAuthUserLoading;
 
     useEffect(() => {
-        setState(prev => ({...prev, projectData: projectData || null}));
-    }, [projectData]);
+        setState(prev => ({...prev, projectData: projectData || null, projectId }));
+    }, [projectData, projectId]);
 
     useEffect(() => {
         if (isTasksLoading) return;

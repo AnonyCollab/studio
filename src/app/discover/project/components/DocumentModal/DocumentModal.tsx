@@ -22,6 +22,7 @@ interface DocumentModalProps {
   onUpdate: (id: string, updates: Partial<TaskNode>) => void;
   onAddSubTask: (task: Partial<TaskNode>) => void;
   theme: Theme;
+  projectId: string | null;
 }
 
 const MobileSection: React.FC<{ title: string, children: React.ReactNode, defaultOpen?: boolean, isLight: boolean }> = ({ title, children, defaultOpen = false, isLight }) => {
@@ -61,12 +62,11 @@ const getFileIcon = (type?: string) => {
     return <FileText size={16} />;
 };
 
-// Runtime constants to replace compile-time types
 const STATUS_VALUES: Status[] = ['Backlog', 'In Progress', 'Review', 'Done'];
 const PRIORITY_VALUES: Priority[] = ['Low', 'Medium', 'High', 'Critical'];
 
 
-export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme }) => {
+export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme, projectId }) => {
   const { members, files } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
@@ -98,7 +98,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       return;
     }
     
-    if (key === 'assign') {
+    if (key === 'assignee') {
         console.log(`DEBUG: Attempting to assign task. Received displayName: "${value}"`);
         const fullAssignee = members.find(a => a.displayName === value);
         
@@ -337,6 +337,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                         taskId={task.id}
                         isLight={isLight}
                         theme={theme}
+                        projectId={projectId}
                     />
                 )}
                 {activeTab === 'activity' && (

@@ -58,9 +58,11 @@ interface Comment {
 }
 
 interface CommentItemProps {
-  postId: string;
+  postId: string; // can also be taskId
   comment: Comment;
   theme?: "light" | "dark";
+  isTaskComment?: boolean;
+  projectId?: string | null;
 }
 
 const renderContentWithMentions = (content: string, isDark: boolean) => {
@@ -153,7 +155,7 @@ const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, is
 };
 
 
-export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProps) {
+export function CommentItem({ postId, comment, theme = "dark", isTaskComment = false, projectId }: CommentItemProps) {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
@@ -170,10 +172,17 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
 
-  useEffect(() => {
-    if (!firestore || !postId || !comment.id) return;
+  const basePath = useMemo(() => {
+    if (isTaskComment) {
+        return `projects/${projectId}/tasks/${postId}/comments/${comment.id}`;
+    }
+    return `posts/${postId}/comments/${comment.id}`;
+  }, [isTaskComment, projectId, postId, comment.id]);
 
-    const repliesQuery = query(collection(firestore, "posts", postId, "comments", comment.id, "replies"), orderBy("createdAt", "asc"));
+  useEffect(() => {
+    if (!firestore || !basePath) return;
+
+    const repliesQuery = query(collection(firestore, basePath, "replies"), orderBy("createdAt", "asc"));
     
     const unsubscribe = onSnapshot(repliesQuery, (replySnapshot) => {
         const repliesData = replySnapshot.docs.map(replyDoc => {
@@ -188,7 +197,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     });
 
     return () => unsubscribe();
-  }, [firestore, postId, comment.id]);
+  }, [firestore, basePath]);
 
   const handleSubmitReply = async (commentId: string) => {
     const content = replyContent.trim();
@@ -200,6 +209,7 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     if (!firestore) return;
 
     try {
+      // For replies, the path is always within a comment, so `addReply` is fine
       await addReply(firestore, postId, commentId, content, user);
       setReplyContent("");
       setReplyingTo(null);

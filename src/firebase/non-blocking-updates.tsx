@@ -126,10 +126,11 @@ export function addPost(firestore: Firestore, postData: any, user: User | null) 
 
 /**
  * Adds a new comment to a post's 'comments' subcollection in Firestore.
+ * Can also be used for task comments by providing a full path.
  */
-export function addComment(firestore: Firestore, postId: string, commentText: string, user: User) {
-    const commentsCollection = collection(firestore, 'posts', postId, 'comments');
-    const postRef = doc(firestore, 'posts', postId);
+export function addComment(firestore: Firestore, parentPath: string, commentText: string, user: User, isTaskComment: boolean = false) {
+    const commentsCollection = collection(firestore, parentPath, 'comments');
+    const parentRef = doc(firestore, parentPath);
 
     const commentData = {
         authorId: user.uid,
@@ -144,19 +145,19 @@ export function addComment(firestore: Firestore, postId: string, commentText: st
     const newCommentRef = doc(commentsCollection); // Create a new doc ref for the comment
     batch.set(newCommentRef, commentData);
     
-    // Update comment count on post
-    batch.update(postRef, { comments: increment(1) });
+    // Only increment comment count for posts, not tasks
+    if (!isTaskComment) {
+        batch.update(parentRef, { comments: increment(1) });
+    }
     
     // Non-blocking commit
     batch.commit().catch(error => {
-        errorEmitter.emit(
-          'permission-error',
-          new FirestorePermissionError({
-            path: `batch write to ${postRef.path} and ${newCommentRef.path}`,
+        const permissionError = new FirestorePermissionError({
+            path: `batch write to ${parentRef.path} and ${newCommentRef.path}`,
             operation: 'write',
-            requestResourceData: { postUpdate: { comments: 'increment' }, newComment: commentData },
-          })
-        );
+            requestResourceData: { parentUpdate: { comments: 'increment' }, newComment: commentData },
+        });
+        errorEmitter.emit('permission-error', permissionError);
     });
 }
 

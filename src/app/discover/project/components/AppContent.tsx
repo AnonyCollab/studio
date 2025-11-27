@@ -15,7 +15,7 @@ import { Sidebar } from './Sidebar';
 import { MobileViewSheet } from './MobileViewSheet';
 import { CreationSheet } from './CreationSheet';
 import { useStore } from '../store/useStore.tsx';
-import { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from '../types';
+import type { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from '../types';
 import { SettingsPage } from './SettingsPage';
 import { useUser } from '@/firebase';
 import { useParams, useRouter } from 'next/navigation';
@@ -33,7 +33,7 @@ export const AppContent: React.FC = () => {
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
-      isStoreLoading, projectData
+      isStoreLoading, projectData, projectId
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
@@ -109,25 +109,44 @@ export const AppContent: React.FC = () => {
 
   // Filter Logic for Header
   const filteredTasks = useMemo(() => {
-      const currentUserName = currentUser.name;
-      const currentTeam = currentUser.teamName || 'Frontend Team';
-
+      if (!currentUser || !tasks || !members) return [];
+      
       switch(filter) {
           case 'Mine':
-              return tasks.filter((t: TaskNode) => t.assignee.name === currentUserName);
+              return tasks.filter((t: TaskNode) => t.assignee?.uid === currentUser.id);
+          
           case 'Team':
-              return tasks.filter((t: TaskNode) => t.assignee.name === currentTeam || t.assignee.type === 'team');
+              const userTeam = members.find(m => m.uid === currentUser.id)?.teamName;
+              if (!userTeam) return [];
+              const teamMemberIds = members.filter(m => m.teamName === userTeam).map(m => m.uid);
+              return tasks.filter((t: TaskNode) => t.assignee?.type === 'team' ? t.assignee.displayName === userTeam : teamMemberIds.includes(t.assignee.uid));
+  
+          case 'Department':
+              const userDepartment = members.find(m => m.uid === currentUser.id)?.department;
+              if (!userDepartment) return [];
+  
+              // Get all teams and users within that department
+              const departmentTeams = members.filter(m => m.parentId === userDepartment);
+              const departmentTeamNames = departmentTeams.map(t => t.displayName);
+              const departmentUserIds = members.filter(m => m.department === userDepartment).map(m => m.uid);
+              
+              return tasks.filter((t: TaskNode) => {
+                  if (t.assignee.type === 'team') {
+                      // Task is assigned to a team
+                      return departmentTeamNames.includes(t.assignee.displayName) || t.assignee.displayName === userDepartment;
+                  }
+                  // Task is assigned to a user
+                  return departmentUserIds.includes(t.assignee.uid);
+              });
+  
           case 'Project':
-              if (focusedParentId) {
-                  return tasks.filter((t: TaskNode) => t.parentId === focusedParentId || t.id === focusedParentId);
-              }
-              return tasks.filter((t: TaskNode) => !t.parentId);
-          case 'All':
-              return tasks;
+               return tasks.filter((t: TaskNode) => t.type === 'Milestone');
+  
           default:
               return tasks;
       }
-  }, [tasks, filter, focusedParentId, currentUser]);
+  }, [tasks, filter, currentUser, members]);
+  
 
   const showHeader = !(isModalOpen && currentPage === 'roadmap');
   
@@ -378,6 +397,7 @@ export const AppContent: React.FC = () => {
                 onUpdate={(id, updates) => updateTask(id, updates)}
                 onAddSubTask={(taskData) => addTask(taskData)}
                 theme={theme}
+                projectId={projectId}
             />
         )}
     </main>
