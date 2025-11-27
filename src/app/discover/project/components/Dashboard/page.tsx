@@ -1,6 +1,6 @@
 
 'use client';
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { Theme, DashboardViewMode } from '../../types';
 import { Target, Users, Briefcase } from 'lucide-react';
 import { useStore } from '../../store/useStore.tsx';
