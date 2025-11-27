@@ -12,7 +12,16 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = () => {
-    const { theme, dashboardView, setDashboardView, isStoreLoading } = useStore();
+    const { theme, dashboardView, setDashboardView, isStoreLoading, currentUser, tasks, members } = useStore();
+
+    console.log("--- Dashboard Debug ---");
+    console.log("Is Store Loading?", isStoreLoading);
+    console.log("Current User:", currentUser);
+    console.log("Tasks Received:", tasks);
+    console.log("Members Received:", members);
+    console.log("-----------------------");
+
+
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";

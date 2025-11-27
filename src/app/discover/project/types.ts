@@ -184,7 +184,7 @@ export interface Document extends TaskNode {
   createdAt: string;
 }
 
-export type Theme = 'light' | 'dark' | 'Sephiroa' | 'Green' | 'Blue';
+export type Theme = 'Light' | 'Dark' | 'Sephiroa' | 'Green' | 'Blue';
 export type BackgroundType = 'Dots' | 'Grid' | 'None';
 export type FilterOption = 'All' | 'Mine' | 'Team' | 'Project';
 
@@ -199,6 +199,7 @@ export interface AppState {
   selectedTaskIds: string[]; 
   isModalOpen: boolean;
   viewMode: ViewMode;
+  dashboardView: DashboardViewMode;
   scale: number;
   focusedParentId: string | null;
   theme: Theme;

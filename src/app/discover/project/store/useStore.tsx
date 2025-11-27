@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect, createContext, useContext, ReactNode } from 'react';
-import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole, Project } from '../types';
+import { AppState, TaskNode, ViewMode, Status, Priority, Theme, BackgroundType, FilterOption, HistoryEntry, UserPost, Assignee, FileItem, CurrentUser, UserRole, Project, DashboardViewMode } from '../types';
 import { MOCK_ASSIGNEES, INITIAL_CYCLES, MOCK_POSTS } from '../constants';
 import { User } from 'firebase/auth';
 import { useCollection, useFirestore, useMemoFirebase, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from '@/firebase';
@@ -30,6 +30,7 @@ export interface ExtendedAppState extends AppState {
   setTasks: (tasks: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => void;
   selectTasks: (ids: string[]) => void;
   setFocusedParentId: (id: string | null) => void;
+  setDashboardView: (view: DashboardViewMode) => void;
   duplicateTask: (id: string) => void;
   moveTask: (taskId: string, newParentId: string | null) => void;
   drillDownStack: string[];
@@ -43,7 +44,7 @@ const createDefaultUser = (authUser: User | null): CurrentUser => {
     if (!authUser) {
         return {
             id: 'guest',
-            name: 'Guest',
+            displayName: 'Guest',
             initials: 'G',
             role: 'Visitor',
             avatarColor: 'bg-slate-500',
@@ -51,7 +52,7 @@ const createDefaultUser = (authUser: User | null): CurrentUser => {
     }
     return {
         id: authUser.uid,
-        name: authUser.displayName || 'Anonymous User',
+        displayName: authUser.displayName || 'Anonymous User',
         initials: (authUser.displayName || 'AU').slice(0, 2).toUpperCase(),
         role: 'Visitor', // Start as visitor, role will be determined after project data loads
         avatarColor: 'bg-blue-500', // This could also be generated
@@ -70,6 +71,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     selectedTaskIds: [],
     isModalOpen: false,
     viewMode: 'canvas',
+    dashboardView: 'Personal',
     scale: 1,
     focusedParentId: null,
     theme: 'Dark',
@@ -284,7 +286,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
             currentUser: {
                 ...prev.currentUser,
                 id: authUser.uid,
-                name: authUser.displayName || prev.currentUser.name,
+                displayName: authUser.displayName || prev.currentUser.displayName,
                 initials: (authUser.displayName || prev.currentUser.initials || '??').slice(0, 2).toUpperCase(),
                 role: userRole,
             }
@@ -386,6 +388,10 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
       setState(prev => ({ ...prev, filter }));
   }, []);
   
+  const setDashboardView = useCallback((view: DashboardViewMode) => {
+    setState(prev => ({ ...prev, dashboardView: view }));
+  }, []);
+
   const addTask = useCallback((task: Partial<TaskNode>): string => {
     if (!firestore || !projectId) return '';
     const id = doc(collection(firestore, 'projects', projectId, 'tasks')).id;
@@ -532,6 +538,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     selectTask,
     selectTasks,
     setViewMode: (mode: ViewMode) => setState(p => ({...p, viewMode: mode})),
+    setDashboardView,
     setScale: (scale: number | ((p: number) => number)) => setState(p => ({...p, scale: typeof scale === 'function' ? scale(p.scale) : scale})),
     setFocusedParentId,
     setTheme,
@@ -549,7 +556,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     isStoreLoading,
   }), [
       state, setCurrentUser, setTasks, addTask, updateTask, deleteTask, duplicateTask, moveTask, 
-      selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, 
+      selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
       addPost, addMember, removeMember, addFile, updateMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading
   ]);
