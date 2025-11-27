@@ -15,10 +15,13 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     const { currentUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading, members } = useStore();
     
     useEffect(() => {
-        console.log("Current user role in Dashboard:", currentUser?.role);
-        console.log("Tasks in Dashboard:", tasks);
-        console.log("Is loading:", isStoreLoading);
-    }, [currentUser, tasks, isStoreLoading]);
+        console.log("--- Dashboard Debug ---");
+        console.log("Is Store Loading?", isStoreLoading);
+        console.log("Current User:", currentUser);
+        console.log("Tasks Received:", tasks);
+        console.log("Members Received:", members);
+        console.log("-----------------------");
+    }, [currentUser, tasks, isStoreLoading, members]);
     
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
