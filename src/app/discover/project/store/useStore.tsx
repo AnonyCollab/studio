@@ -487,12 +487,13 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
         const teamDoc: Assignee = {
             id: newTeamId,
             uid: newTeamId,
-            name: member.name || 'New Department',
-            displayName: member.name || 'New Department',
-            initials: (member.name || 'ND').substring(0, 2).toUpperCase(),
+            name: member.name || 'New Team',
+            displayName: member.name || 'New Team',
+            initials: (member.name || 'NT').substring(0, 2).toUpperCase(),
             type: 'team',
-            color: 'bg-gray-500',
-            role: 'Member' // Teams don't have roles in the same way as users
+            color: member.color || 'bg-gray-500',
+            role: 'Member',
+            parentId: member.parentId || null
         };
         const memberRef = doc(firestore, 'projects', projectId, 'members', newTeamId);
         setDocumentNonBlocking(memberRef, teamDoc, {});
