@@ -351,7 +351,7 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
               placeholder={`Replying to this comment...`}
               value={replyContent}
               onChange={handleReplyChange}
-              className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
+              className={`pr-10 resize-none text-sm ${isDark ? "bg-[#18181b] border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
               rows={1}
             />
             <Button

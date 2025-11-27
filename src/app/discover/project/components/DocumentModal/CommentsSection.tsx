@@ -114,7 +114,7 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
   const headerClass = isLight ? "text-slate-400" : "text-slate-500";
   const inputClass = isLight 
     ? "bg-white border-slate-200 text-slate-700 placeholder-slate-400 focus:border-slate-400 focus:ring-slate-200" 
-    : "bg-[#252525] border-gray-700 text-gray-300 placeholder-gray-600 focus:border-gray-500";
+    : "bg-[#18181b] border-gray-700 text-gray-300 placeholder-gray-600 focus:border-gray-500";
 
   return (
     <div>
