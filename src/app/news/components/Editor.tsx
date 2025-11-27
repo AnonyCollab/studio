@@ -81,7 +81,9 @@ export default function Editor({ onChange, initialContent, editable, collaborati
 
   // Creates a new editor instance.
   const editor: BlockNoteEditor | null = useCreateBlockNote({
-    initialContent: initialBlocks,
+    // IMPORTANT: Do not provide initialContent if collaboration is enabled.
+    // The content will be synced from the collaboration provider.
+    initialContent: collaborationOptions ? undefined : initialBlocks,
     collaboration: collaborationOptions,
   });
 
