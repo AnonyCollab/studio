@@ -75,7 +75,24 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const isReadOnly = !canEdit;
 
   const handleUpdateProperty = (key: string, value: any) => {
-    if (isReadOnly) return;
+    if (isReadOnly) {
+      console.log(`DEBUG: Update blocked for key "${key}". Reason: User is in read-only mode.`);
+      return;
+    }
+    
+    if (key === 'assign') {
+        console.log(`DEBUG: Attempting to assign task. Received displayName: "${value}"`);
+        const fullAssignee = members.find(a => a.displayName === value);
+        
+        if (fullAssignee) {
+            console.log('DEBUG: Found matching assignee object:', fullAssignee);
+            onUpdate(task.id, { assignee: fullAssignee });
+        } else {
+            console.error(`DEBUG: CRITICAL - Could not find assignee with displayName "${value}" in the members list.`, { allMembers: members });
+        }
+        return; 
+    }
+
     if (key === 'status') onUpdate(task.id, { status: value });
     if (key === 'priority') onUpdate(task.id, { priority: value });
     if (key === 'dateStart') onUpdate(task.id, { startDate: value });
@@ -88,13 +105,6 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
         onUpdate(task.id, { type: value });
         if ((value === 'Issue' || value === 'Sub-issue') && !task.parentId) {
             setShowParentPicker(true);
-        }
-    }
-
-    if (key === 'assign') {
-        const fullAssignee = members.find(a => a.name === value);
-        if (fullAssignee) {
-            onUpdate(task.id, { assignee: fullAssignee });
         }
     }
   };
@@ -116,7 +126,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       size: task.size || 'M',
       dateStart: task.startDate,
       dateEnd: task.dueDate,
-      assign: task.assignee.name,
+      assign: task.assignee.displayName,
       cycleId: task.cycleId,
       parentId: task.parentId,
       type: task.type,
