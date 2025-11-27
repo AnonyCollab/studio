@@ -36,8 +36,8 @@ service cloud.firestore {
     // Rules for Direct Messages
     match /dms/{dmId} {
         allow get: if request.auth != null && request.auth.uid in resource.data.participants;
-        // Allow list only if the query is constrained to the user's conversations on the client.
-        allow list: if request.auth != null && request.query.where[0][2].hasAny([request.auth.uid]);
+        // Allow list only if the query is constrained on the client to conversations the user is a part of.
+        allow list: if request.auth != null && request.query.where[0][2] == request.auth.uid;
         allow create: if request.auth != null && request.auth.uid in request.resource.data.participants;
         allow update: if request.auth != null && request.auth.uid in resource.data.participants;
         
