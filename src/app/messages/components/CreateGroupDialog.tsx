@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
-import { collection, query, where, documentId, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, documentId, addDoc, serverTimestamp, onSnapshot, doc } from 'firebase/firestore';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter, FirestorePermissionError } from '@/firebase';
@@ -26,7 +26,7 @@ interface Friend {
 }
 
 export function CreateGroupDialog({ isOpen, onOpenChange, theme }: CreateGroupDialogProps) {
-  const { user: currentUser } = useUser();
+  const { user: currentUser, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
   const [groupName, setGroupName] = useState('');
@@ -34,24 +34,38 @@ export function CreateGroupDialog({ isOpen, onOpenChange, theme }: CreateGroupDi
   const [isLoading, setIsLoading] = useState(false);
   const isDark = theme === 'dark';
 
-  const userDocQuery = useMemoFirebase(() => {
-    if (!firestore || !currentUser) return null;
-    return collection(firestore, 'users');
-  }, [firestore, currentUser]);
+  const [friendUIDs, setFriendUIDs] = useState<string[]>([]);
+  const userDocRef = useMemoFirebase(() => {
+    if (isUserLoading || !firestore || !currentUser) return null;
+    return doc(firestore, 'users', currentUser.uid);
+  }, [firestore, currentUser, isUserLoading]);
 
-  const { data: friendsData } = useCollection(userDocQuery);
+  useEffect(() => {
+    if (!userDocRef) {
+      setFriendUIDs([]);
+      return;
+    }
+    const unsub = onSnapshot(userDocRef, (doc) => {
+      setFriendUIDs(doc.data()?.friends || []);
+    });
+    return () => unsub();
+  }, [userDocRef]);
+
+  const friendsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !firestore || friendUIDs.length === 0) return null;
+    return query(collection(firestore, 'users'), where(documentId(), 'in', friendUIDs));
+  }, [firestore, friendUIDs, isUserLoading]);
+
+  const { data: friendsData } = useCollection(friendsQuery);
 
   const friends: Friend[] = useMemo(() => {
     if (!friendsData) return [];
-    // In a real app, this should query user.friends array. For now, show all users except current.
-    return friendsData
-      .filter(u => u.id !== currentUser?.uid)
-      .map(u => ({
+    return friendsData.map(u => ({
         id: u.id,
         displayName: u.profile.displayName,
         photoURL: u.profile.photoURL
       }));
-  }, [friendsData, currentUser]);
+  }, [friendsData]);
 
   const handleToggleFriend = (friendId: string) => {
     setSelectedFriends(prev =>
