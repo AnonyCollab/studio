@@ -2,9 +2,9 @@
 import React, { useMemo, useEffect } from 'react';
 import { TaskNode, Theme, DashboardViewMode, CurrentUser } from '../types';
 import { StatusBadge, PriorityIcon } from './Plan';
-import { 
-    CheckCircle2, AlertTriangle, Clock, TrendingUp, Users, Layers, 
-    Target, Zap, AlertCircle, Briefcase, Crown 
+import {
+    CheckCircle2, AlertTriangle, Clock, TrendingUp, Users, Layers,
+    Target, Zap, AlertCircle, Briefcase, Crown
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 
@@ -12,22 +12,24 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = () => {
-    const { currentUser, tasks, theme, dashboardView, setDashboardView } = useStore();
+    const { currentUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading } = useStore();
     useEffect(() => {
         console.log("Current user role in Dashboard:", currentUser?.role);
-    }, [currentUser]);
+        console.log("Tasks in Dashboard:", tasks);
+        console.log("Is loading:", isStoreLoading);
+    }, [currentUser, tasks, isStoreLoading]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
     // Mock Team Context for Demo
     const currentTeamName = currentUser.teamName || 'Frontend Team';
-    const teamMembers = ['Alex Chen', 'Sarah Jones', 'Mike Ross']; 
+    const teamMembers = ['Alex Chen', 'Sarah Jones', 'Mike Ross'];
 
     // --- Data Selectors ---
 
     const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser.name), [tasks, currentUser.name]);
-    
-    const teamTasks = useMemo(() => tasks.filter(t => 
-        t.assignee.name === currentTeamName || 
+
+    const teamTasks = useMemo(() => tasks.filter(t =>
+        t.assignee.name === currentTeamName ||
         (t.assignee.type === 'user' && teamMembers.includes(t.assignee.name))
     ), [tasks, currentTeamName]);
 
@@ -42,7 +44,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     };
 
     const getCriticalCount = (taskList: TaskNode[]) => taskList.filter(t => t.priority === 'Critical' && t.status !== 'Done').length;
-    
+
     const getUpcomingDeadlines = (taskList: TaskNode[]) => {
         return taskList
             .filter(t => t.status !== 'Done')
@@ -52,8 +54,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
     // --- Styles ---
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
-    const cardClass = isLight 
-        ? "bg-white/80 border-black/5 shadow-sm hover:shadow-md" 
+    const cardClass = isLight
+        ? "bg-white/80 border-black/5 shadow-sm hover:shadow-md"
         : "bg-[#18181b]/60 border-white/5 shadow-sm hover:bg-[#18181b]/80";
     const textMain = isLight ? "text-slate-800" : "text-slate-100";
     const textMuted = isLight ? "text-slate-500" : "text-slate-400";
@@ -132,9 +134,9 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                             <div key={key} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
                                 <div className={`text-xs font-bold ${textMain} opacity-0 group-hover:opacity-100 transition-opacity`}>{value}</div>
                                 <div className="w-full bg-slate-800/10 rounded-t-md relative overflow-hidden group-hover:bg-slate-800/20 transition-colors h-full flex items-end">
-                                    <div 
-                                        className={`w-full rounded-t-md transition-all duration-1000 ${color} opacity-80 group-hover:opacity-100`} 
-                                        style={{ height: `${Math.max(height, 5)}%` }} 
+                                    <div
+                                        className={`w-full rounded-t-md transition-all duration-1000 ${color} opacity-80 group-hover:opacity-100`}
+                                        style={{ height: `${Math.max(height, 5)}%` }}
                                     />
                                 </div>
                                 <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 truncate w-full text-center">{key}</span>
@@ -164,51 +166,51 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
             {/* Metrics */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <StatCard 
-                    label="My Tasks" 
-                    value={myTasks.length} 
-                    icon={Target} 
-                    color="bg-brand-500/20 text-brand-500" 
+                <StatCard
+                    label="My Tasks"
+                    value={myTasks.length}
+                    icon={Target}
+                    color="bg-brand-500/20 text-brand-500"
                     subtext={`${myTasks.filter(t => t.status === 'In Progress').length} in progress`}
                 />
-                <StatCard 
-                    label="Completed" 
-                    value={`${getCompletionRate(myTasks)}%`} 
-                    icon={CheckCircle2} 
-                    color="bg-emerald-500/20 text-emerald-500" 
+                <StatCard
+                    label="Completed"
+                    value={`${getCompletionRate(myTasks)}%`}
+                    icon={CheckCircle2}
+                    color="bg-emerald-500/20 text-emerald-500"
                     subtext="Last 30 days"
                 />
-                <StatCard 
-                    label="Approaching Deadlines" 
-                    value={getUpcomingDeadlines(myTasks).length} 
-                    icon={Clock} 
-                    color="bg-orange-500/20 text-orange-500" 
+                <StatCard
+                    label="Approaching Deadlines"
+                    value={getUpcomingDeadlines(myTasks).length}
+                    icon={Clock}
+                    color="bg-orange-500/20 text-orange-500"
                     subtext="Due within 48h"
                 />
             </div>
 
             {/* Workspace Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
-                <TaskListWidget 
-                    title="Focus for Today" 
-                    tasks={myTasks.filter(t => t.status === 'In Progress')} 
-                    emptyMsg="No active tasks. Pull from backlog?" 
+                <TaskListWidget
+                    title="Focus for Today"
+                    tasks={myTasks.filter(t => t.status === 'In Progress')}
+                    emptyMsg="No active tasks. Pull from backlog?"
                 />
-                <TaskListWidget 
-                    title="Up Next / Backlog" 
-                    tasks={myTasks.filter(t => t.status === 'Backlog')} 
-                    emptyMsg="You're all caught up!" 
+                <TaskListWidget
+                    title="Up Next / Backlog"
+                    tasks={myTasks.filter(t => t.status === 'Backlog')}
+                    emptyMsg="You're all caught up!"
                 />
                 <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
                     <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Recent Activity</h3>
                     <div className="space-y-4">
-                        {[1,2,3].map(i => (
+                        {[1, 2, 3].map(i => (
                             <div key={i} className="flex gap-3 items-start">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isLight ? 'bg-slate-100' : 'bg-white/10'}`}>
                                     <Layers size={14} className={textMuted} />
                                 </div>
                                 <div>
-                                    <p className={`text-sm ${textMain}`}>Moved <span className="font-bold">Task-{100+i}</span> to <span className="text-brand-500">In Review</span></p>
+                                    <p className={`text-sm ${textMain}`}>Moved <span className="font-bold">Task-{100 + i}</span> to <span className="text-brand-500">In Review</span></p>
                                     <p className={`text-xs ${textMuted}`}>2 hours ago</p>
                                 </div>
                             </div>
@@ -243,31 +245,31 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <StatCard 
-                        label="Active Sprint Items" 
-                        value={teamTasks.filter(t => t.status !== 'Done').length} 
-                        icon={Briefcase} 
-                        color="bg-blue-500/20 text-blue-500" 
+                    <StatCard
+                        label="Active Sprint Items"
+                        value={teamTasks.filter(t => t.status !== 'Done').length}
+                        icon={Briefcase}
+                        color="bg-blue-500/20 text-blue-500"
                     />
-                    <StatCard 
-                        label="Blocked Items" 
-                        value={teamTasks.filter(t => t.priority === 'Critical').length} 
-                        icon={AlertCircle} 
-                        color="bg-rose-500/20 text-rose-500" 
+                    <StatCard
+                        label="Blocked Items"
+                        value={teamTasks.filter(t => t.priority === 'Critical').length}
+                        icon={AlertCircle}
+                        color="bg-rose-500/20 text-rose-500"
                         subtext="Needs attention"
                     />
-                    <StatCard 
-                        label="Team Velocity" 
-                        value="12 pts" 
-                        icon={TrendingUp} 
-                        color="bg-purple-500/20 text-purple-500" 
+                    <StatCard
+                        label="Team Velocity"
+                        value="12 pts"
+                        icon={TrendingUp}
+                        color="bg-purple-500/20 text-purple-500"
                         subtext="Avg per day"
                     />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <DistributionChart data={statusData} title="Sprint Progress" />
-                    
+
                     <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
                         <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Member Workload</h3>
                         <div className="space-y-4">
@@ -281,8 +283,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 w-24 h-2 bg-slate-800/20 rounded-full overflow-hidden">
-                                            <div 
-                                                className={`h-full rounded-full ${m.count > 5 ? 'bg-rose-500' : m.count > 2 ? 'bg-yellow-500' : 'bg-emerald-500'}`} 
+                                            <div
+                                                className={`h-full rounded-full ${m.count > 5 ? 'bg-rose-500' : m.count > 2 ? 'bg-yellow-500' : 'bg-emerald-500'}`}
                                                 style={{ width: `${Math.min(m.count * 10, 100)}%` }}
                                             />
                                         </div>
@@ -293,10 +295,10 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                         </div>
                     </div>
 
-                    <TaskListWidget 
-                        title="Team Blockers" 
-                        tasks={teamTasks.filter(t => t.priority === 'Critical')} 
-                        emptyMsg="No critical blockers." 
+                    <TaskListWidget
+                        title="Team Blockers"
+                        tasks={teamTasks.filter(t => t.priority === 'Critical')}
+                        emptyMsg="No critical blockers."
                     />
                 </div>
             </div>
@@ -329,7 +331,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <DistributionChart data={priorityData} title="Risk Distribution" type="priority" />
-                    
+
                     <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
                         <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Upcoming Milestones</h3>
                         <div className="space-y-0 relative">
@@ -362,10 +364,22 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         { id: 'Project', label: 'Project Overview', icon: Briefcase },
     ];
 
+    // Show loading state while data is being fetched
+    if (isStoreLoading) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <div className={`text-center ${textMuted}`}>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+                    <p>Loading dashboard data...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full h-full p-4 md:p-8 overflow-y-auto custom-scrollbar pb-32 md:pb-8">
             <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
-                
+
                 {/* Desktop Tab Switcher (Visible on lg screens) */}
                 <div className="hidden lg:flex justify-center mb-4">
                     <div className={`flex p-1 rounded-xl border ${containerClass}`}>
@@ -375,8 +389,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                                 onClick={() => setDashboardView && setDashboardView(tab.id)}
                                 className={`
                                     flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all
-                                    ${dashboardView === tab.id 
-                                        ? (isLight ? 'bg-white shadow-sm text-slate-900' : 'bg-white/10 text-white shadow-sm') 
+                                    ${dashboardView === tab.id
+                                        ? (isLight ? 'bg-white shadow-sm text-slate-900' : 'bg-white/10 text-white shadow-sm')
                                         : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white')}
                                 `}
                             >
