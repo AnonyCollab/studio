@@ -29,7 +29,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
     // --- Data Selectors ---
 
-    const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser.name), [tasks, currentUser.name]);
+    const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser.displayName), [tasks, currentUser.displayName]);
     
     const teamTasks = useMemo(() => tasks.filter(t => 
         t.assignee.name === currentTeamName || 
@@ -171,7 +171,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <StatCard 
                     label="My Tasks" 
-                    value={myTasks.length} 
+                    value={myTasks.filter(t => t.status !== 'Done').length} 
                     icon={Target} 
                     color="bg-brand-500/20 text-brand-500" 
                     subtext={`${myTasks.filter(t => t.status === 'In Progress').length} in progress`}
