@@ -41,7 +41,7 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
       return null;
     }
     const path = `projects/${projectId}/tasks/${taskId}/comments`;
-    console.log(`DEBUG: Constructing comments query for path: ${path}`);
+    console.log("DEBUG: Constructing comments query for path:", path);
     return query(collection(firestore, path), orderBy('createdAt', 'asc'));
   }, [firestore, projectId, taskId]);
 

@@ -152,6 +152,7 @@ export function addComment(firestore: Firestore, parentPath: string, commentText
     
     // Non-blocking commit
     batch.commit().catch(error => {
+        console.error("DEBUG: Batch write failed in addComment.", { path: parentRef.path, error });
         const permissionError = new FirestorePermissionError({
             path: `batch write to ${parentRef.path} and ${newCommentRef.path}`,
             operation: 'write',
