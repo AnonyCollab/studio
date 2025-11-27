@@ -12,7 +12,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = () => {
-    const { currentUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading } = useStore();
+    const { currentUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading, members } = useStore();
     useEffect(() => {
         console.log("Current user role in Dashboard:", currentUser?.role);
         console.log("Tasks in Dashboard:", tasks);
@@ -20,9 +20,17 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     }, [currentUser, tasks, isStoreLoading]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
-    // Mock Team Context for Demo
+    // Mock Team Context for Demo - Use current user's team
     const currentTeamName = currentUser.teamName || 'Frontend Team';
-    const teamMembers = ['Alex Chen', 'Sarah Jones', 'Mike Ross'];
+
+    const teamMembers = useMemo(() => {
+        // In a real app, you would fetch members of the current user's team.
+        // For now, we'll just filter from the members list in the store.
+        // This is a simplified mock logic.
+        return (members || [])
+            .filter(m => m.type === 'user')
+            .map(m => m.name);
+    }, [members]);
 
     // --- Data Selectors ---
 
@@ -31,7 +39,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     const teamTasks = useMemo(() => tasks.filter(t =>
         t.assignee.name === currentTeamName ||
         (t.assignee.type === 'user' && teamMembers.includes(t.assignee.name))
-    ), [tasks, currentTeamName]);
+    ), [tasks, currentTeamName, teamMembers]);
 
     const projectTasks = tasks;
 
