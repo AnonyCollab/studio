@@ -92,6 +92,7 @@ export const ProjectOverviewView = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <DistributionChart data={priorityData} title="Risk Distribution" type="priority" />
+                
                 <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
                     <h3 className={`text-lg font-bold mb-6 ${textMain}`}>Upcoming Milestones</h3>
                     <div className="space-y-0 relative">
