@@ -62,61 +62,32 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   }, [firestore, user]);
   const { data: outgoingRequestsData } = useCollection(outgoingRequestsQuery);
 
-  // New query to find accepted requests that the current user sent
-  const acceptedRequestsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'friendRequests'), where('senderId', '==', user.uid), where('status', '==', 'accepted'));
-  }, [firestore, user]);
-  const { data: acceptedRequestsData } = useCollection(acceptedRequestsQuery);
-
-
-  const userDocQuery = useMemoFirebase(() => {
+  const userDocRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'users', user.uid);
   }, [firestore, user]);
 
+  // Step 1: Get the current user's friend UIDs
   const [friendUIDs, setFriendUIDs] = useState<string[]>([]);
   useEffect(() => {
-    if (!userDocQuery) return;
-    const unsub = onSnapshot(userDocQuery, (doc) => {
+    if (!userDocRef) {
+      setFriendUIDs([]);
+      return;
+    };
+    const unsub = onSnapshot(userDocRef, (doc) => {
       setFriendUIDs(doc.data()?.friends || []);
     });
     return () => unsub();
-  }, [userDocQuery]);
+  }, [userDocRef]);
 
+  // Step 2: Use the friend UIDs to query only the friend documents
   const friendsQuery = useMemoFirebase(() => {
     if (!firestore || friendUIDs.length === 0) return null;
+    // This query fetches documents where the document ID is in the friendUIDs array.
     return query(collection(firestore, 'users'), where(documentId(), 'in', friendUIDs));
   }, [firestore, friendUIDs]);
+
   const { data: friendsData } = useCollection(friendsQuery);
-
-  // --- Effect to process accepted friend requests ---
-  useEffect(() => {
-    if (!acceptedRequestsData || acceptedRequestsData.length === 0 || !firestore || !user) return;
-
-    const processAcceptedRequests = async () => {
-      const batch = writeBatch(firestore);
-      const userRef = doc(firestore, 'users', user.uid);
-      
-      acceptedRequestsData.forEach(req => {
-        // Add the receiver to the sender's (current user's) friend list
-        batch.update(userRef, { friends: arrayUnion(req.receiverId) });
-        // Delete the request document to prevent re-processing
-        const reqRef = doc(firestore, 'friendRequests', req.id);
-        batch.delete(reqRef);
-      });
-
-      try {
-        await batch.commit();
-      } catch (error) {
-         console.error("Error processing accepted friend requests:", error);
-         // Optionally emit a permission error if needed
-      }
-    };
-
-    processAcceptedRequests();
-  }, [acceptedRequestsData, firestore, user]);
-
 
   // --- Memoized Data Transformation ---
 
@@ -143,7 +114,8 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
   }, [incomingRequestsData, outgoingRequestsData]);
   
   const allFriends = useMemo((): FriendData[] => {
-    return (friendsData || []).map(friend => ({
+    if (!friendsData) return [];
+    return friendsData.map(friend => ({
       id: friend.id,
       name: friend.profile.displayName,
       avatar: friend.profile.photoURL,
@@ -184,10 +156,7 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
                 });
         }
     } catch (error) {
-        // This will catch the permission error on the getDoc call
         console.error("Error checking/creating DM:", error);
-        // We can choose to optimistically open the DM anyway
-        // or show a toast message. For a better UX, let's just proceed.
     }
 
     onSelectDM(dmId);
@@ -264,10 +233,13 @@ export function FriendsPage({ theme, onSelectDM }: FriendsPageProps) {
         
         const batch = writeBatch(firestore);
 
-        batch.update(requestRef, { status: 'accepted' });
-        
+        const senderUserRef = doc(firestore, 'users', senderId);
+        batch.update(senderUserRef, { friends: arrayUnion(receiverId) });
+
         const receiverUserRef = doc(firestore, 'users', receiverId);
         batch.update(receiverUserRef, { friends: arrayUnion(senderId) });
+        
+        batch.delete(requestRef); // Delete the request after accepting
 
         await batch.commit();
 
