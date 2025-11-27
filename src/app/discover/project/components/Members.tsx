@@ -34,7 +34,7 @@ interface MembersProps {
 export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, members: initialMembers, onViewProfile }) => {
     const { user: authUser } = useUser();
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
-    const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
+    const [selectedDepartment, setSelectedDepartment] = useState<Assignee | null>(null);
     const { updateMember, currentUser, removeMember, addMember } = useStore();
     const { toast } = useToast();
     const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
@@ -45,7 +45,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     }, [currentUser]);
 
     const allMembers = initialMembers;
-    const teams = allMembers.filter(m => m.type === 'team');
+    const departments = allMembers.filter(m => m.type === 'team' && !m.parentId);
+    const teams = allMembers.filter(m => m.type === 'team' && m.parentId);
     const users = allMembers.filter(m => m.type === 'user');
 
     const getStats = (name: string) => {
@@ -57,11 +58,11 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
         };
     };
 
-    const getTeamDetails = (team: Assignee) => {
+    const getDepartmentDetails = (dept: Assignee) => {
         return {
-            lead: allMembers.find(m => m.role === 'Team Lead' && m.team === team.name),
-            members: allMembers.filter(m => m.role === 'Member' && m.team === team.name),
-            tasks: tasks.filter(t => t.assignee.name === team.name)
+            teams: teams.filter(t => t.parentId === dept.id),
+            members: users.filter(u => u.department === dept.name),
+            tasks: tasks.filter(t => t.assignee.name === dept.name)
         };
     };
 
@@ -110,7 +111,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const tableHeaderBg = isLight ? "bg-black/5 text-slate-600" : "bg-white/5 text-slate-400";
     const tableRowBorder = isLight ? "border-black/5 hover:bg-black/5" : "border-white/5 hover:bg-white/5";
 
-    const teamDetails = selectedTeam ? getTeamDetails(selectedTeam) : { lead: undefined, members: [], tasks: [] };
+    const departmentDetails = selectedDepartment ? getDepartmentDetails(selectedDepartment) : { teams: [], members: [], tasks: [] };
 
     return (
         <>
@@ -162,8 +163,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                     </span>
                                                 </td>
                                                 <td className="px-6 py-4 hidden sm:table-cell">
-                                                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${member.team ? 'bg-blue-500/20 text-blue-300' : (isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400')}`}>
-                                                        {member.team || 'Unassigned'}
+                                                     <span className={`text-xs font-medium px-2 py-0.5 rounded ${member.department ? 'bg-blue-500/20 text-blue-300' : (isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/10 text-slate-400')}`}>
+                                                        {member.department || 'Unassigned'}
                                                      </span>
                                                 </td>
                                                 <td className="px-6 py-4">
@@ -198,10 +199,10 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                                                         </DropdownMenuSubTrigger>
                                                                         <DropdownMenuPortal>
                                                                             <DropdownMenuSubContent>
-                                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { team: undefined }); }}>Unassigned</DropdownMenuItem>
-                                                                                {teams.map(team => (
-                                                                                    <DropdownMenuItem key={team.id} onClick={(e) => { e.stopPropagation(); updateMember(member.id, { team: team.name }); }}>
-                                                                                        {team.name}
+                                                                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); updateMember(member.id, { department: undefined }); }}>Unassigned</DropdownMenuItem>
+                                                                                {departments.map(dept => (
+                                                                                    <DropdownMenuItem key={dept.id} onClick={(e) => { e.stopPropagation(); updateMember(member.id, { department: dept.name }); }}>
+                                                                                        {dept.name}
                                                                                     </DropdownMenuItem>
                                                                                 ))}
                                                                             </DropdownMenuSubContent>
@@ -237,19 +238,19 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                             )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {teams.map(team => (
+                            {departments.map(dept => (
                                 <div 
-                                    key={team.id} 
-                                    onClick={() => setSelectedTeam(team)}
+                                    key={dept.id} 
+                                    onClick={() => setSelectedDepartment(dept)}
                                     className={`p-6 rounded-2xl border shadow-lg backdrop-blur-sm flex items-center justify-between cursor-pointer active:scale-[0.98] ${cardClass}`}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-lg ${team.color || 'bg-gray-500'} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                                            {team.initials || team.name.substring(0,2)}
+                                        <div className={`w-12 h-12 rounded-lg ${dept.color || 'bg-gray-500'} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                                            {dept.initials || dept.name.substring(0,2)}
                                         </div>
                                         <div>
-                                            <h3 className={`font-bold ${textMain}`}>{team.name}</h3>
-                                            <p className={`text-xs ${textMuted}`}>{getStats(team.name).total} Active Tasks</p>
+                                            <h3 className={`font-bold ${textMain}`}>{dept.name}</h3>
+                                            <p className={`text-xs ${textMuted}`}>{getStats(dept.name).total} Active Tasks</p>
                                         </div>
                                     </div>
                                 </div>
@@ -266,11 +267,12 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                             onChange={(e) => setNewDepartmentName(e.target.value)}
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') handleCreateDepartment();
-                                                if (e.key === 'Escape') setIsCreatingDepartment(false);
+                                                if (e.key === 'Escape') {
+                                                    setNewDepartmentName('');
+                                                    setIsCreatingDepartment(false);
+                                                }
                                             }}
-                                            onBlur={() => {
-                                                if (!newDepartmentName) setIsCreatingDepartment(false);
-                                            }}
+                                            onBlur={handleCreateDepartment}
                                             placeholder="New Department..."
                                             className={`h-auto p-0 bg-transparent border-0 font-bold text-base ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${textMain} placeholder:text-slate-500`}
                                         />
@@ -283,12 +285,12 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
             </div>
 
             <DepartmentSheet 
-                team={selectedTeam}
-                members={teamDetails.members}
-                lead={teamDetails.lead}
-                tasks={teamDetails.tasks}
-                isOpen={!!selectedTeam}
-                onClose={() => setSelectedTeam(null)}
+                department={selectedDepartment}
+                members={departmentDetails.members}
+                teams={departmentDetails.teams}
+                tasks={departmentDetails.tasks}
+                isOpen={!!selectedDepartment}
+                onClose={() => setSelectedDepartment(null)}
                 theme={theme}
             />
         </>
