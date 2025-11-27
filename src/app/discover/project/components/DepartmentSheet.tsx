@@ -2,13 +2,14 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Users, Briefcase, PlusCircle, Folder, ArrowLeft } from 'lucide-react';
+import { X, Users, Briefcase, PlusCircle, Folder, ArrowLeft, Layers, User } from 'lucide-react';
 import { Assignee, TaskNode, Theme, UserRole } from '../types';
 import { PriorityIcon } from './Plan';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useStore } from '../store/useStore';
 import { useToast } from '@/hooks/use-toast';
+import { Progress } from '@/components/ui/progress';
 
 interface DepartmentSheetProps {
     item: Assignee | null;
@@ -213,18 +214,38 @@ const Content: React.FC<DepartmentSheetProps & { item: Assignee }> = ({
                 )}
                  {activeTab === 'Teams' && (
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-4">
-                         {canManage && (
+                         {canManage && !isCreatingTeam && (
                              <Button variant="outline" size="sm" onClick={() => setIsCreatingTeam(true)}>
                                  <PlusCircle className="mr-2 h-4 w-4" />
                                  Create Team
                              </Button>
                          )}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {teams.map(team => (
-                                <div key={team.id} onClick={() => onSelectTeam(team)} className={`p-4 rounded-xl border cursor-pointer ${cardClass}`}>
-                                    <h4 className={`font-bold ${textMain}`}>{team.name}</h4>
-                                </div>
-                            ))}
+                             {teams.map(team => {
+                                const teamStats = { total: 0, completionRate: 0 }; // Placeholder
+                                return (
+                                    <div key={team.id} onClick={() => onSelectTeam(team)} className={`p-4 rounded-xl border flex flex-col gap-3 cursor-pointer transition-all ${cardClass}`}>
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg ${team.color} flex items-center justify-center text-white font-bold`}>
+                                                    {team.initials}
+                                                </div>
+                                                <h4 className={`font-bold ${textMain}`}>{team.name}</h4>
+                                            </div>
+                                             <div className="flex -space-x-2">
+                                                {/* Placeholder for member icons */}
+                                            </div>
+                                        </div>
+                                         <div className="space-y-1">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className={textMuted}>Completion</span>
+                                                <span className={`font-bold ${textMain}`}>{teamStats.completionRate}%</span>
+                                            </div>
+                                            <Progress value={teamStats.completionRate} className="h-1.5" />
+                                        </div>
+                                    </div>
+                                );
+                            })}
                             {isCreatingTeam && (
                                  <div className={`p-4 rounded-xl border-2 border-dashed flex items-center gap-4 w-full ${isLight ? 'border-brand-300 bg-brand-50' : 'border-brand-500/50 bg-brand-500/10'}`}>
                                      <Input 

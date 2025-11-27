@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
-import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut, PlusCircle, Folder } from 'lucide-react';
+import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut, PlusCircle, Folder, Users, Layers } from 'lucide-react';
 import { DepartmentSheet } from './DepartmentSheet';
 import { useStore } from '../store/useStore.tsx';
 import {
@@ -20,6 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 
 const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
 
@@ -50,12 +51,25 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const allMembers = initialMembers;
     const departments = allMembers.filter(m => m.type === 'team' && !m.parentId);
 
-    const getStats = (name: string) => {
-        const userTasks = tasks.filter(t => t.assignee.name === name);
+    const getStats = (assigneeName: string) => {
+        const relevantTasks = tasks.filter(t => {
+            const assignee = allMembers.find(m => m.name === assigneeName);
+            if (!assignee) return false;
+            
+            if (assignee.type === 'team') {
+                 // Include tasks assigned to the team itself OR any of its members/sub-teams
+                const memberIds = allMembers.filter(m => m.department === assignee.id || m.id === assignee.id).map(m => m.name);
+                return memberIds.includes(t.assignee.name);
+            }
+            return t.assignee.name === assigneeName;
+        });
+
+        const done = relevantTasks.filter(t => t.status === 'Done').length;
         return {
-            total: userTasks.length,
-            done: userTasks.filter(t => t.status === 'Done').length,
-            inProgress: userTasks.filter(t => t.status === 'In Progress').length
+            total: relevantTasks.length,
+            done: done,
+            inProgress: relevantTasks.filter(t => t.status === 'In Progress').length,
+            completionRate: relevantTasks.length > 0 ? Math.round((done / relevantTasks.length) * 100) : 0,
         };
     };
 
@@ -239,7 +253,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className={`text-sm font-bold uppercase tracking-wider ${textMuted}`}>Departments</h2>
-                            {currentUser.role === 'Owner' && (
+                            {currentUser.role === 'Owner' && !isCreatingDepartment && (
                                 <Button variant="outline" size="sm" onClick={() => setIsCreatingDepartment(true)}>
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Create Department
@@ -247,25 +261,53 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                             )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {departments.map(dept => (
-                                <div 
-                                    key={dept.id} 
-                                    onClick={() => handleDrillDown(dept)}
-                                    className={`p-6 rounded-2xl border shadow-lg backdrop-blur-sm flex items-center justify-between cursor-pointer active:scale-[0.98] ${cardClass}`}
-                                >
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-lg ${dept.color || 'bg-gray-500'} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                                            {dept.initials || dept.name.substring(0,2)}
+                            {departments.map(dept => {
+                                const deptStats = getStats(dept.name);
+                                const deptMembers = getSubItems(dept.name, 'user');
+                                const subTeamsCount = getSubItems(dept.id, 'team').length;
+
+                                return (
+                                    <div 
+                                        key={dept.id} 
+                                        onClick={() => handleDrillDown(dept)}
+                                        className={`p-6 rounded-2xl border flex flex-col gap-4 shadow-lg backdrop-blur-sm cursor-pointer active:scale-[0.98] transition-all ${cardClass}`}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className={`w-12 h-12 rounded-lg ${dept.color || 'bg-gray-500'} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                                                <Folder size={24}/>
+                                            </div>
+                                            <div className="flex -space-x-3">
+                                                {deptMembers.slice(0,3).map(m => (
+                                                    <div key={m.id} className={`w-8 h-8 rounded-full border-2 ${m.color} ${isLight ? 'border-white' : 'border-[#18181b]'} flex items-center justify-center text-[10px] text-white`}>
+                                                        {m.initials}
+                                                    </div>
+                                                ))}
+                                                {deptMembers.length > 3 && (
+                                                     <div className={`w-8 h-8 rounded-full border-2 ${isLight ? 'border-white bg-slate-200 text-slate-600' : 'border-[#18181b] bg-white/10 text-white/70'} flex items-center justify-center text-[10px]`}>
+                                                         +{deptMembers.length-3}
+                                                     </div>
+                                                )}
+                                            </div>
                                         </div>
                                         <div>
-                                            <h3 className={`font-bold ${textMain}`}>{dept.name}</h3>
-                                            <p className={`text-xs ${textMuted}`}>{getStats(dept.name).total} Active Tasks</p>
+                                            <h3 className={`font-bold text-lg mb-1 ${textMain}`}>{dept.name}</h3>
+                                            <div className={`flex items-center gap-4 text-xs ${textMuted}`}>
+                                                 <span className="flex items-center gap-1.5"><Users size={14}/> {deptMembers.length} Members</span>
+                                                 <span className="flex items-center gap-1.5"><Layers size={14}/> {subTeamsCount} Teams</span>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-2 mt-auto">
+                                            <div className="flex justify-between items-center text-xs">
+                                                <span className={textMuted}>Task Completion</span>
+                                                <span className={`font-bold ${textMain}`}>{deptStats.completionRate}%</span>
+                                            </div>
+                                            <Progress value={deptStats.completionRate} className="h-2" />
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                             {isCreatingDepartment && (
-                                <div className={`p-6 rounded-2xl border-2 border-dashed flex items-center justify-center ${isLight ? 'border-brand-300 bg-brand-50' : 'border-brand-500/50 bg-brand-500/10'}`}>
+                                <div className={`p-4 rounded-xl border-2 border-dashed flex items-center justify-center ${isLight ? 'border-brand-300 bg-brand-50' : 'border-brand-500/50 bg-brand-500/10'}`}>
                                     <div className="flex items-center gap-4 w-full">
                                         <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${isLight ? 'bg-slate-200 text-slate-500' : 'bg-white/10 text-white/50'}`}>
                                             <Folder size={24} />
@@ -283,7 +325,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                             }}
                                             onBlur={handleCreateDepartment}
                                             placeholder="New Department..."
-                                            className={`h-auto p-0 bg-transparent border-0 font-bold text-base ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${textMain} placeholder:text-slate-500`}
+                                            className={`h-auto p-0 bg-transparent border-0 font-bold text-lg ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${textMain} placeholder:text-slate-500`}
                                         />
                                     </div>
                                 </div>
