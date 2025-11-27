@@ -202,7 +202,7 @@ interface PlanProps {
 
 export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOpen, isViewMenuOpen, setIsViewMenuOpen, onToggleViewMenu }) => {
   const { 
-      tasks, selectedTaskId, selectedTaskIds, viewMode, scale, focusedParentId, theme, background, filter, currentUser,
+      tasks, selectedTaskId, selectedTaskIds, viewMode, scale, focusedParentId, theme, background, filter, currentUser, members,
       setTasks, selectTask, selectTasks, setViewMode, setScale, updateTask, onUpdateTaskConnections, addTask, deleteTask, duplicateTask, moveTask, setFocusedParentId, setTheme, setBackground, setFilter
   } = store;
   
@@ -227,26 +227,44 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
 
   // Filter Logic
   const filteredTasks = useMemo(() => {
-    if (!currentUser) return [];
-    const currentUserName = currentUser.displayName;
-    const currentTeam = currentUser.teamName;
-    const currentDepartment = currentUser.department;
-
+    if (!currentUser || !tasks || !members) return [];
+    
     switch(filter) {
         case 'Mine':
-            return tasks.filter((t: TaskNode) => t.assignee?.displayName === currentUserName);
+            return tasks.filter((t: TaskNode) => t.assignee?.uid === currentUser.id);
+        
         case 'Team':
-            return tasks.filter((t: TaskNode) => t.assignee?.displayName === currentTeam || t.assignee?.type === 'team');
+            const userTeam = members.find(m => m.uid === currentUser.id)?.teamName;
+            if (!userTeam) return [];
+            const teamMemberIds = members.filter(m => m.teamName === userTeam).map(m => m.uid);
+            return tasks.filter((t: TaskNode) => t.assignee?.type === 'team' ? t.assignee.displayName === userTeam : teamMemberIds.includes(t.assignee.uid));
+
         case 'Department':
-            return tasks.filter((t: TaskNode) => t.assignee?.department === currentDepartment);
+            const userDepartment = members.find(m => m.uid === currentUser.id)?.department;
+            if (!userDepartment) return [];
+
+            // Get all teams and users within that department
+            const departmentTeams = members.filter(m => m.parentId === userDepartment);
+            const departmentTeamNames = departmentTeams.map(t => t.displayName);
+            const departmentUserIds = members.filter(m => m.department === userDepartment).map(m => m.uid);
+            
+            return tasks.filter((t: TaskNode) => {
+                if (t.assignee.type === 'team') {
+                    // Task is assigned to a team
+                    return departmentTeamNames.includes(t.assignee.displayName) || t.assignee.displayName === userDepartment;
+                }
+                // Task is assigned to a user
+                return departmentUserIds.includes(t.assignee.uid);
+            });
+
         case 'Project':
              return tasks.filter((t: TaskNode) => t.type === 'Milestone');
-        case 'All':
-            return tasks;
+
         default:
             return tasks;
     }
-  }, [tasks, filter, focusedParentId, currentUser]);
+}, [tasks, filter, currentUser, members]);
+
 
   const canvasTasks = useMemo(() => {
     if (!focusedParentId) {
