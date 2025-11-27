@@ -1,4 +1,6 @@
 
+'use client';
+
 import { Home, Plus, Users, Gamepad2, Music, Code } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useState } from 'react';
@@ -34,7 +36,7 @@ export function ServerList({ servers, selectedServer, onSelectServer, theme }: S
   return (
     <TooltipProvider delayDuration={100}>
       <div className={`w-20 h-full flex-shrink-0 flex flex-col items-center py-3 gap-2 ${
-        isDark ? 'bg-[#0a0e1a] border-r border-white/10' : 'bg-white border-r border-gray-200'
+        isDark ? 'bg-[#131823] border-r border-white/10' : 'bg-gray-100 border-r border-gray-200'
       }`}>
         {allServers.map((server) => {
           const Icon = server.icon;
