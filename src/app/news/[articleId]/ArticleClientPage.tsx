@@ -51,7 +51,7 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
 
   const articleRef = useMemoFirebase(() => {
     if (!firestore || !articleId) return null;
-    return doc(firestore, 'news/articles/documents', articleId);
+    return doc(firestore, 'news', 'articles', 'documents', articleId);
   }, [firestore, articleId]);
 
   const { data: articleData, isLoading } = useDoc<Article>(articleRef);
@@ -85,7 +85,7 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-background' : 'bg-gray-50'} ${articleData ? 'bg-green-500/10' : ''}`}>
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="mb-8">
                 <Link href="/news" passHref>
