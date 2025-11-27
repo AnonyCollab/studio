@@ -173,10 +173,13 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
   const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
 
   const basePath = useMemo(() => {
-    if (isTaskComment) {
+    if (isTaskComment && projectId && postId && comment.id) {
         return `projects/${projectId}/tasks/${postId}/comments/${comment.id}`;
     }
-    return `posts/${postId}/comments/${comment.id}`;
+    if (!isTaskComment && postId && comment.id) {
+        return `posts/${postId}/comments/${comment.id}`;
+    }
+    return null;
   }, [isTaskComment, projectId, postId, comment.id]);
 
   useEffect(() => {
@@ -206,11 +209,10 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
       toast({ variant: "destructive", title: "Authentication required", description: "You must be logged in to reply." });
       return;
     }
-    if (!firestore) return;
+    if (!firestore || !basePath) return;
 
     try {
-      // For replies, the path is always within a comment, so `addReply` is fine
-      await addReply(firestore, postId, commentId, content, user);
+      await addReply(firestore, basePath, content, user);
       setReplyContent("");
       setReplyingTo(null);
     } catch (err) {
