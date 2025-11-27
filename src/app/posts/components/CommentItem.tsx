@@ -106,7 +106,7 @@ const AuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark:
 };
 
 
-const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark: boolean, timestamp: string }) => {
+const ReplyAuthorInfo = ({ authorId, isDark, timestamp, content }: { authorId: string, isDark: boolean, timestamp: string, content: string }) => {
     const firestore = useFirestore();
     const userRef = useMemoFirebase(() => {
         if (!firestore || !authorId) return null;
@@ -129,6 +129,9 @@ const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, is
                     <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
                 </div>
+                 <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                    {renderContentWithMentions(content, isDark)}
+                </p>
             </div>
         </div>
     );
@@ -272,31 +275,25 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
 
     return (
         <div key={reply.id} className="flex items-start gap-3 group/reply">
-            <ReplyAuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
             <div className="flex-1 min-w-0">
-            <div className={`rounded-lg p-2.5 border ${isDark ? "bg-transparent" : "bg-gray-50"}`}>
-                
-                <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-                {renderContentWithMentions(reply.content, isDark)}
-                </p>
-            </div>
-            <div className="flex items-center gap-4 mt-1.5 px-3">
-                <button
-                onClick={() => handleLikeReply(reply.id)}
-                className={cn("flex items-center gap-1 text-xs transition-colors",
-                    isReplyLiked ? "text-red-400" : isDark ? "text-gray-500 hover:text-red-400" : "text-gray-500 hover:text-red-500"
-                )}
-                >
-                <Heart className={cn("w-3.5 h-3.5", isReplyLiked && "fill-current")} />
-                <span>{reply.likes}</span>
-                </button>
-                <button
-                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}
-                >
-                Reply
-                </button>
-            </div>
+                <ReplyAuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} content={reply.content} />
+                <div className="flex items-center gap-4 mt-1.5 px-3 ml-11">
+                    <button
+                    onClick={() => handleLikeReply(reply.id)}
+                    className={cn("flex items-center gap-1 text-xs transition-colors",
+                        isReplyLiked ? "text-red-400" : isDark ? "text-gray-500 hover:text-red-400" : "text-gray-500 hover:text-red-500"
+                    )}
+                    >
+                    <Heart className={cn("w-3.5 h-3.5", isReplyLiked && "fill-current")} />
+                    <span>{reply.likes}</span>
+                    </button>
+                    <button
+                    onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                    className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}
+                    >
+                    Reply
+                    </button>
+                </div>
             </div>
         </div>
     )
