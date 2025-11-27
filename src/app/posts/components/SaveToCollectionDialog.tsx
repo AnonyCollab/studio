@@ -5,9 +5,6 @@ import { useState, ReactNode } from "react";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog"
 import { Drawer, DrawerContent, DrawerTrigger, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer"
 import {
@@ -148,12 +145,12 @@ export function SaveToCollectionDialog({
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}>
           {children}
-        </DrawerTrigger>
+        DrawerTrigger>
         <DrawerContent className="p-0 rounded-t-2xl border-none">
           {isCreating ? (
             <CreateCollection
-              isOpen={isCreating}
-              onClose={() => setIsCreating(false)}
+              isMobile={true}
+              onBack={() => setIsCreating(false)}
               onCreate={handleCreateCollection}
             />
           ) : (
@@ -171,41 +168,35 @@ export function SaveToCollectionDialog({
   }
 
   return (
-    <Popover open={isOpen} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}>
-        {children}
-      </PopoverTrigger>
-      <PopoverContent
-        align="end"
-        className="p-0 gap-0 border-none w-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-         {isCreating ? (
-            <Dialog open={isCreating} onOpenChange={(open) => !open && setIsCreating(false)}>
-              <DialogContent className="sm:max-w-[425px] p-0 gap-0 border-none">
-                 <DialogHeader className="p-4 border-b">
-                    <DialogTitle>Create New Collection</DialogTitle>
-                    <DialogDescription className="sr-only">
-                        Enter details for your new collection.
-                    </DialogDescription>
-                 </DialogHeader>
-                <CreateCollection
-                  isOpen={isCreating}
-                  onClose={() => setIsCreating(false)}
-                  onCreate={handleCreateCollection}
-                />
-              </DialogContent>
-            </Dialog>
-          ) : (
-            <div className={`flex flex-col h-auto max-h-[500px] w-full sm:w-[350px] ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
-              <div className={`p-4 border-b text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
-                <h4 className="font-medium leading-none">Save to collection</h4>
-                <p className="sr-only">Select a collection to save the post to, or create a new one.</p>
-              </div>
-              <CollectionsList />
+    <>
+      <Popover open={isOpen} onOpenChange={handleOpenChange}>
+        <PopoverTrigger asChild onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}>
+          {children}
+        </PopoverTrigger>
+        <PopoverContent
+          align="end"
+          className="p-0 gap-0 border-none w-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className={`flex flex-col h-auto max-h-[500px] w-full sm:w-[350px] ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
+            <div className={`p-4 border-b text-center ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
+              <h4 className="font-medium leading-none">Save to collection</h4>
+              <p className="sr-only">Select a collection to save the post to, or create a new one.</p>
             </div>
-          )}
-      </PopoverContent>
-    </Popover>
+            <CollectionsList />
+          </div>
+        </PopoverContent>
+      </Popover>
+      
+      <Dialog open={isCreating} onOpenChange={(open) => !open && setIsCreating(false)}>
+        <DialogContent className="sm:max-w-[425px] p-0 gap-0 border-none">
+          <CreateCollection
+            isMobile={false}
+            onBack={() => setIsCreating(false)}
+            onCreate={handleCreateCollection}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
