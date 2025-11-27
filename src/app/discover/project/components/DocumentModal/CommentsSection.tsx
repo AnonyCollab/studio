@@ -35,23 +35,17 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
   const firestore = useFirestore();
   const { toast } = useToast();
 
-  console.log("CommentsSection DEBUG: Component rendered. Props:", { taskId, projectId, isLight });
-
   const commentsQuery = useMemoFirebase(() => {
-    console.log("CommentsSection DEBUG: useMemoFirebase for commentsQuery is running.");
     if (!firestore || !projectId || !taskId) {
-      console.log('CommentsSection DEBUG: Skipping query because firestore, projectId, or taskId is missing.', { firestore, projectId, taskId });
       return null;
     }
     const path = `projects/${projectId}/tasks/${taskId}/comments`;
-    console.log("CommentsSection DEBUG: Constructing comments query for path:", path);
     return query(collection(firestore, path), orderBy('createdAt', 'asc'));
   }, [firestore, projectId, taskId]);
 
   const { data: commentsData, isLoading, error } = useCollection<Comment>(commentsQuery);
 
   useEffect(() => {
-    console.log("CommentsSection DEBUG: useCollection hook update received.", {isLoading, hasError: !!error, dataCount: commentsData?.length});
     if (error) {
         console.error("CommentsSection DEBUG: Error received from useCollection:", error);
     }
@@ -96,18 +90,14 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("CommentsSection DEBUG: handleSubmit triggered.");
     if (!commentText.trim() || !user || !firestore || !projectId) {
-      console.warn("CommentsSection DEBUG: Submission aborted. Missing required data.", { hasComment: !!commentText.trim(), hasUser: !!user, hasFirestore: !!firestore, hasProjectId: !!projectId });
       if (!user) toast({ variant: "destructive", title: "Authentication required" });
       return;
     };
     
     try {
         const parentPath = `projects/${projectId}/tasks/${taskId}`;
-        console.log("CommentsSection DEBUG: Calling addComment with path:", parentPath);
         await addComment(firestore, parentPath, commentText, user, true);
-        console.log("CommentsSection DEBUG: addComment call finished.");
         setCommentText('');
 
     } catch(err) {

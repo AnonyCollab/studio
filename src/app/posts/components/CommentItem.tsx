@@ -105,33 +105,6 @@ const AuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark:
   );
 };
 
-const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark: boolean, timestamp: string }) => {
-  const firestore = useFirestore();
-  const userRef = useMemoFirebase(() => {
-    if (!firestore || !authorId) return null;
-    return doc(firestore, 'users', authorId);
-  }, [firestore, authorId]);
-  const { data: authorData } = useDoc<{ profile: UserProfile }>(userRef);
-
-  if (!authorData) {
-    return (
-        <p className="text-sm">...</p>
-    );
-  }
-
-  const author = authorData.profile;
-
-  return (
-    <div className="flex items-baseline justify-between mb-1">
-        <div className="flex items-center gap-2">
-            <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
-            <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
-        </div>
-        {/* More options can go here */}
-    </div>
-  );
-};
-
 
 export function CommentItem({ postId, comment, theme = "dark", isTaskComment = false, projectId }: CommentItemProps) {
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -218,8 +191,8 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
   const handleLikeReply = async (replyId: string) => {
     const newLikedState = !likedReplies[replyId];
     setLikedReplies(prev => ({ ...prev, [replyId]: newLikedState }));
-    if (firestore) {
-      toggleLikeReply(firestore, postId, comment.id, replyId, likedReplies[replyId]);
+    if (firestore && basePath) {
+      toggleLikeReply(firestore, basePath, replyId, likedReplies[replyId]);
     }
   }
 
@@ -268,35 +241,43 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
     const isAuthor = user && user.uid === reply.authorId;
 
     return (
-      <div key={reply.id} className="flex gap-3 group/reply">
-        <ReplyAuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
-        <div className="flex-1 min-w-0">
-          <div className={`rounded-lg p-2.5 border ${isDark ? "bg-[#18181b] border-white/10" : "bg-white border-gray-200"}`}>
-            <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
-              {renderContentWithMentions(reply.content, isDark)}
-            </p>
-          </div>
-          <div className="flex items-center gap-4 mt-1.5 px-3">
-            <button
-              onClick={() => handleLikeReply(reply.id)}
-              className={cn("flex items-center gap-1 text-xs transition-colors",
-                isReplyLiked ? "text-red-400" : isDark ? "text-gray-500 hover:text-red-400" : "text-gray-500 hover:text-red-500"
-              )}
-            >
-              <Heart className={cn("w-3.5 h-3.5", isReplyLiked && "fill-current")} />
-              <span>{reply.likes}</span>
-            </button>
-            <button
-              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-              className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}
-            >
-              Reply
-            </button>
-          </div>
+        <div key={reply.id} className="flex items-start gap-3 group/reply">
+            {authorProfile && (
+            <Avatar className="w-8 h-8 flex-shrink-0">
+                <AvatarImage src={authorProfile.photoURL} />
+                <AvatarFallback>{authorProfile.displayName?.[0]}</AvatarFallback>
+            </Avatar>
+            )}
+            <div className="flex-1 min-w-0">
+            <div className={`rounded-lg p-2.5 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                <div className="flex items-baseline justify-between mb-1">
+                    <AuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
+                </div>
+                <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                {renderContentWithMentions(reply.content, isDark)}
+                </p>
+            </div>
+            <div className="flex items-center gap-4 mt-1.5 px-3">
+                <button
+                onClick={() => handleLikeReply(reply.id)}
+                className={cn("flex items-center gap-1 text-xs transition-colors",
+                    isReplyLiked ? "text-red-400" : isDark ? "text-gray-500 hover:text-red-400" : "text-gray-500 hover:text-red-500"
+                )}
+                >
+                <Heart className={cn("w-3.5 h-3.5", isReplyLiked && "fill-current")} />
+                <span>{reply.likes}</span>
+                </button>
+                <button
+                onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                className={`text-xs transition-colors ${isDark ? 'text-gray-500 hover:text-cyan-400' : 'text-gray-500 hover:text-cyan-600'}`}
+                >
+                Reply
+                </button>
+            </div>
+            </div>
         </div>
-      </div>
     )
-  }, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id, user, firestore, postId, isReplyDeleteDialogOpen]);
+  }, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id, user, firestore, postId, isReplyDeleteDialogOpen, authorProfile]);
 
   return (
     <div className="flex flex-col group/comment">

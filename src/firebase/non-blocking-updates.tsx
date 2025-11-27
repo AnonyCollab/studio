@@ -1,5 +1,6 @@
 
 
+
 'use client';
     
 import {
@@ -125,11 +126,9 @@ export function addPost(firestore: Firestore, postData: any, user: User | null) 
 }
 
 /**
- * Adds a new comment to a post's 'comments' subcollection in Firestore.
- * Can also be used for task comments by providing a full path.
+ * Adds a new comment to a post's or task's 'comments' subcollection.
  */
 export function addComment(firestore: Firestore, parentPath: string, commentText: string, user: User, isTaskComment: boolean = false) {
-    console.log("addComment DEBUG: Function called with path:", parentPath);
     const commentsCollection = collection(firestore, parentPath, 'comments');
     const parentRef = doc(firestore, parentPath);
 
@@ -142,21 +141,15 @@ export function addComment(firestore: Firestore, parentPath: string, commentText
 
     const batch = writeBatch(firestore);
     
-    // Add new comment
-    const newCommentRef = doc(commentsCollection); // Create a new doc ref for the comment
+    const newCommentRef = doc(commentsCollection);
     batch.set(newCommentRef, commentData);
     
-    // Only increment comment count for posts, not tasks
     if (!isTaskComment) {
-        console.log("addComment DEBUG: This is a post comment, incrementing count.");
         batch.update(parentRef, { comments: increment(1) });
-    } else {
-        console.log("addComment DEBUG: This is a task comment, not incrementing count.");
     }
     
-    // Non-blocking commit
     batch.commit().catch(error => {
-        console.error("addComment DEBUG: Batch write failed in addComment.", { path: parentRef.path, error });
+        console.error("Error in addComment batch write:", { path: parentRef.path, error });
         const permissionError = new FirestorePermissionError({
             path: `batch write to ${parentRef.path} and ${newCommentRef.path}`,
             operation: 'write',
@@ -211,8 +204,8 @@ export function toggleLikeComment(firestore: Firestore, parentId: string, commen
 /**
  * Toggles a like on a reply.
  */
-export function toggleLikeReply(firestore: Firestore, postId: string, commentId: string, replyId: string, isLiked: boolean) {
-    const replyRef = doc(firestore, 'posts', postId, 'comments', commentId, 'replies', replyId);
+export function toggleLikeReply(firestore: Firestore, basePath: string, replyId: string, isLiked: boolean) {
+    const replyRef = doc(firestore, basePath, 'replies', replyId);
     const likeIncrement = isLiked ? increment(-1) : increment(1);
     return updateDocumentNonBlocking(replyRef, {
         likes: likeIncrement
