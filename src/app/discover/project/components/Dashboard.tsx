@@ -12,8 +12,14 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = () => {
-    const { currentUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading, members } = useStore();
+    const { currentUser: storeUser, tasks, theme, dashboardView, setDashboardView, isStoreLoading, members } = useStore();
     
+    // Ensure currentUser has both name and displayName for consistency
+    const currentUser = useMemo(() => ({
+        ...storeUser,
+        name: storeUser.displayName,
+    }), [storeUser]);
+
     useEffect(() => {
         console.log("--- Dashboard Debug ---");
         console.log("Is Store Loading?", isStoreLoading);
@@ -35,11 +41,22 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             .map(m => m.displayName);
     }, [members]);
 
-    // --- Data Selectors ---
+    // --- Data Selectors (FIXED LOGIC) ---
 
-    const myTasks = useMemo(() => tasks.filter(t => t.assignee.displayName === currentUser.displayName), [tasks, currentUser.displayName]);
+    const myTasks = useMemo(() => {
+        if (!currentUser) return [];
+        return tasks.filter(t => t.assignee.id === currentUser.id);
+    }, [tasks, currentUser]);
 
-    const teamTasks = useMemo(() => tasks.filter(t => t.assignee.type === 'team' || (t.assignee.type === 'user' && teamMembers.includes(t.assignee.displayName))), [tasks, teamMembers]);
+    const teamTasks = useMemo(() => {
+        if (!currentTeamName) return [];
+        const teamMemberIds = members.filter(m => m.department === currentTeamName).map(m => m.id);
+        
+        return tasks.filter(t => 
+            t.assignee.id === currentTeamName || // Assigned to the team directly
+            teamMemberIds.includes(t.assignee.id) // Assigned to a member of the team
+        );
+    }, [tasks, members, currentTeamName]);
 
     const projectTasks = tasks;
 
@@ -416,5 +433,3 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         </div>
     );
 };
-
-    
