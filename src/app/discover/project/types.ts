@@ -31,6 +31,7 @@ export interface CurrentUser {
     role: UserRole;
     avatarColor: string;
     teamName?: string; 
+    department?: string;
 }
 
 export interface Assignee {
@@ -186,7 +187,7 @@ export interface Document extends TaskNode {
 
 export type Theme = 'Light' | 'Dark' | 'Sephiroa' | 'Green' | 'Blue';
 export type BackgroundType = 'Dots' | 'Grid' | 'None';
-export type FilterOption = 'All' | 'Mine' | 'Team' | 'Project';
+export type FilterOption = 'All' | 'Mine' | 'Team' | 'Project' | 'Department';
 
 export interface AppState {
   currentUser: CurrentUser;

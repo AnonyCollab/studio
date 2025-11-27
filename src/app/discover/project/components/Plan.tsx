@@ -6,7 +6,8 @@ import {
   Calendar, 
   Trello, 
   FolderOpen,
-  FileText
+  FileText,
+  Building2,
 } from 'lucide-react';
 import { Status, Priority, ViewMode, TaskNode, FilterOption, CurrentUser } from '../types';
 import { CanvasView } from './views/Board';
@@ -91,11 +92,11 @@ const AssignedTasksWidget: React.FC<AssignedTasksWidgetProps> = ({ isLight, task
         ? "bg-white border-slate-200 text-slate-800 shadow-2xl ring-1 ring-black/5"
         : "bg-[#18181b] border-white/10 text-slate-200 shadow-2xl ring-1 ring-white/10";
     
-    const filterOptions = [
+    const filterOptions: {id: FilterOption, label: string, icon: React.ElementType}[] = [
         { id: 'Mine', label: 'My Tasks', icon: CheckCircle2 },
         { id: 'Team', label: 'Team', icon: Users },
-        { id: 'Project', label: 'Project', icon: Layers },
-        { id: 'All', label: 'All', icon: Briefcase },
+        { id: 'Department', label: 'Department', icon: Building2 },
+        { id: 'Project', label: 'Milestones', icon: Layers },
     ];
 
     const currentLabel = filterOptions.find(f => f.id === filter)?.label || 'Tasks';
@@ -184,14 +185,6 @@ const AssignedTasksWidget: React.FC<AssignedTasksWidgetProps> = ({ isLight, task
                              </div>
                         )}
                     </div>
-                    <div className={`p-2 border-t text-center ${isLight ? 'border-slate-100 bg-slate-50' : 'border-white/5 bg-white/5'}`}>
-                        <button 
-                            onClick={() => setFilter('All')}
-                            className="text-[10px] font-bold text-brand-500 hover:text-brand-600 uppercase tracking-wider py-1 transition-colors"
-                        >
-                            View Full List
-                        </button>
-                    </div>
                 </div>
             )}
         </div>
@@ -237,17 +230,17 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
     if (!currentUser) return [];
     const currentUserName = currentUser.displayName;
     const currentTeam = currentUser.teamName;
+    const currentDepartment = currentUser.department;
 
     switch(filter) {
         case 'Mine':
             return tasks.filter((t: TaskNode) => t.assignee?.displayName === currentUserName);
         case 'Team':
             return tasks.filter((t: TaskNode) => t.assignee?.displayName === currentTeam || t.assignee?.type === 'team');
+        case 'Department':
+            return tasks.filter((t: TaskNode) => t.assignee?.department === currentDepartment);
         case 'Project':
-            if (focusedParentId) {
-                return tasks.filter((t: TaskNode) => t.parentId === focusedParentId || t.id === focusedParentId);
-            }
-            return tasks.filter((t: TaskNode) => !t.parentId);
+             return tasks.filter((t: TaskNode) => t.type === 'Milestone');
         case 'All':
             return tasks;
         default:
@@ -414,9 +407,9 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
                             onAddChild={(parentId) => !isReadOnly && addTask({ parentId })}
                             onFocus={setFocusedParentId}
                             onAddRoot={() => !isReadOnly && addTask(focusedParentId ? { parentId: focusedParentId } : {})}
-                            onDelete={isReadOnly ? () => {} : deleteTask}
-                            onDuplicate={isReadOnly ? () => {} : duplicateTask}
-                            onMove={isReadOnly ? undefined : moveTask}
+                            onDelete={deleteTask}
+                            onDuplicate={duplicateTask}
+                            onMove={moveTask}
                             theme={theme}
                             background={background}
                             setTheme={setTheme}
