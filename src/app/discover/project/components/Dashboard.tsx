@@ -443,9 +443,9 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                     </div>
                 </div>
 
-                {viewMode === 'Personal' && renderPersonalTab()}
-                {viewMode === 'Team' && renderTeamTab()}
-                {viewMode === 'Project' && renderProjectTab()}
+                {dashboardView === 'Personal' && renderPersonalTab()}
+                {dashboardView === 'Team' && renderTeamTab()}
+                {dashboardView === 'Project' && renderProjectTab()}
             </div>
         </div>
     );
