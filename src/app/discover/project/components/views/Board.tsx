@@ -9,7 +9,8 @@ interface CanvasViewProps {
     tasks: TaskNode[];
     scale: number;
     setScale: React.Dispatch<React.SetStateAction<number>>;
-    setTasks: (tasks: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => void;
+    onUpdateTask: (id: string, updates: Partial<TaskNode>) => void;
+    onUpdateTaskConnections: (startId: string, targetId: string) => void;
     selectedTaskId: string | null;
     selectedTaskIds: string[];
     onSelect: (id: string | null, openModal?: boolean) => void;
@@ -182,8 +183,6 @@ const TaskCard = React.memo(({
     let statusColor = getStatusColor(task.status);
     const isMilestone = task.type === 'Milestone';
     
-    // Determine if this card is the "Crowned" central root
-    // Either it's the fake Project Root, OR it is the actual focused parent task
     const isRootNode = isCentral; 
 
     const bgClass = isLight ? 'bg-white/90' : 'bg-[#18181b]/90';
@@ -212,7 +211,6 @@ const TaskCard = React.memo(({
             ${bgClass} ${borderClass}`} 
             style={{ 
                 transform: `translate(${task.position.x}px, ${task.position.y}px)`,
-                // Removing border-color transition to prevent flickering during rapid drag if state were syncing
                 borderLeftColor: isRootNode ? '#f59e0b' : statusColor
             }} 
             onMouseDown={(e) => canDrag && onMouseDown(e, task.id)}
@@ -292,7 +290,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
     tasks: initialTasks, 
     scale, 
     setScale, 
-    setTasks: setGlobalTasks, 
+    onUpdateTask,
+    onUpdateTaskConnections,
     selectedTaskId, 
     selectedTaskIds,
     onSelect, 
@@ -306,11 +305,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
 }) => {
     const canvasRef = useRef<HTMLDivElement>(null);
     const [cardHeights, setCardHeights] = useState<Record<string, number>>({});
-    
-    // Local state for smooth dragging (60fps) without triggering heavy global state updates/localStorage
     const [localTasks, setLocalTasks] = useState(initialTasks);
 
-    // Sync local state when props change (e.g. undo/redo, external updates)
     useEffect(() => {
         setLocalTasks(initialTasks);
     }, [initialTasks]);
@@ -354,8 +350,6 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 attachments: [],
                 checklist: []
             };
-            // Filter out milestones to avoid dupes if they are in localTasks, 
-            // actually localTasks coming from Plan are filtered already.
             return [projectRoot, ...localTasks];
         }
         return localTasks;
@@ -370,9 +364,9 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         potentialDrag: boolean; 
         isDragging: boolean;
         startMouse: { x: number, y: number };
-        dragStartId: string | null;
+        draggedIds: string[];
         initialPositions: Record<string, {x: number, y: number}>;
-    }>({ potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, dragStartId: null, initialPositions: {} });
+    }>({ potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {} });
 
     const selectRef = useRef<{
         isSelecting: boolean;
@@ -428,20 +422,18 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             const dx = (mouseX - dragRef.current.startMouse.x) / effectiveScale;
             const dy = (mouseY - dragRef.current.startMouse.y) / effectiveScale;
 
-            // Update LOCAL state for smooth 60fps dragging
             setLocalTasks(prev => prev.map(t => {
-                // Can't move fixed central nodes
-                if ((focusedParentId && t.id === focusedParentId) || t.id === PROJECT_ROOT_ID) return t;
+                if (dragRef.current.draggedIds.includes(t.id)) {
+                    const initial = dragRef.current.initialPositions[t.id];
+                    if (initial) {
+                        let newX = initial.x + dx;
+                        let newY = initial.y + dy;
+                        
+                        newX = Math.max(0, Math.min(MAX_CANVAS_WIDTH - CARD_WIDTH, newX));
+                        newY = Math.max(newY, CENTRAL_Y + (focusedParentId ? 200 : PROJECT_ROOT_HEIGHT_BUFFER));
 
-                const initial = dragRef.current.initialPositions[t.id];
-                if (initial) {
-                    let newX = initial.x + dx;
-                    let newY = initial.y + dy;
-                    
-                    newX = Math.max(0, Math.min(MAX_CANVAS_WIDTH - CARD_WIDTH, newX));
-                    newY = Math.max(newY, CENTRAL_Y + (focusedParentId ? 200 : PROJECT_ROOT_HEIGHT_BUFFER));
-
-                    return { ...t, position: { x: newX, y: newY } };
+                        return { ...t, position: { x: newX, y: newY } };
+                    }
                 }
                 return t;
             }));
@@ -517,22 +509,20 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             mouseRef.current = { x: e.clientX, y: e.clientY };
             if (!rAF.current) rAF.current = requestAnimationFrame(updateLoop);
         };
+
         const handleMouseUp = () => {
             if (rAF.current) { cancelAnimationFrame(rAF.current); rAF.current = null; }
 
-            // DRAG END: Commit changes to global store
             if (dragRef.current.isDragging) {
-                if (dragRef.current.dragStartId) {
-                    // Commit the local state positions to the global store
-                    // We need to filter out the PROJECT_ROOT_ID fake node if it exists in localTasks 
-                    // (Actually localTasks should just be tasks, PROJECT_ROOT_ID is added in renderTasks)
-                    // localTasks state is exactly the tasks array but with updated positions.
-                    setGlobalTasks(localTasks);
-                }
+                dragRef.current.draggedIds.forEach(id => {
+                    const task = localTasks.find(t => t.id === id);
+                    if (task) {
+                        onUpdateTask(id, { position: task.position });
+                    }
+                });
             }
             
-            // Reset Drag State
-            dragRef.current = { potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, dragStartId: null, initialPositions: {} };
+            dragRef.current = { potentialDrag: false, isDragging: false, startMouse: {x:0, y:0}, draggedIds: [], initialPositions: {} };
 
             if (selectRef.current.isSelecting) {
                 const { startX, startY, currentX, currentY } = selectRef.current;
@@ -566,22 +556,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                     const targetId = snapRef.current.taskId;
 
                     if (startId !== PROJECT_ROOT_ID && targetId !== PROJECT_ROOT_ID) {
-                        setGlobalTasks(prev => prev.map(t => {
-                            let newPrev = t.prev || [];
-                            let newNext = t.next || [];
-
-                            if (t.id === startId) {
-                                newPrev = newPrev.filter(p => p !== targetId);
-                                if (!newNext.includes(targetId)) newNext = [...newNext, targetId];
-                                return { ...t, prev: newPrev, next: newNext };
-                            }
-                            if (t.id === targetId) {
-                                newNext = newNext.filter(n => n !== startId);
-                                if (!newPrev.includes(startId)) newPrev = [...newPrev, startId];
-                                return { ...t, prev: newPrev, next: newNext };
-                            }
-                            return t;
-                        }));
+                        onUpdateTaskConnections(startId, targetId);
                     }
                 }
                 connectRef.current = { isConnecting: false, startTaskId: null, startX: 0, startY: 0 };
@@ -598,7 +573,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             canvas.removeEventListener('touchmove', handleTouchMove);
             if (rAF.current) cancelAnimationFrame(rAF.current);
         };
-    }, [effectiveScale, setGlobalTasks, onSelectTasks, activeTool, focusedParentId, isReadOnly, cardHeights, localTasks]);
+    }, [effectiveScale, onSelectTasks, activeTool, focusedParentId, isReadOnly, cardHeights, localTasks, onUpdateTask, onUpdateTaskConnections]);
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if (activeTool === 'pointer' && !e.defaultPrevented) onSelectTasks([]);
@@ -617,15 +592,17 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         const task = tasksRef.current.find(t => t.id === taskId);
         if (!task) return;
         
-        // Prevent dragging of Fixed Central Nodes (Project Root or Focused Parent)
         if (taskId === focusedParentId || taskId === PROJECT_ROOT_ID) return;
 
         let currentSelection = selectedIdsRef.current;
-        const isUnselectedDrag = !currentSelection.includes(taskId);
-        let dragGroup = isUnselectedDrag ? [taskId] : currentSelection;
+        let draggedIds = currentSelection.includes(taskId) ? currentSelection : [taskId];
+        if (!e.shiftKey && !currentSelection.includes(taskId)) {
+            onSelectTasks([taskId]);
+            draggedIds = [taskId];
+        }
 
         const initialPositions: Record<string, {x: number, y: number}> = {};
-        dragGroup.forEach(id => {
+        draggedIds.forEach(id => {
             const t = tasksRef.current.find(x => x.id === id);
             if (t) initialPositions[id] = { ...t.position };
         });
@@ -634,7 +611,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
             potentialDrag: true,
             isDragging: false,
             startMouse: { x: e.clientX, y: e.clientY },
-            dragStartId: taskId,
+            draggedIds: draggedIds,
             initialPositions
         };
     }, [onSelectTasks, focusedParentId, isReadOnly]);
@@ -762,10 +739,8 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 <div className="absolute top-0 left-0 w-full h-full pointer-events-none z-0">
                     {renderTasks.map(task => {
                         const isProjectRoot = task.id === PROJECT_ROOT_ID;
-                        // In directories, focusedParentId node is the Root.
                         const isCentralRoot = (focusedParentId && task.id === focusedParentId) || isProjectRoot;
                         
-                        // Only draw line for Root/Milestones
                         if (!isCentralRoot && task.type !== 'Milestone') return null;
                         
                         const lineColor = getStructuralColor(task.type);
@@ -790,7 +765,6 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                 </div>
 
                 {renderTasks.map(task => {
-                    // Determine central logic for both Project Root & Focused Parent in Directory
                     const isCentral = !!((focusedParentId && task.id === focusedParentId) || task.id === PROJECT_ROOT_ID);
                     
                     const renderTask = isCentral ? {
@@ -808,7 +782,7 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
                             onFocus={onFocus}
                             onDoubleClick={(id) => onSelect(id, true)}
                             isLight={isLight}
-                            isCentral={isCentral} // Passes true for focused parent, enabling Crown
+                            isCentral={isCentral}
                             isReadOnly={isReadOnly}
                             onResize={handleCardResize}
                         />
@@ -825,4 +799,3 @@ export const CanvasView: React.FC<CanvasViewProps> = ({
         </div>
     );
 };
-

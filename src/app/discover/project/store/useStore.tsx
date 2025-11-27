@@ -25,6 +25,7 @@ export interface ExtendedAppState extends AppState {
   addFile: (file: Partial<FileItem>) => void;
   addTask: (task: Partial<TaskNode>) => string;
   updateTask: (id: string, updates: Partial<TaskNode>) => void;
+  onUpdateTaskConnections: (startId: string, targetId: string) => void;
   deleteTask: (id: string) => void;
   leaveProject?: () => Promise<void>;
   setTasks: (tasks: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => void;
@@ -258,9 +259,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
         }
     
         if (!projectData || !authUser) {
-            // Early exit or handle case where essential data is missing
             if(!isProjectLoading && !projectData) {
-                // Project doesn't exist, maybe redirect
                 // router.push('/discover'); 
             }
             return;
@@ -278,7 +277,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
             ...prev,
             members: membersData ? membersData.map(m => ({
                 ...m,
-                id: m.uid, // Ensure id is populated from uid
+                id: m.uid,
                 type: m.type || 'user',
                 color: m.color || 'bg-blue-500',
                 initials: (m.displayName || '?').charAt(0)
@@ -334,10 +333,8 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   const updateTask = useCallback((id: string, updates: Partial<TaskNode>) => {
     if (!firestore || !projectId) return;
     const taskRef = doc(firestore, 'projects', projectId, 'tasks', id);
-    // Non-blocking update
     updateDocumentNonBlocking(taskRef, updates);
 
-    // Apply cascading updates locally for immediate UI feedback
      setState(prev => {
         let tempTasks = prev.tasks.map(t => t.id === id ? { ...t, ...updates } : t);
         if (updates.startDate || updates.dueDate || updates.status) {
@@ -345,6 +342,24 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
             tempTasks = updateCascadingStatus(tempTasks, id);
         }
         return { ...prev, tasks: tempTasks };
+    });
+  }, [firestore, projectId]);
+
+  const onUpdateTaskConnections = useCallback((startId: string, targetId: string) => {
+    if (!firestore || !projectId) return;
+
+    const batch = writeBatch(firestore);
+    const startRef = doc(firestore, 'projects', projectId, 'tasks', startId);
+    const targetRef = doc(firestore, 'projects', projectId, 'tasks', targetId);
+
+    batch.update(startRef, { next: arrayUnion(targetId) });
+    batch.update(targetRef, { prev: arrayUnion(startId) });
+    
+    batch.commit().catch(error => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: `batch write for connections`,
+            operation: 'update',
+        }));
     });
   }, [firestore, projectId]);
 
@@ -504,11 +519,9 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
         const memberRef = doc(firestore, 'projects', projectId, 'members', newTeamId);
         setDocumentNonBlocking(memberRef, teamDoc, {});
     } else {
-        // Logic for adding a user member is handled elsewhere (e.g. InviteDialog)
     }
   }, [firestore, projectId]);
   
-  // Dummy/Placeholder functions that need Firestore integration
   const addPost = useCallback((post: Partial<UserPost>) => {}, []);
   const setTasks = useCallback((tasksOrUpdater: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => {
     const newTasks = typeof tasksOrUpdater === 'function' ? tasksOrUpdater(state.tasks) : tasksOrUpdater;
@@ -532,6 +545,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     setTasks,
     addTask,
     updateTask,
+    onUpdateTaskConnections,
     deleteTask,
     duplicateTask,
     moveTask,
@@ -555,7 +569,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     updateProject,
     isStoreLoading,
   }), [
-      state, setCurrentUser, setTasks, addTask, updateTask, deleteTask, duplicateTask, moveTask, 
+      state, setCurrentUser, setTasks, addTask, updateTask, onUpdateTaskConnections, deleteTask, duplicateTask, moveTask, 
       selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
       addPost, addMember, removeMember, addFile, updateMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading

@@ -79,7 +79,6 @@ interface AssignedTasksWidgetProps {
 const AssignedTasksWidget: React.FC<AssignedTasksWidgetProps> = ({ isLight, tasks, filter, setFilter, selectTask }) => {
     const [isOpen, setIsOpen] = useState(false);
 
-    // Updated to Solid / Non-Transparent Colors
     const containerClass = isLight 
         ? "bg-white border border-slate-200 shadow-xl" 
         : "bg-[#18181b] border border-white/10 shadow-xl";
@@ -122,7 +121,6 @@ const AssignedTasksWidget: React.FC<AssignedTasksWidgetProps> = ({ isLight, task
             {isOpen && (
                 <div className={`absolute top-full right-0 mt-2 w-80 sm:w-96 border rounded-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col z-[60] ${dropdownClass}`}>
                     
-                    {/* Filter Tabs */}
                     <div className={`p-2 border-b flex gap-1 ${isLight ? 'border-slate-100 bg-slate-50' : 'border-white/5 bg-white/5'}`}>
                         {filterOptions.map((opt) => (
                             <button
@@ -212,7 +210,7 @@ interface PlanProps {
 export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOpen, isViewMenuOpen, setIsViewMenuOpen, onToggleViewMenu }) => {
   const { 
       tasks, selectedTaskId, selectedTaskIds, viewMode, scale, focusedParentId, theme, background, filter, currentUser,
-      setTasks, selectTask, selectTasks, setViewMode, setScale, updateTask, addTask, deleteTask, duplicateTask, moveTask, setFocusedParentId, setTheme, setBackground, setFilter
+      setTasks, selectTask, selectTasks, setViewMode, setScale, updateTask, onUpdateTaskConnections, addTask, deleteTask, duplicateTask, moveTask, setFocusedParentId, setTheme, setBackground, setFilter
   } = store;
   
   useEffect(() => {
@@ -258,26 +256,16 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
 
   const canvasTasks = useMemo(() => {
     if (!focusedParentId) {
-        // Root View: Show ONLY Milestones (Level 0) and Goals (Level 1)
         return tasks.filter((t: TaskNode) => {
-            // Level 0: Milestone
             if (!t.parentId) return true; 
-            
             const parent = tasks.find((p: TaskNode) => p.id === t.parentId);
             if (!parent) return false;
-            
-            // Level 1: Goal (Is child of Root/Milestone)
             return !parent.parentId; 
         });
     } else {
-        // Nested View: Show Focused Task (Crown) and DIRECT Children ONLY
         return tasks.filter((t: TaskNode) => {
-            // 1. The Focused Task itself
             if (t.id === focusedParentId) return true;
-            
-            // 2. Direct Children of Focused Task
             if (t.parentId === focusedParentId) return true;
-            
             return false;
         });
     }
@@ -305,10 +293,8 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
   return (
     <section className="relative w-full h-full font-sans overflow-hidden selection:bg-brand-500/30 flex justify-center">
        
-       {/* Viewport */}
        <div className="w-full max-w-screen-2xl h-full relative flex flex-col">
            
-           {/* Viewport Content */}
            <div className="flex-1 relative overflow-hidden z-0">
               {viewMode === 'canvas' && (
                   <div className="w-full h-full hidden lg:block">
@@ -316,7 +302,8 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
                         tasks={canvasTasks} 
                         scale={scale} 
                         setScale={setScale}
-                        setTasks={setTasks} 
+                        onUpdateTask={updateTask}
+                        onUpdateTaskConnections={onUpdateTaskConnections}
                         selectedTaskId={selectedTaskId} 
                         selectedTaskIds={selectedTaskIds}
                         onSelect={selectTask}
@@ -388,9 +375,6 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
               )}
            </div>
 
-           {/* Floating UI Layer (z-50) */}
-           
-           {/* DESKTOP: Top Center View Switcher */}
            <div className="hidden lg:flex absolute top-6 left-1/2 -translate-x-1/2 z-50 justify-center">
               <div className={`flex p-1.5 rounded-xl gap-1 ${widgetClass}`}>
                 {viewOptions.map(v => (
@@ -408,7 +392,6 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
               </div>
            </div>
 
-           {/* DESKTOP: Top Right User Actions & Widgets */}
            <div className="absolute top-4 right-4 lg:top-6 lg:right-6 z-50 flex items-center gap-3 hidden lg:flex">
                 <AssignedTasksWidget 
                     isLight={isLightTheme} 
@@ -419,8 +402,6 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
                 />
            </div>
 
-           {/* Sidebar - Desktop Widget ONLY (Hidden in Outline View) */}
-           {/* We pass isOpen=false here because Plan only manages desktop. Mobile drawer is in App.tsx. */}
            {viewMode !== 'outline' && (
                 <div className="absolute top-4 left-4 lg:top-6 lg:left-6 bottom-20 lg:bottom-6 z-50 flex flex-col pointer-events-none">
                     <div className="pointer-events-auto h-auto max-h-full flex flex-col gap-4">
@@ -446,7 +427,6 @@ export const Plan: React.FC<PlanProps> = ({ store, isSidebarOpen, setIsSidebarOp
                 </div>
            )}
            
-           {/* Breadcrumbs Widget - Fixed Bottom Left (Hidden on Mobile) */}
            <div className="fixed bottom-8 left-8 z-50 pointer-events-auto hidden lg:block">
                 <div className={`px-4 py-2 rounded-xl flex items-center ${widgetClass}`}>
                      <Breadcrumbs 
