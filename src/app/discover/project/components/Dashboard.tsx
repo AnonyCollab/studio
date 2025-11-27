@@ -46,7 +46,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     const myTasks = useMemo(() => {
         if (!currentUser || !tasks) return [];
         console.log(`Filtering for "My Tasks". Current user ID: ${currentUser.id}`);
-        const filtered = tasks.filter(t => t.assignee.id === currentUser.id);
+        const filtered = tasks.filter(t => t.assignee && (t.assignee.id === currentUser.id || t.assignee.uid === currentUser.id));
         console.log(`Found ${filtered.length} tasks assigned to the current user.`);
         if (filtered.length > 0) {
             console.log("Sample 'My Task' assignee object:", filtered[0].assignee);
@@ -61,8 +61,8 @@ export const Dashboard: React.FC<DashboardProps> = () => {
         console.log(`Found ${teamMemberIds.length} members in the team:`, teamMemberIds);
         
         const filtered = tasks.filter(t => 
-            t.assignee.id === currentTeamName || // Assigned to the team directly
-            teamMemberIds.includes(t.assignee.id) // Assigned to a member of the team
+            (t.assignee && t.assignee.id === currentTeamName) || // Assigned to the team directly
+            (t.assignee && teamMemberIds.includes(t.assignee.id)) // Assigned to a member of the team
         );
         console.log(`Found ${filtered.length} tasks for the team.`);
         if (filtered.length > 0) {
