@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Users, Briefcase, PlusCircle } from 'lucide-react';
+import { X, Users, Briefcase, PlusCircle, Folder } from 'lucide-react';
 import { Assignee, TaskNode, Theme, UserRole } from '../types';
 import { PriorityIcon } from './Plan';
 import { Button } from '@/components/ui/button';
@@ -22,14 +22,11 @@ interface DepartmentSheetProps {
 
 type Tab = 'Overview' | 'Members' | 'Teams' | 'Work' | 'Activity';
 
-
-// Moved Backdrop outside of the main component
 const Backdrop: React.FC<{ onClick: () => void, isLight: boolean }> = ({ onClick, isLight }) => {
     const overlayClass = isLight ? "bg-black/20 backdrop-blur-sm" : "bg-black/60 backdrop-blur-sm";
     return <div className={`fixed inset-0 z-[150] ${overlayClass} animate-in fade-in duration-300`} onClick={onClick} />;
 };
 
-// Moved Content outside of the main component
 const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({ 
     department, members, teams, tasks, onClose, theme
 }) => {
@@ -272,4 +269,3 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
         </>
     );
 };
-
