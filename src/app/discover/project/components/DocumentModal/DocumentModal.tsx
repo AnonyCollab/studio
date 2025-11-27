@@ -8,9 +8,10 @@ import { CommentsSection } from './CommentsSection';
 import { ChecklistSection } from './ChecklistSection';
 import { ResourcePickerModal } from './ResourcePickerModal';
 import { breakDownTask } from '@/ai/flows/breakDownTaskFlow';
-import { TaskNode, Theme, Attachment, CurrentUser, TaskType } from '../../types';
+import { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem } from '../../types';
 import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore';
+import { FilePreview } from '../FilePreview';
 
 interface DocumentModalProps {
   task: TaskNode;
@@ -50,11 +51,22 @@ const HIERARCHY: Record<TaskType, number> = {
     'Gateway': 6
 };
 
+const getFileIcon = (type?: string) => {
+    if (!type) return <FileText size={16} />;
+    if (type.startsWith('image/')) return <FileText size={16} />;
+    if (type.startsWith('video/')) return <FileText size={16} />;
+    if (type.includes('zip') || type.includes('archive')) return <FileText size={16} />;
+    if (type.includes('pdf')) return <FileText size={16} />;
+    return <FileText size={16} />;
+};
+
+
 export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme }) => {
-  const { members } = useStore();
+  const { members, files } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [showParentPicker, setShowParentPicker] = useState(false);
+  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   
   const task = allTasks.find(t => t.id === initialTask.id) || initialTask;
 
@@ -193,21 +205,30 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const badgeBlocked = isLight ? "bg-slate-50 border-slate-100 text-slate-600" : "bg-slate-900/20 border-slate-800 text-slate-300";
 
   const renderResources = () => (
-      <div className="space-y-2">
-        {(task.attachments || []).map(att => (
-            <div key={att.id} className={`flex items-center gap-3 p-3 rounded-xl border ${isLight ? 'bg-slate-50 border-slate-100' : 'bg-white/5 border-white/5'}`}>
-                <div className="p-2 bg-brand-500/20 rounded text-brand-500"><FileText size={16} /></div>
-                <span className={`text-sm font-medium flex-1 ${textMain}`}>{att.name}</span>
-            </div>
-        ))}
-        {!isReadOnly && (
+    <div className="space-y-2">
+      {(task.attachments || []).map(att => {
+        const file = files.find(f => f.id === att.id || f.name === att.name);
+        return (
             <button 
-                onClick={() => setShowResourcePicker(true)}
-                className={`w-full py-2 border border-dashed rounded-lg text-xs font-bold ${textMuted} hover:bg-white/5`}
+                key={att.id} 
+                onClick={() => file && setPreviewFile(file)}
+                className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${isLight ? 'bg-slate-50 border-slate-100 hover:bg-slate-100' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
             >
-                + Link Resource
+                <div className={`p-2 bg-brand-500/10 rounded text-brand-500`}>
+                    {getFileIcon(file?.fileType)}
+                </div>
+                <span className={`text-sm font-medium flex-1 ${textMain}`}>{att.name}</span>
             </button>
-        )}
+        )
+      })}
+      {!isReadOnly && (
+          <button 
+              onClick={() => setShowResourcePicker(true)}
+              className={`w-full py-2 border border-dashed rounded-lg text-xs font-bold ${textMuted} hover:bg-white/5`}
+          >
+              + Link Resource
+          </button>
+      )}
     </div>
   );
 
@@ -504,6 +525,15 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                 onClose={() => setShowResourcePicker(false)}
                 onSelect={handleResourceSelect}
                 isLight={isLight}
+            />
+        )}
+        
+        {previewFile && (
+            <FilePreview 
+                file={previewFile}
+                isOpen={!!previewFile}
+                onClose={() => setPreviewFile(null)}
+                theme={theme}
             />
         )}
     </>

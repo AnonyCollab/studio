@@ -10,17 +10,19 @@ import { Button } from '@/components/ui/button';
 import { FilePreview } from './FilePreview';
 import { NewFileEditor } from './NewFileEditor';
 
-const getFileIcon = (type?: string) => {
-    if (type === 'application/json') return <FileText size={20} />;
-    if (!type) return <File size={20} />;
-    if (type.startsWith('image/')) return <Image size={20} />;
-    if (type.startsWith('video/')) return <Video size={20} />;
-    if (type.includes('zip') || type.includes('archive')) return <Archive size={20} />;
-    if (type.includes('pdf')) return <FileText size={20} />;
-    return <File size={20} />;
+const getFileIcon = (type?: string, size = 20) => {
+    if (type === 'folder') return <Folder size={size} />;
+    if (type === 'application/json') return <FileText size={size} />;
+    if (!type) return <File size={size} />;
+    if (type.startsWith('image/')) return <Image size={size} />;
+    if (type.startsWith('video/')) return <Video size={size} />;
+    if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
+    if (type.includes('pdf')) return <FileText size={size} />;
+    return <File size={size} />;
 };
 
 const getFileColor = (type?: string) => {
+    if (type === 'folder') return 'text-brand-500';
     if (type === 'application/json') return 'text-green-500';
     if (!type) return 'text-gray-400';
     if (type.startsWith('image/')) return 'text-emerald-500';
@@ -168,7 +170,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                     className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${cardClass}`}
                                 >
                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
-                                        <Folder size={24} />
+                                        {getFileIcon(folder.type, 24)}
                                     </div>
                                     <div className="min-w-0">
                                         <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder.name}</h3>
@@ -178,7 +180,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                              {isCreatingFolder && (
                                 <div className={`p-4 rounded-xl border flex items-center gap-4 transition-all ${cardClass}`}>
                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
-                                        <Folder size={24} />
+                                        {getFileIcon('folder', 24)}
                                     </div>
                                     <div className="min-w-0">
                                         <Input
