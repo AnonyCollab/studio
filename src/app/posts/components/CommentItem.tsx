@@ -106,6 +106,36 @@ const AuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark:
 };
 
 
+const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark: boolean, timestamp: string }) => {
+    const firestore = useFirestore();
+    const userRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+    const { data: authorData } = useDoc<{ profile: UserProfile }>(userRef);
+
+    if (!authorData) return <div className="h-8" />; // Placeholder for loading state
+
+    const author = authorData.profile;
+
+    return (
+        <div className="flex items-start gap-3">
+            <Avatar className="w-8 h-8 flex-shrink-0">
+                <AvatarImage src={author.photoURL} />
+                <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
+            </Avatar>
+            <div className={`rounded-lg p-2.5 border w-full ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
+                <div className="flex items-baseline justify-between mb-1">
+                    <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
+                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
+
 export function CommentItem({ postId, comment, theme = "dark", isTaskComment = false, projectId }: CommentItemProps) {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -242,17 +272,10 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
 
     return (
         <div key={reply.id} className="flex items-start gap-3 group/reply">
-            {authorProfile && (
-            <Avatar className="w-8 h-8 flex-shrink-0">
-                <AvatarImage src={authorProfile.photoURL} />
-                <AvatarFallback>{authorProfile.displayName?.[0]}</AvatarFallback>
-            </Avatar>
-            )}
+            <ReplyAuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
             <div className="flex-1 min-w-0">
             <div className={`rounded-lg p-2.5 border ${isDark ? "bg-white/5 border-white/10" : "bg-gray-50 border-gray-200"}`}>
-                <div className="flex items-baseline justify-between mb-1">
-                    <AuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
-                </div>
+                
                 <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {renderContentWithMentions(reply.content, isDark)}
                 </p>

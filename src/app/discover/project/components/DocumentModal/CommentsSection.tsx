@@ -36,16 +36,20 @@ export function CommentsSection({ taskId, isLight, theme, projectId }: CommentsS
   const { toast } = useToast();
 
   const commentsQuery = useMemoFirebase(() => {
+    console.log(`CommentsSection DEBUG: useMemoFirebase for commentsQuery is running.`);
     if (!firestore || !projectId || !taskId) {
+      console.log(`CommentsSection DEBUG: Aborting query construction (missing firestore/projectId/taskId).`);
       return null;
     }
     const path = `projects/${projectId}/tasks/${taskId}/comments`;
+    console.log(`CommentsSection DEBUG: Constructing comments query for path: ${path}`);
     return query(collection(firestore, path), orderBy('createdAt', 'asc'));
   }, [firestore, projectId, taskId]);
 
   const { data: commentsData, isLoading, error } = useCollection<Comment>(commentsQuery);
 
   useEffect(() => {
+      console.log(`CommentsSection DEBUG: useCollection hook update received. {isLoading: ${isLoading}, hasError: ${!!error}, dataCount: ${commentsData?.length}}`);
     if (error) {
         console.error("CommentsSection DEBUG: Error received from useCollection:", error);
     }
