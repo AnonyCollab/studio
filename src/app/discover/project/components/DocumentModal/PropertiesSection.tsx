@@ -1,11 +1,11 @@
 
 import React, { useState, useRef } from 'react';
 import { Users, ArrowUpRight, Plus, FileText, ArrowDownRight, ChevronDown, RotateCw, FolderTree, ChevronRight, ArrowLeftRight } from 'lucide-react';
-import { MOCK_ASSIGNEES, INITIAL_CYCLES, INITIAL_TASKS } from '../../constants';
 import { AssigneePickerModal } from './AssigneePickerModal';
 import { CyclePickerModal } from './CyclePickerModal';
 import { ParentPickerModal } from './ParentPickerModal';
-import { TaskNode } from '../../types';
+import { TaskNode, Assignee } from '../../types';
+import { INITIAL_CYCLES } from '../../constants';
 
 interface PropertiesSectionProps {
   properties: any;
@@ -15,11 +15,13 @@ interface PropertiesSectionProps {
   currentTaskId?: string;
   showParentPicker?: boolean;
   setShowParentPicker?: (show: boolean) => void;
+  members: Assignee[];
 }
 
 export function PropertiesSection({ 
     properties, updateProperty, isLight, tasks = [], currentTaskId = '',
-    showParentPicker: controlledShowPicker, setShowParentPicker: setControlledShowPicker
+    showParentPicker: controlledShowPicker, setShowParentPicker: setControlledShowPicker,
+    members
 }: PropertiesSectionProps) {
   const [localShowParentPicker, setLocalShowParentPicker] = useState(false);
   const [showAssigneePicker, setShowAssigneePicker] = useState(false);
@@ -64,7 +66,7 @@ export function PropertiesSection({
     return undefined;
   };
 
-  const currentAssignee = MOCK_ASSIGNEES.find(a => a.name === properties.assign) || MOCK_ASSIGNEES.find(a => a.name === 'Unassigned');
+  const currentAssignee = members.find(a => a.name === properties.assign) || members.find(a => a.name === 'Unassigned');
   const currentCycle = INITIAL_CYCLES.find(c => c.id === properties.cycleId);
   
   const parentTask = properties.parentId ? tasks.find(t => t.id === properties.parentId) : null;
@@ -126,6 +128,7 @@ export function PropertiesSection({
                     }}
                     position={window.innerWidth >= 1024 ? getAssigneeModalPosition() : undefined}
                     isLight={isLight}
+                    members={members}
                 />
             )}
             </div>

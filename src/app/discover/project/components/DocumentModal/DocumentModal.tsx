@@ -9,8 +9,8 @@ import { ChecklistSection } from './ChecklistSection';
 import { ResourcePickerModal } from './ResourcePickerModal';
 import { breakDownTask } from '@/ai/flows/breakDownTaskFlow';
 import { TaskNode, Theme, Attachment, CurrentUser, TaskType } from '../../types';
-import { MOCK_ASSIGNEES } from '../../constants';
 import { StatusBadge } from '../Plan';
+import { useStore } from '../../store/useStore';
 
 interface DocumentModalProps {
   task: TaskNode;
@@ -50,10 +50,14 @@ const HIERARCHY: Record<TaskType, number> = {
     'Gateway': 6
 };
 
-export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme }) => {
+export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme }) => {
+  const { members } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [showParentPicker, setShowParentPicker] = useState(false);
+  
+  const task = allTasks.find(t => t.id === initialTask.id) || initialTask;
+
 
   if (!task) return null;
 
@@ -88,7 +92,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
     }
 
     if (key === 'assign') {
-        const fullAssignee = MOCK_ASSIGNEES.find(a => a.name === value);
+        const fullAssignee = members.find(a => a.name === value);
         if (fullAssignee) {
             onUpdate(task.id, { assignee: fullAssignee });
         }
@@ -140,9 +144,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
       setAiLoading(false);
   };
 
-  const parentTask = task.parentId ? tasks.find(t => t.id === task.parentId) : null;
-  const prevTasks = (task.prev || []).map(id => tasks.find(t => t.id === id)).filter(Boolean) as TaskNode[];
-  const subTasks = tasks.filter(t => task.childrenIds?.includes(t.id));
+  const parentTask = task.parentId ? allTasks.find(t => t.id === task.parentId) : null;
+  const prevTasks = (task.prev || []).map(id => allTasks.find(t => t.id === id)).filter(Boolean) as TaskNode[];
+  const subTasks = allTasks.filter(t => task.childrenIds?.includes(t.id));
 
   // --- Hierarchy Logic ---
   const allowedTypes = (Object.keys(HIERARCHY) as TaskType[]).filter(newType => {
@@ -158,7 +162,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
       }
 
       if (task.childrenIds && task.childrenIds.length > 0) {
-          const children = tasks.filter(t => task.childrenIds?.includes(t.id));
+          const children = allTasks.filter(t => task.childrenIds?.includes(t.id));
           const hasInvalidChild = children.some(child => {
               const childLevel = HIERARCHY[child.type];
               return childLevel <= newLevel;
@@ -286,6 +290,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
                                 updateProperty={handleUpdateProperty}
                                 isLight={isLight}
                                 allowedTypes={allowedTypes}
+                                members={members}
                             />
                         </div>
                     </div>
@@ -429,10 +434,11 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task, tasks = [], 
                         properties={properties}
                         updateProperty={handleUpdateProperty}
                         isLight={isLight}
-                        tasks={tasks} 
+                        tasks={allTasks} 
                         currentTaskId={task.id}
                         showParentPicker={showParentPicker}
                         setShowParentPicker={setShowParentPicker}
+                        members={members}
                     />
                 </div>
 

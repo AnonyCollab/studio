@@ -7,8 +7,7 @@ import { SizePickerModal } from './SizePickerModal';
 import { StatusPickerModal } from './StatusPickerModal';
 import { PriorityPickerModal } from './PriorityPickerModal';
 import { AssigneePickerModal } from './AssigneePickerModal';
-import { MOCK_ASSIGNEES } from '../../constants';
-import { TaskType } from '../../types';
+import { TaskType, Assignee } from '../../types';
 
 interface DocumentHeaderProps {
   title: string;
@@ -17,9 +16,10 @@ interface DocumentHeaderProps {
   updateProperty: (key: string, value: any) => void;
   isLight: boolean;
   allowedTypes?: TaskType[];
+  members: Assignee[];
 }
 
-export function DocumentHeader({ title, setTitle, properties, updateProperty, isLight, allowedTypes }: DocumentHeaderProps) {
+export function DocumentHeader({ title, setTitle, properties, updateProperty, isLight, allowedTypes, members }: DocumentHeaderProps) {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showSizePicker, setShowSizePicker] = useState(false);
   const [showStatusPicker, setShowStatusPicker] = useState(false);
@@ -75,7 +75,7 @@ export function DocumentHeader({ title, setTitle, properties, updateProperty, is
   const titlePlaceholder = isLight ? "placeholder:text-slate-300" : "placeholder:text-slate-700";
   const titleColor = isLight ? 'text-slate-900' : 'text-white';
 
-  const currentAssignee = MOCK_ASSIGNEES.find(a => a.name === properties.assign);
+  const currentAssignee = members.find(a => a.name === properties.assign);
   const assigneeInitials = currentAssignee ? currentAssignee.initials : '?';
   const assigneeColor = currentAssignee ? currentAssignee.color : 'bg-slate-500';
 
@@ -267,6 +267,7 @@ export function DocumentHeader({ title, setTitle, properties, updateProperty, is
             }}
             position={getModalPosition(assigneeRef)}
             isLight={isLight}
+            members={members}
           />
       )}
     </>

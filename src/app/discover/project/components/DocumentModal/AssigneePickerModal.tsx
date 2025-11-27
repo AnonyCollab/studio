@@ -1,6 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
-import { MOCK_ASSIGNEES } from '../../constants';
+import { Assignee } from '../../types';
 
 interface AssigneePickerModalProps {
   onClose: () => void;
@@ -8,9 +8,10 @@ interface AssigneePickerModalProps {
   currentAssignee?: string;
   position?: { top: number; left: number };
   isLight: boolean;
+  members: Assignee[];
 }
 
-export function AssigneePickerModal({ onClose, onSelect, currentAssignee, position, isLight }: AssigneePickerModalProps) {
+export function AssigneePickerModal({ onClose, onSelect, currentAssignee, position, isLight, members }: AssigneePickerModalProps) {
   const containerClass = isLight ? "bg-white border-slate-200 shadow-xl" : "bg-[#1e1e1e] border-gray-700 shadow-xl";
   const itemHover = isLight ? "hover:bg-slate-100" : "hover:bg-[#2a2a2a]";
   const textMain = isLight ? "text-slate-700" : "text-gray-300";
@@ -20,7 +21,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
   const renderList = () => (
     <div className="max-h-[300px] overflow-y-auto custom-scrollbar p-2">
         <div className={`px-3 py-2 text-xs font-bold uppercase tracking-wider ${labelClass}`}>Users</div>
-        {MOCK_ASSIGNEES.filter(a => a.type === 'user').map(assignee => (
+        {members.filter(a => a.type === 'user').map(assignee => (
             <button
                 key={assignee.name}
                 onClick={() => onSelect(assignee.name)}
@@ -31,7 +32,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
             </button>
         ))}
         <div className={`px-3 py-2 mt-1 text-xs font-bold uppercase tracking-wider border-t ${isLight ? 'border-slate-100' : 'border-gray-700'} ${labelClass}`}>Teams</div>
-        {MOCK_ASSIGNEES.filter(a => a.type === 'team').map(team => (
+        {members.filter(a => a.type === 'team').map(team => (
             <button
                 key={team.name}
                 onClick={() => onSelect(team.name)}
@@ -67,7 +68,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
                 <div>
                     <div className="text-xs font-bold uppercase opacity-50 mb-3 px-1">Users</div>
                     <div className="space-y-2">
-                        {MOCK_ASSIGNEES.filter(a => a.type === 'user').map(assignee => (
+                        {members.filter(a => a.type === 'user').map(assignee => (
                             <button
                                 key={assignee.name}
                                 onClick={() => onSelect(assignee.name)}
@@ -83,7 +84,7 @@ export function AssigneePickerModal({ onClose, onSelect, currentAssignee, positi
                 <div>
                     <div className="text-xs font-bold uppercase opacity-50 mb-3 px-1">Teams</div>
                     <div className="space-y-2">
-                        {MOCK_ASSIGNEES.filter(a => a.type === 'team').map(team => (
+                        {members.filter(a => a.type === 'team').map(team => (
                             <button
                                 key={team.name}
                                 onClick={() => onSelect(team.name)}
