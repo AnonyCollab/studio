@@ -165,8 +165,8 @@ export function addComment(firestore: Firestore, parentPath: string, commentText
 /**
  * Adds a new reply to a comment's 'replies' subcollection in Firestore.
  */
-export function addReply(firestore: Firestore, postId: string, commentId: string, replyText: string, user: User) {
-  const repliesCollection = collection(firestore, 'posts', postId, 'comments', commentId, 'replies');
+export function addReply(firestore: Firestore, basePath: string, replyText: string, user: User) {
+  const repliesCollection = collection(firestore, basePath, 'replies');
 
   return addDocumentNonBlocking(repliesCollection, {
     authorId: user.uid,
@@ -190,8 +190,13 @@ export function toggleLikePost(firestore: Firestore, postId: string, isLiked: bo
 /**
  * Toggles a like on a comment.
  */
-export function toggleLikeComment(firestore: Firestore, postId: string, commentId: string, isLiked: boolean) {
-    const commentRef = doc(firestore, 'posts', postId, 'comments', commentId);
+export function toggleLikeComment(firestore: Firestore, parentId: string, commentId: string, isLiked: boolean, isTaskComment: boolean = false, projectId?: string | null) {
+    let commentRef;
+    if (isTaskComment && projectId) {
+        commentRef = doc(firestore, 'projects', projectId, 'tasks', parentId, 'comments', commentId);
+    } else {
+        commentRef = doc(firestore, 'posts', parentId, 'comments', commentId);
+    }
     const likeIncrement = isLiked ? increment(-1) : increment(1);
     return updateDocumentNonBlocking(commentRef, {
         likes: likeIncrement

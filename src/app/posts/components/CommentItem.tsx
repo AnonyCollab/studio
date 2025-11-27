@@ -225,7 +225,7 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
     const newLikedState = !isLiked;
     setIsLiked(newLikedState);
     if(firestore) {
-        toggleLikeComment(firestore, postId, comment.id, isLiked);
+        toggleLikeComment(firestore, postId, comment.id, isLiked, isTaskComment, projectId);
     }
   }
 
