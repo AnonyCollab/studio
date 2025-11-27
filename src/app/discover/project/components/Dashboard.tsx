@@ -6,7 +6,7 @@ import {
     CheckCircle2, AlertTriangle, Clock, TrendingUp, Users, Layers,
     Target, Zap, AlertCircle, Briefcase, Crown
 } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store/useStore.tsx';
 
 interface DashboardProps {
 }
@@ -20,13 +20,11 @@ export const Dashboard: React.FC<DashboardProps> = () => {
     }, [currentUser, tasks, isStoreLoading]);
     const isLight = ['Light', 'Sephiroa', 'Green'].includes(theme);
 
-    // Mock Team Context for Demo - Use current user's team
-    const currentTeamName = currentUser.teamName || 'Frontend Team';
+    // Get current user's team name, or default if not available
+    const currentTeamName = currentUser.teamName || '';
 
     const teamMembers = useMemo(() => {
-        // In a real app, you would fetch members of the current user's team.
-        // For now, we'll just filter from the members list in the store.
-        // This is a simplified mock logic.
+        // For now, we consider all users to be part of the team for the 'Team Pulse' view
         return (members || [])
             .filter(m => m.type === 'user')
             .map(m => m.name);
@@ -36,10 +34,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
 
     const myTasks = useMemo(() => tasks.filter(t => t.assignee.name === currentUser.name), [tasks, currentUser.name]);
 
-    const teamTasks = useMemo(() => tasks.filter(t =>
-        t.assignee.name === currentTeamName ||
-        (t.assignee.type === 'user' && teamMembers.includes(t.assignee.name))
-    ), [tasks, currentTeamName, teamMembers]);
+    const teamTasks = useMemo(() => tasks.filter(t => t.assignee.type === 'team'), [tasks]);
 
     const projectTasks = tasks;
 
@@ -247,7 +242,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 space-y-6">
                 <div className="flex items-center justify-between mb-2">
                     <div>
-                        <h2 className={`text-2xl font-bold ${textMain}`}>{currentTeamName} Pulse</h2>
+                        <h2 className={`text-2xl font-bold ${textMain}`}>{currentTeamName || "Team"} Pulse</h2>
                         <p className={textMuted}>Collaborative overview and workload distribution.</p>
                     </div>
                 </div>
@@ -334,7 +329,7 @@ export const Dashboard: React.FC<DashboardProps> = () => {
                     <StatCard label="Total Scope" value={projectTasks.length} icon={Layers} color="bg-brand-500/20 text-brand-500" />
                     <StatCard label="Completion" value={`${getCompletionRate(projectTasks)}%`} icon={CheckCircle2} color="bg-emerald-500/20 text-emerald-500" />
                     <StatCard label="Total Blockers" value={getCriticalCount(projectTasks)} icon={AlertTriangle} color="bg-rose-500/20 text-rose-500" />
-                    <StatCard label="Contributors" value="12" icon={Users} color="bg-blue-500/20 text-blue-500" />
+                    <StatCard label="Contributors" value={members.length} icon={Users} color="bg-blue-500/20 text-blue-500" />
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
