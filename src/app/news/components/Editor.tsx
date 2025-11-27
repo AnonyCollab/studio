@@ -34,9 +34,6 @@ const customTheme = {
   dark: darkTheme,
 };
 
-// Y.js document cache
-const yDocs = new Map<string, Y.Doc>();
-
 interface EditorProps {
     onChange?: (value: string) => void;
     initialContent?: string;
@@ -61,11 +58,8 @@ export default function Editor({ onChange, initialContent, editable, collaborati
   const collaborationOptions = useMemo(() => {
     if (!collaborationId) return undefined;
 
-    let doc = yDocs.get(collaborationId);
-    if (!doc) {
-      doc = new Y.Doc();
-      yDocs.set(collaborationId, doc);
-    }
+    // Create a new Y.Doc for each editor instance to avoid HMR issues.
+    const doc = new Y.Doc();
     
     const host = process.env.NEXT_PUBLIC_PARTYKIT_HOST;
 
