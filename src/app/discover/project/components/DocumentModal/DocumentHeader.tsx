@@ -7,7 +7,7 @@ import { SizePickerModal } from './SizePickerModal';
 import { StatusPickerModal } from './StatusPickerModal';
 import { PriorityPickerModal } from './PriorityPickerModal';
 import { AssigneePickerModal } from './AssigneePickerModal';
-import { TaskType, Assignee } from '../../types';
+import type { TaskType, Assignee } from '../../types';
 
 interface DocumentHeaderProps {
   title: string;

@@ -9,7 +9,7 @@ import {
   FileText,
   Building2,
 } from 'lucide-react';
-import { Status, Priority, ViewMode, TaskNode, FilterOption, CurrentUser } from '../types';
+import type { Status, Priority, ViewMode, TaskNode, FilterOption, CurrentUser } from '../types';
 import { CanvasView } from './views/Board';
 import { KanbanView } from './views/Kanban';
 import { ListView } from './views/List';

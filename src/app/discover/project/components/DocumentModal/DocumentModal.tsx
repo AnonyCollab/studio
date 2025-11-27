@@ -9,7 +9,7 @@ import { CommentsSection } from './CommentsSection';
 import { ChecklistSection } from './ChecklistSection';
 import { ResourcePickerModal } from './ResourcePickerModal';
 import { breakDownTask } from '@/ai/flows/breakDownTaskFlow';
-import { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem, Status, Priority } from '../../types';
+import type { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem, Status, Priority } from '../../types';
 import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore.tsx';
 import { FilePreview } from '../FilePreview';
@@ -613,4 +613,3 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     </>
   );
 };
-

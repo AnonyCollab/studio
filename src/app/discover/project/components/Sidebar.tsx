@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useMemo } from 'react';
-import { TaskNode, Theme, BackgroundType, Page, MembersViewMode, ResourcesViewMode, CommunityViewMode } from '../types';
+import type { TaskNode, Theme, BackgroundType, Page, MembersViewMode, ResourcesViewMode, CommunityViewMode } from '../types';
 import { ChevronRight, ChevronDown, FileText, Plus, ArrowRightCircle, Search, X, ChevronUp, Calendar as CalendarIcon, ChevronLeft, Eye, Filter, Users, Video, Image, File, MoreHorizontal, Copy, Trash2, Circle, ArrowLeft, CornerDownRight, Flag, Target, CheckSquare, Zap, BookOpen, Maximize2, Folder } from 'lucide-react';
 import { StatusBadge } from './Plan';
 
@@ -271,7 +271,7 @@ const TaskTreeItem: React.FC<{
                         }
                     }}
                 >
-                    {children.map((childId) => (
+                    {children.map((childId, i) => (
                         <TaskTreeItem
                             key={childId}
                             taskId={childId}
@@ -287,6 +287,7 @@ const TaskTreeItem: React.FC<{
                             onDrillDown={onDrillDown}
                             isLight={isLight}
                             isMainView={true}
+                            isLast={i === children.length-1}
                         />
                     ))}
                 </div>
@@ -687,7 +688,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { label: 'All', active: communityView === 'All' },
         { label: 'Help', active: communityView === 'Help' }, 
         { label: 'Feedback', active: communityView === 'Feedback' }, 
-        { label: 'Updates', active: communityView === 'Updates' },
+        { label: 'Updates', active: communityView === 'Updates' }, 
         { label: 'Polls', active: communityView === 'Polls' }
     ], setCommunityView);
 
