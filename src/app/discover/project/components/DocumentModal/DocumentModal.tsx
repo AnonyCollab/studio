@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { DocumentHeader } from './DocumentHeader';
 import { PropertiesSection } from './PropertiesSection';
 import { ContentEditor } from './ContentEditor';
@@ -69,6 +70,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [showParentPicker, setShowParentPicker] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
+  const [activeTab, setActiveTab] = useState('comments');
   
   const task = allTasks.find(t => t.id === initialTask.id) || initialTask;
 
@@ -249,46 +251,61 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     </div>
   );
   
- const renderCommentAndActivityTabs = () => (
-    <Tabs defaultValue="comments" className="w-full">
-        <TabsList className="bg-transparent p-0 border-b rounded-none mb-4 gap-6">
-            <TabsTrigger 
-                value="comments" 
-                className={`bg-transparent p-0 pb-2 text-sm font-medium border-b-2 rounded-none transition-colors
-                    ${isLight 
-                        ? 'text-slate-500 data-[state=active]:text-brand-600 data-[state=active]:border-brand-600 border-transparent hover:text-slate-800' 
-                        : 'text-slate-400 data-[state=active]:text-brand-400 data-[state=active]:border-brand-400 border-transparent hover:text-white'
-                    }`}
-            >
-                <MessageCircle size={14} className="mr-2"/> Comments
-            </TabsTrigger>
-            <TabsTrigger 
-                value="activity" 
-                 className={`bg-transparent p-0 pb-2 text-sm font-medium border-b-2 rounded-none transition-colors
-                    ${isLight 
-                        ? 'text-slate-500 data-[state=active]:text-brand-600 data-[state=active]:border-brand-600 border-transparent hover:text-slate-800' 
-                        : 'text-slate-400 data-[state=active]:text-brand-400 data-[state=active]:border-brand-400 border-transparent hover:text-white'
-                    }`}
-            >
-                <History size={14} className="mr-2"/> Activity
-            </TabsTrigger>
-        </TabsList>
-        <TabsContent value="comments" className="mt-4">
-            <CommentsSection 
-                comments={task.comments || []} 
-                addComment={(c) => {
-                    if(currentUser?.role === 'Visitor') return;
-                    const currentComments = task.comments || [];
-                    onUpdate(task.id, { comments: [...currentComments, c] } as any);
-                }}
-                isLight={isLight}
-            />
-        </TabsContent>
-        <TabsContent value="activity" className="mt-4 px-2">
-            {renderActivity()}
-        </TabsContent>
-    </Tabs>
-  );
+ const renderCommentAndActivityTabs = () => {
+    const tabs = [
+        { id: 'comments', label: 'Comments', icon: MessageCircle },
+        { id: 'activity', label: 'Activity', icon: History }
+    ];
+
+    return (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <div className="flex border-b border-white/5 gap-6">
+                {tabs.map(tab => {
+                    const isActive = activeTab === tab.id;
+                    const Icon = tab.icon;
+                    return (
+                         <div key={tab.id} className="relative py-2">
+                             <button
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex items-center gap-2 px-1 py-2 text-sm font-medium transition-colors
+                                    ${isActive
+                                        ? (isLight ? 'text-blue-600' : 'text-blue-400')
+                                        : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white')
+                                    }
+                                `}
+                            >
+                                <Icon size={14} /> {tab.label}
+                            </button>
+                             {isActive && (
+                                <motion.div
+                                    layoutId="underline"
+                                    className={`absolute bottom-0 left-0 right-0 h-0.5 ${isLight ? 'bg-blue-600' : 'bg-blue-400'}`}
+                                />
+                             )}
+                         </div>
+                    );
+                })}
+            </div>
+
+            <TabsContent value="comments" className="mt-6">
+                <CommentsSection 
+                    comments={task.comments || []} 
+                    addComment={(c) => {
+                        if(currentUser?.role === 'Visitor') return;
+                        const currentComments = task.comments || [];
+                        onUpdate(task.id, { comments: [...currentComments, c] } as any);
+                    }}
+                    isLight={isLight}
+                    postId={task.id}
+                    theme={theme}
+                />
+            </TabsContent>
+            <TabsContent value="activity" className="mt-6 px-2">
+                {renderActivity()}
+            </TabsContent>
+        </Tabs>
+    );
+};
 
 
   const getSubtasksLabel = () => {
