@@ -73,6 +73,7 @@ export function ArticleCard({
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={(e) => e.stopPropagation()}
                     className={`h-8 w-8 ${
                       isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                     }`}
@@ -83,6 +84,7 @@ export function ArticleCard({
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={(e) => e.stopPropagation()}
                       className={`h-8 w-8 ${
                         isBookmarked
                           ? isDark
@@ -101,6 +103,7 @@ export function ArticleCard({
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={(e) => e.stopPropagation()}
                         className={`h-8 w-8 ${
                           isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                         }`}
@@ -193,6 +196,7 @@ export function ArticleCard({
                 <Button
                   variant="ghost"
                   size="icon"
+                  onClick={(e) => e.stopPropagation()}
                   className={`h-8 w-8 ${
                     isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                   }`}
@@ -203,6 +207,7 @@ export function ArticleCard({
                   <Button
                     variant="ghost"
                     size="icon"
+                    onClick={(e) => e.stopPropagation()}
                     className={`h-8 w-8 ${
                       isBookmarked
                         ? isDark
@@ -221,6 +226,7 @@ export function ArticleCard({
                     <Button
                       variant="ghost"
                       size="icon"
+                      onClick={(e) => e.stopPropagation()}
                       className={`h-8 w-8 ${
                         isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                       }`}
