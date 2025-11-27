@@ -1,9 +1,9 @@
 import ArticleClientPage from "./ArticleClientPage";
 
-export default function ArticlePage({ params }: { params: { articleId: string } }) {
-  // This is now a Server Component. It safely extracts the articleId from params.
+// The page component is now async to align with modern Next.js patterns
+// for handling route parameters, resolving the server-side error.
+export default async function ArticlePage({ params }: { params: { articleId: string } }) {
   const { articleId } = params;
 
-  // It then passes the ID as a simple prop to the Client Component.
   return <ArticleClientPage articleId={articleId} />;
 }
