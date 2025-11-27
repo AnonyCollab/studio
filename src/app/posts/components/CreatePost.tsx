@@ -27,8 +27,9 @@ import { useFirebaseApp, useFirestore, useUser } from "@/firebase";
 import { usePosts } from "@/context/PostContext";
 import { cn } from "@/lib/utils";
 import { addPost } from "@/firebase/non-blocking-updates";
-import { detailedSectorsData, SectorWithSubSectors, SubSector } from "@/app/data/naics";
+import { detailedSectorsData, SectorWithSubSectors, SubSector, findIndustryByName } from "@/app/data/naics";
 import { Badge } from "@/components/ui/badge";
+import { suggestNaicsCode } from '@/ai/flows/suggestNaicsCodeFlow';
 
 
 const CreatePostSchema = z.object({
@@ -55,6 +56,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
   const [postType, setPostType] = useState("qa");
   const [activeTab, setActiveTab] = useState("problem");
   const [isSuggestingTags, setIsSuggestingTags] = useState(false);
+  const [isSuggestingNaics, setIsSuggestingNaics] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -112,6 +114,57 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
       description: "AI tag suggestions are currently unavailable.",
     });
     setIsSuggestingTags(false);
+  };
+
+  const handleSuggestNaics = async () => {
+    const title = getValues("title");
+    const problem = getValues("problemDetails");
+    
+    if (!title && !problem) {
+      toast({
+        variant: "destructive",
+        title: "More Information Needed",
+        description: "Please provide a title and problem details for an accurate suggestion.",
+      });
+      return;
+    }
+
+    setIsSuggestingNaics(true);
+    try {
+      const description = `Title: ${title}\n\nDetails: ${problem}`;
+      const result = await suggestNaicsCode({ description });
+      
+      if (result && result.code) {
+        const industryInfo = findIndustryByName(result.name);
+        if (industryInfo && industryInfo.sector && industryInfo.subSector && industryInfo.industry) {
+          // Trigger updates in sequence
+          setSelectedSectorCode(industryInfo.sector.code);
+          setValue("sector", industryInfo.sector.code, { shouldValidate: true });
+
+          // We need to wait for the sub-sectors to become available
+          setTimeout(() => {
+            setSelectedSubSectorCode(industryInfo.subSector!.code);
+            setValue("sector", industryInfo.subSector!.code, { shouldValidate: true });
+            
+            // And then for industries
+            setTimeout(() => {
+              setValue("sector", industryInfo.industry!.code, { shouldValidate: true });
+              toast({ title: "AI Suggestion Applied!", description: `Industry set to: ${result.name}` });
+            }, 100);
+          }, 100);
+
+        } else {
+            toast({ variant: 'destructive', title: "Suggestion Error", description: "Could not map suggestion to form fields." });
+        }
+      } else {
+        toast({ variant: 'destructive', title: "Suggestion Failed", description: "The AI could not determine an industry." });
+      }
+    } catch (error) {
+      console.error("NAICS Suggestion Error:", error);
+      toast({ variant: 'destructive', title: "AI Error", description: "An error occurred while fetching the suggestion." });
+    } finally {
+      setIsSuggestingNaics(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -441,16 +494,22 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
               name="sector"
               render={({ field }) => (
                 <FormItem className="space-y-4">
-                  <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
-                    Sector <span className="text-red-500">*</span>
-                  </FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel className={isDark ? 'text-white' : 'text-gray-900'}>
+                      Sector <span className="text-red-500">*</span>
+                    </FormLabel>
+                     <Button type="button" variant="link" size="sm" onClick={handleSuggestNaics} disabled={isSuggestingNaics} className="text-cyan-400 p-0 h-auto">
+                      <Sparkles className="w-3.5 h-3.5 mr-1" />
+                      {isSuggestingNaics ? 'Suggesting...' : 'AI Suggest'}
+                    </Button>
+                  </div>
                   
                   <Select onValueChange={(value) => {
                       setSelectedSectorCode(value);
                       setSelectedSubSectorCode("");
                       field.onChange(value); // Keep top-level sector as fallback
                       trigger("sector");
-                  }}>
+                  }} value={selectedSectorCode}>
                     <FormControl>
                       <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
                         <SelectValue placeholder="Select a main sector" />
@@ -470,7 +529,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                         setSelectedSubSectorCode(value);
                         field.onChange(value); // Update form value to sub-sector
                         trigger("sector");
-                    }}>
+                    }} value={selectedSubSectorCode}>
                         <FormControl>
                             <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
                                 <SelectValue placeholder="Select a sub-sector" />
@@ -490,7 +549,7 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
                     <Select onValueChange={(value) => {
                         field.onChange(value); // Update form value to industry
                         trigger("sector");
-                    }}>
+                    }} value={field.value}>
                         <FormControl>
                             <SelectTrigger className={isDark ? "bg-white/5 border-white/10 text-white" : "bg-gray-100 border-gray-300 text-gray-900"}>
                                 <SelectValue placeholder="Select an industry" />
@@ -571,3 +630,5 @@ export function CreatePost({ onClose, theme = "dark" }: CreatePostProps) {
     </div>
   );
 }
+
+    
