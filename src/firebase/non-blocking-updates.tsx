@@ -1,4 +1,5 @@
 
+
 'use client';
     
 import {
@@ -130,14 +131,8 @@ export function addComment(firestore: Firestore, postId: string, commentText: st
     const commentsCollection = collection(firestore, 'posts', postId, 'comments');
     const postRef = doc(firestore, 'posts', postId);
 
-    const authorData = {
-        name: user.displayName || 'Anonymous User',
-        avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-        uid: user.uid,
-    };
-
     const commentData = {
-        author: authorData,
+        authorId: user.uid,
         content: commentText,
         likes: 0,
         createdAt: serverTimestamp(),
@@ -171,15 +166,9 @@ export function addComment(firestore: Firestore, postId: string, commentText: st
  */
 export function addReply(firestore: Firestore, postId: string, commentId: string, replyText: string, user: User) {
   const repliesCollection = collection(firestore, 'posts', postId, 'comments', commentId, 'replies');
-  
-  const authorData = {
-    name: user.displayName || 'Anonymous User',
-    avatar: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-    uid: user.uid,
-  };
 
   return addDocumentNonBlocking(repliesCollection, {
-    author: authorData,
+    authorId: user.uid,
     content: replyText,
     likes: 0,
     createdAt: serverTimestamp(),

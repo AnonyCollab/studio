@@ -238,11 +238,15 @@
           "type": "string",
           "description": "Unique identifier for the Comment entity."
         },
+        "authorId": {
+          "type": "string",
+          "description": "The UID of the user who made the comment."
+        },
         "postId": {
           "type": "string",
           "description": "Reference to the Post this comment belongs to. (Relationship: Post 1:N Comment)"
         },
-        "text": {
+        "content": {
           "type": "string",
           "description": "The text content of the comment."
         },
@@ -254,8 +258,9 @@
       },
       "required": [
         "id",
+        "authorId",
         "postId",
-        "text",
+        "content",
         "createdAt"
       ]
     },
@@ -378,14 +383,9 @@
           "type": "string",
           "format": "date-time",
           "description": "Timestamp for when the conversation was created."
-        },
-        "updatedAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "Timestamp for the last activity in the conversation."
         }
       },
-      "required": ["participants", "createdAt", "updatedAt"]
+      "required": ["participants", "createdAt"]
     },
     "Message": {
       "title": "Message",

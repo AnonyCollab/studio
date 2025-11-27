@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useCallback } from "react";
@@ -11,7 +10,8 @@ import { collection, query, onSnapshot, orderBy, Timestamp } from "firebase/fire
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
-import { useFirestore, useUser } from "@/firebase";
+import { useFirestore, useUser, useDoc, useMemoFirebase } from "@/firebase";
+import { doc } from 'firebase/firestore';
 import { addReply, toggleLikeComment, toggleLikeReply, deleteComment, deleteReply } from "@/firebase/non-blocking-updates";
 import { MentionPopover } from "./MentionPopover";
 import { mockUsers } from "@/app/messages/data/mockUsers";
@@ -33,9 +33,15 @@ interface Author {
   uid: string;
 }
 
+interface UserProfile {
+    uid: string;
+    displayName: string;
+    photoURL: string;
+}
+
 interface Reply {
   id: string;
-  author: Author;
+  authorId: string;
   content: string;
   timestamp: string;
   createdAt: Timestamp;
@@ -44,7 +50,7 @@ interface Reply {
 
 interface Comment {
   id:string;
-  author: Author;
+  authorId: string;
   content: string;
   timestamp: string;
   createdAt: Timestamp;
@@ -71,6 +77,82 @@ const renderContentWithMentions = (content: string, isDark: boolean) => {
     });
 };
 
+const AuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark: boolean, timestamp: string }) => {
+    const firestore = useFirestore();
+    const userRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+    const { data: authorData } = useDoc<{ profile: UserProfile }>(userRef);
+
+    if (!authorData) {
+        return (
+            <div className="flex items-center gap-3">
+                <Avatar className="w-9 h-9 flex-shrink-0 bg-gray-500" />
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm">Loading...</p>
+                </div>
+            </div>
+        );
+    }
+    
+    const author = authorData.profile;
+
+    return (
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <Avatar className="w-9 h-9 flex-shrink-0">
+                    <AvatarImage src={author.photoURL} />
+                    <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
+                </Avatar>
+                <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
+            </div>
+            <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
+        </div>
+    );
+};
+
+const ReplyAuthorInfo = ({ authorId, isDark, timestamp }: { authorId: string, isDark: boolean, timestamp: string }) => {
+    const firestore = useFirestore();
+    const userRef = useMemoFirebase(() => {
+        if (!firestore || !authorId) return null;
+        return doc(firestore, 'users', authorId);
+    }, [firestore, authorId]);
+    const { data: authorData } = useDoc<{ profile: UserProfile }>(userRef);
+
+    if (!authorData) {
+        return (
+            <>
+                <Avatar className="w-8 h-8 flex-shrink-0 bg-gray-500" />
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm">...</p>
+                </div>
+            </>
+        );
+    }
+
+    const author = authorData.profile;
+
+    return (
+        <>
+            <Avatar className="w-8 h-8 flex-shrink-0">
+                <AvatarImage src={author.photoURL} />
+                <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                    <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
+                    <div className="flex items-center gap-1">
+                        <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
+                        {/* More options can go here */}
+                    </div>
+                </div>
+            </div>
+        </>
+    );
+};
+
+
 export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProps) {
   const [replies, setReplies] = useState<Reply[]>([]);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -84,7 +166,6 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   const isDark = theme === "dark";
   const [isCommentDeleteDialogOpen, setIsCommentDeleteDialogOpen] = useState(false);
   const [isReplyDeleteDialogOpen, setIsReplyDeleteDialogOpen] = useState<string | null>(null);
-
 
   const [mentionQuery, setMentionQuery] = useState<string | null>(null);
   const [mentionTarget, setMentionTarget] = useState<EventTarget & HTMLTextAreaElement | null>(null);
@@ -184,47 +265,16 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
     setMentionTarget(null);
   };
 
-
   const renderReply = useCallback((reply: Reply) => {
     const isReplyLiked = likedReplies[reply.id];
-    const isAuthor = user && user.uid === reply.author.uid;
+    const isAuthor = user && user.uid === reply.authorId;
 
     return (
     <div key={reply.id} className="flex gap-3 group/reply">
-        <Avatar className="w-8 h-8 flex-shrink-0">
-            <AvatarImage src={reply.author.avatar} />
-            <AvatarFallback>{reply.author.name[0]}</AvatarFallback>
-        </Avatar>
         <div className="flex-1 min-w-0">
             <div className={`rounded-lg p-2.5 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
-                <div className="flex items-center justify-between mb-1">
-                    <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{reply.author.name}</p>
-                    <div className="flex items-center gap-1">
-                      <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{reply.timestamp}</span>
-                      {isAuthor && (
-                         <AlertDialog open={isReplyDeleteDialogOpen === reply.id} onOpenChange={(open) => setIsReplyDeleteDialogOpen(open ? reply.id : null)}>
-                            <AlertDialogTrigger asChild>
-                                <button className={cn('p-1 rounded-full opacity-0 group-hover/reply:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-500')}>
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className={cn(isDark ? 'bg-[#1a1f2e] border-white/10' : '')}>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Reply?</AlertDialogTitle>
-                                    <AlertDialogDescription className={cn(isDark ? 'text-gray-400' : '')}>
-                                        Are you sure you want to permanently delete this reply? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className={cn(isDark ? 'bg-transparent text-white hover:bg-white/10' : '')}>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => firestore && deleteReply(firestore, postId, comment.id, reply.id)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                    </div>
-                </div>
-                <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+                <ReplyAuthorInfo authorId={reply.authorId} isDark={isDark} timestamp={reply.timestamp} />
+                <p className={`text-sm pl-11 -mt-5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                     {renderContentWithMentions(reply.content, isDark)}
                 </p>
             </div>
@@ -250,45 +300,16 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
   )}, [isDark, likedReplies, handleLikeReply, replyingTo, comment.id, user, firestore, postId, isReplyDeleteDialogOpen]);
 
   return (
-    <div className="flex gap-3 group/comment">
-        <Avatar className="w-9 h-9 flex-shrink-0">
-            <AvatarImage src={comment.author.avatar} />
-            <AvatarFallback>{comment.author.name[0]}</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-            <div className={`rounded-lg p-3 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
+    <div className="flex flex-col group/comment">
+        <div className={`rounded-lg p-3 border ${isDark ? "bg-[#131823] border-white/10" : "bg-gray-100 border-gray-200"}`}>
             <div className="flex items-center justify-between mb-2">
-                <p className={`text-sm ${isDark ? "text-white" : "text-gray-900"}`}>{comment.author.name}</p>
-                 <div className="flex items-center gap-1">
-                    <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{comment.timestamp}</span>
-                    {user && user.uid === comment.author.uid && (
-                        <AlertDialog open={isCommentDeleteDialogOpen} onOpenChange={setIsCommentDeleteDialogOpen}>
-                            <AlertDialogTrigger asChild>
-                                <button className={cn('p-1 rounded-full opacity-0 group-hover/comment:opacity-100 transition-opacity', isDark ? 'text-gray-400 hover:text-red-400' : 'text-gray-500 hover:text-red-500')}>
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className={cn(isDark ? 'bg-[#1a1f2e] border-white/10' : '')}>
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Comment?</AlertDialogTitle>
-                                    <AlertDialogDescription className={cn(isDark ? 'text-gray-400' : '')}>
-                                        Are you sure you want to permanently delete this comment? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className={cn(isDark ? 'bg-transparent text-white hover:bg-white/10' : '')}>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => firestore && deleteComment(firestore, postId, comment.id)} className="bg-red-600 hover:bg-red-700 text-white">Delete</AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    )}
-                </div>
+                <AuthorInfo authorId={comment.authorId} isDark={isDark} timestamp={comment.timestamp} />
             </div>
-            <p className={`text-sm ${isDark ? "text-gray-300" : "text-gray-700"}`}>
+            <p className={`text-sm pl-12 -mt-5 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {renderContentWithMentions(comment.content, isDark)}
             </p>
-            </div>
-            <div className="flex items-center gap-4 mt-2 px-3">
+        </div>
+        <div className="flex items-center gap-4 mt-2 px-3">
             <button 
               onClick={handleLikeComment}
               className={cn("flex items-center gap-1 text-xs transition-colors",
@@ -306,45 +327,44 @@ export function CommentItem({ postId, comment, theme = "dark" }: CommentItemProp
                     {visibleReplies[comment.id] ? 'Hide' : 'View'} {replies.length} replies
                 </button>
             )}
-            </div>
-            
-            {/* Reply Form */}
-            {replyingTo === comment.id && (
-            <MentionPopover
-                query={mentionQuery}
-                onSelect={handleMentionSelect}
-                target={mentionTarget}
-                users={Object.values(mockUsers)}
-                theme={theme}
-            >
-                <div className="relative mt-3 ml-4">
-                    <Textarea
-                        placeholder={`Replying to ${comment.author.name}...`}
-                        value={replyContent}
-                        onChange={handleReplyChange}
-                        className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
-                        rows={1}
-                    />
-                    <Button
-                        type="button"
-                        onClick={() => handleSubmitReply(comment.id)}
-                        disabled={!replyContent.trim()}
-                        size="icon"
-                        className={`absolute right-1.5 bottom-1.5 h-7 w-7 ${isDark ? 'bg-cyan-400 hover:bg-cyan-500 text-gray-900' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
-                    >
-                        <Send className="w-3.5 h-3.5" />
-                    </Button>
-                </div>
-            </MentionPopover>
-            )}
-
-            {/* Replies Section */}
-            {visibleReplies[comment.id] && replies && replies.length > 0 && (
-            <div className="mt-4 pl-8 space-y-4">
-                {replies.map(reply => renderReply(reply))}
-            </div>
-            )}
         </div>
+        
+        {/* Reply Form */}
+        {replyingTo === comment.id && (
+        <MentionPopover
+            query={mentionQuery}
+            onSelect={handleMentionSelect}
+            target={mentionTarget}
+            users={Object.values(mockUsers)}
+            theme={theme}
+        >
+            <div className="relative mt-3 ml-4">
+                <Textarea
+                    placeholder={`Replying to this comment...`}
+                    value={replyContent}
+                    onChange={handleReplyChange}
+                    className={`pr-10 resize-none text-sm ${isDark ? "bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-cyan-400/50" : "bg-white border-gray-300 text-gray-900 placeholder:text-gray-500 focus:border-cyan-500/50"}`}
+                    rows={1}
+                />
+                <Button
+                    type="button"
+                    onClick={() => handleSubmitReply(comment.id)}
+                    disabled={!replyContent.trim()}
+                    size="icon"
+                    className={`absolute right-1.5 bottom-1.5 h-7 w-7 ${isDark ? 'bg-cyan-400 hover:bg-cyan-500 text-gray-900' : 'bg-cyan-600 hover:bg-cyan-700 text-white'}`}
+                >
+                    <Send className="w-3.5 h-3.5" />
+                </Button>
+            </div>
+        </MentionPopover>
+        )}
+
+        {/* Replies Section */}
+        {visibleReplies[comment.id] && replies && replies.length > 0 && (
+        <div className="mt-4 pl-8 space-y-4">
+            {replies.map(reply => renderReply(reply))}
+        </div>
+        )}
     </div>
   )
 }

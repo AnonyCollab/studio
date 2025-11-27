@@ -22,7 +22,7 @@ interface Author {
 
 interface Comment {
   id:string;
-  author: Author;
+  authorId: string;
   content: string;
   timestamp: string;
   createdAt: Timestamp;
@@ -55,7 +55,7 @@ export function CommentSection({ postId, theme = "dark" }: CommentSectionProps) 
         const data = doc.data();
         return {
           id: doc.id,
-          author: data.author,
+          authorId: data.authorId,
           content: data.content,
           createdAt: data.createdAt,
           timestamp: data.createdAt ? formatDistanceToNow(data.createdAt.toDate(), { addSuffix: true }) : 'just now',
