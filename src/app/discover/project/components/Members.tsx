@@ -15,6 +15,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuPortal,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
@@ -55,14 +56,14 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
 
     const getStats = (assigneeName: string) => {
         const relevantTasks = tasks.filter(t => {
-            const assignee = allMembers.find(m => m.name === assigneeName);
+            const assignee = allMembers.find(m => m.displayName === assigneeName);
             if (!assignee) return false;
             
             if (assignee.type === 'team') {
-                const memberIds = allMembers.filter(m => m.department === assignee.id || m.id === assignee.id).map(m => m.name);
-                return memberIds.includes(t.assignee.name);
+                const memberIds = allMembers.filter(m => m.department === assignee.id || m.id === assignee.id).map(m => m.displayName);
+                return memberIds.includes(t.assignee.displayName);
             }
-            return t.assignee.name === assigneeName;
+            return t.assignee.displayName === assigneeName;
         });
 
         const done = relevantTasks.filter(t => t.status === 'Done').length;
@@ -394,7 +395,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                 item={currentItem}
                 members={currentItem ? getSubItems(currentItem.displayName, 'user') : []}
                 teams={currentItem ? getSubItems(currentItem.id, 'team') : []}
-                tasks={currentItem ? tasks.filter(t => t.assignee.name === currentItem.displayName) : []}
+                tasks={currentItem ? tasks.filter(t => t.assignee.displayName === currentItem.displayName) : []}
                 isOpen={!!currentItem}
                 onClose={() => setDrilldownHistory([])}
                 onBack={drilldownHistory.length > 1 ? handleGoBack : undefined}
