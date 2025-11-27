@@ -124,7 +124,7 @@ const ReplyAuthorInfo = ({ authorId, isDark, timestamp, content }: { authorId: s
                 <AvatarImage src={author.photoURL} />
                 <AvatarFallback>{author.displayName?.[0]}</AvatarFallback>
             </Avatar>
-            <div className={`rounded-lg p-2.5 border w-full ${isDark ? "bg-transparent" : "bg-gray-50"}`}>
+            <div className={`rounded-lg p-2.5 border w-full ${isDark ? "bg-transparent border-white/10" : "bg-gray-50 border-gray-200"}`}>
                 <div className="flex items-baseline justify-between mb-1">
                     <p className={`text-sm font-medium ${isDark ? "text-white" : "text-gray-900"}`}>{author.displayName}</p>
                     <span className={`text-xs ${isDark ? "text-gray-500" : "text-gray-500"}`}>{timestamp}</span>
@@ -309,7 +309,7 @@ export function CommentItem({ postId, comment, theme = "dark", isTaskComment = f
             </Avatar>
         )}
         <div className="flex-1">
-            <div className={`rounded-lg p-3 border ${isDark ? "bg-[#18181b]" : "bg-white border-gray-200"}`}>
+            <div className={`rounded-lg p-3 border ${isDark ? "bg-[#18181b] border-white/10" : "bg-white border-gray-200"}`}>
               <AuthorInfo authorId={comment.authorId} isDark={isDark} timestamp={comment.timestamp} />
               <p className={`text-sm mt-1 ${isDark ? "text-gray-300" : "text-gray-700"}`}>
                 {renderContentWithMentions(comment.content, isDark)}
