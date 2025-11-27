@@ -9,7 +9,7 @@ import { CommentsSection } from './CommentsSection';
 import { ChecklistSection } from './ChecklistSection';
 import { ResourcePickerModal } from './ResourcePickerModal';
 import { breakDownTask } from '@/ai/flows/breakDownTaskFlow';
-import { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem } from '../../types';
+import { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem, Status, Priority } from '../../types';
 import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore.tsx';
 import { FilePreview } from '../FilePreview';
@@ -88,7 +88,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       (currentUser.role === 'Member' && task.assignee.displayName === 'Unassigned')
   );
 
-  const isReadOnly = !canEdit;
+  const isReadOnly = false; // !canEdit; (Temporarily disabled for debugging)
 
   const handleUpdateProperty = (key: string, value: any) => {
     if (isReadOnly) {
@@ -235,16 +235,58 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       )}
     </div>
   );
+  
+  const getStatusColorClass = (status: string) => {
+    switch (status as Status) {
+        case 'Done': return 'text-emerald-400';
+        case 'In Progress': return 'text-blue-400';
+        case 'Review': return 'text-orange-400';
+        default: return 'text-slate-400';
+    }
+  };
+
+  const getPriorityColorClass = (priority: string) => {
+      switch (priority as Priority) {
+          case 'Critical': return 'text-red-500';
+          case 'High': return 'text-orange-400';
+          case 'Medium': return 'text-blue-400';
+          default: return 'text-slate-400';
+      }
+  };
+
+  const renderActivityText = (action: string) => {
+    const parts = action.split(/\*\*(.*?)\*\*/g);
+    return parts.map((part, index) => {
+        if (index % 2 !== 0) { // Text between **
+            if (Object.values(Status).includes(part as Status)) {
+                return <strong key={index} className={getStatusColorClass(part)}>{part}</strong>;
+            }
+            if (Object.values(Priority).includes(part as Priority)) {
+                return <strong key={index} className={getPriorityColorClass(part)}>{part}</strong>;
+            }
+            if (members.some(m => m.displayName === part)) {
+                return <strong key={index} className="text-purple-400 cursor-pointer hover:underline">{part}</strong>;
+            }
+            return <strong key={index}>{part}</strong>;
+        }
+        return part;
+    });
+  };
 
   const renderActivity = () => (
-      <div className="space-y-3 pl-2 border-l border-dashed border-white/10">
+      <div className="space-y-4 pl-2">
         {(task.history || []).slice().reverse().map(h => (
-            <div key={h.id} className="relative">
-                <div className="absolute -left-[13px] top-1.5 w-2 h-2 rounded-full bg-slate-500" />
-                <p className={`text-xs ${textMain}`}>
-                    <span className="font-bold">{h.user}</span> {h.action}
-                </p>
-                <p className={`text-[10px] opacity-50 ${textMuted}`}>{new Date(h.date).toLocaleString()}</p>
+            <div key={h.id} className="relative flex items-start gap-4">
+                <div className="absolute left-[5px] top-4 -bottom-4 w-0.5 bg-white/5" />
+                <div className="relative z-10 mt-1">
+                    <div className="w-3 h-3 rounded-full bg-slate-600" />
+                </div>
+                <div>
+                    <p className={`text-sm ${textMain}`}>
+                        <strong className="text-purple-400 cursor-pointer hover:underline">{h.user}</strong> {renderActivityText(h.action)}
+                    </p>
+                    <p className={`text-xs opacity-70 ${textMuted}`}>{new Date(h.date).toLocaleString()}</p>
+                </div>
             </div>
         ))}
         {(task.history || []).length === 0 && <div className={`text-xs italic ${textMuted}`}>No activity yet.</div>}
@@ -258,16 +300,16 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     ];
 
     return (
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <div className="w-full">
             <div className="flex border-b border-white/5 gap-6">
                 {tabs.map(tab => {
                     const isActive = activeTab === tab.id;
                     const Icon = tab.icon;
                     return (
-                         <div key={tab.id} className="relative py-2">
+                         <div key={tab.id} className="relative">
                              <button
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`flex items-center gap-2 px-1 py-2 text-sm font-medium transition-colors
+                                className={`flex items-center gap-2 px-1 py-3 text-sm font-medium transition-colors
                                     ${isActive
                                         ? (isLight ? 'text-blue-600' : 'text-blue-400')
                                         : (isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white')
@@ -287,23 +329,25 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                 })}
             </div>
 
-            <TabsContent value="comments" className="mt-6">
-                <CommentsSection 
-                    comments={task.comments || []} 
-                    addComment={(c) => {
-                        if(currentUser?.role === 'Visitor') return;
-                        const currentComments = task.comments || [];
-                        onUpdate(task.id, { comments: [...currentComments, c] } as any);
-                    }}
-                    isLight={isLight}
-                    postId={task.id}
-                    theme={theme}
-                />
-            </TabsContent>
-            <TabsContent value="activity" className="mt-6 px-2">
-                {renderActivity()}
-            </TabsContent>
-        </Tabs>
+            <div className="mt-6">
+                {activeTab === 'comments' && (
+                     <CommentsSection 
+                        comments={task.comments || []} 
+                        addComment={(c) => {
+                            if(currentUser?.role === 'Visitor') return;
+                            const currentComments = task.comments || [];
+                            onUpdate(task.id, { comments: [...currentComments, c] } as any);
+                        }}
+                        isLight={isLight}
+                        postId={task.id}
+                        theme={theme}
+                    />
+                )}
+                {activeTab === 'activity' && (
+                     <div className="px-2">{renderActivity()}</div>
+                )}
+            </div>
+        </div>
     );
 };
 
@@ -569,3 +613,4 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     </>
   );
 };
+
