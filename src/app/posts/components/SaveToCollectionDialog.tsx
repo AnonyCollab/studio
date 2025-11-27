@@ -43,7 +43,7 @@ export function SaveToCollectionDialog({
 }: SaveToCollectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [collections, setCollections] = useState<Collection[]>([]); // Removed mock data
+  const [collections, setCollections] = useState<Collection[]>([]);
   const isMobile = useIsMobile();
   const isDark = theme === "dark";
 
@@ -53,7 +53,6 @@ export function SaveToCollectionDialog({
     );
     setCollections(updatedCollections);
     
-    // This is a simple check to see if it's saved in ANY collection
     const isSavedInAnyCollection = updatedCollections.some(c => c.isSaved);
     onSaveToggle(isSavedInAnyCollection);
   };
@@ -82,7 +81,6 @@ export function SaveToCollectionDialog({
   const CollectionsList = () => (
     <>
       <div className="flex-1 overflow-y-auto">
-        {/* Create New Collection */}
         <button
           onClick={() => setIsCreating(true)}
           className={`w-full flex items-center gap-3 p-4 transition-colors border-b ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'}`}
@@ -93,7 +91,6 @@ export function SaveToCollectionDialog({
           <div className="flex-1 text-left">New Collection</div>
         </button>
 
-        {/* Existing Collections */}
         {collections.map((collection) => (
           <div
             key={collection.id}
@@ -128,7 +125,6 @@ export function SaveToCollectionDialog({
         ))}
       </div>
 
-      {/* Footer */}
       <div className={`p-4 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
         <Button
           onClick={() => setIsOpen(false)}
@@ -145,7 +141,7 @@ export function SaveToCollectionDialog({
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
         <DrawerTrigger asChild onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}>
           {children}
-        DrawerTrigger>
+        </DrawerTrigger>
         <DrawerContent className="p-0 rounded-t-2xl border-none">
           {isCreating ? (
             <CreateCollection
@@ -189,7 +185,7 @@ export function SaveToCollectionDialog({
       </Popover>
       
       <Dialog open={isCreating} onOpenChange={(open) => !open && setIsCreating(false)}>
-        <DialogContent className="sm:max-w-[425px] p-0 gap-0 border-none">
+        <DialogContent className={`sm:max-w-[425px] p-0 gap-0 border-none ${isDark ? 'bg-[#1a1f2e] text-white' : 'bg-white text-gray-900'}`}>
           <CreateCollection
             isMobile={false}
             onBack={() => setIsCreating(false)}
