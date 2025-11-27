@@ -160,7 +160,8 @@ export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaP
         return query(collection(firestore, 'dms', channelId, 'messages'), orderBy('createdAt', 'asc'));
     }
     if(!serverId) return null;
-    return query(collection(firestore, 'servers', serverId, 'messages'), orderBy('createdAt', 'asc'));
+    // Corrected path for server channel messages
+    return query(collection(firestore, 'servers', serverId, 'channels', channelId, 'messages'), orderBy('createdAt', 'asc'));
   }, [firestore, channelId, serverId, isDM, dmData]);
 
   const { data: messages, isLoading } = useCollection<Message>(messagesQuery);
@@ -219,7 +220,7 @@ export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaP
           updatedAt: serverTimestamp()
         }, { merge: true });
     } else if(serverId) {
-        await addDoc(collection(firestore, 'servers', serverId, 'messages'), messageData);
+        await addDoc(collection(firestore, 'servers', serverId, 'channels', channelId, 'messages'), messageData);
     }
   };
 
@@ -258,7 +259,7 @@ export function ChatArea({ channelId, serverId, isDM, theme, onBack }: ChatAreaP
             createdAt: serverTimestamp(),
           };
           
-          const messageCollection = isDM ? collection(firestore, 'dms', channelId, 'messages') : collection(firestore, 'servers', serverId!, 'messages');
+          const messageCollection = isDM ? collection(firestore, 'dms', channelId, 'messages') : collection(firestore, 'servers', serverId!, 'channels', channelId, 'messages');
           await addDoc(messageCollection, fileMessage);
           
           if(isDM) {
