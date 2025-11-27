@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { TaskNode, Theme, MembersViewMode, Assignee, UserRole } from '../types';
-import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut, PlusCircle } from 'lucide-react';
+import { Mail, MoreHorizontal, Briefcase, Crown, User, ChevronDown, ChevronUp, UserPlus, LogOut, PlusCircle, Folder } from 'lucide-react';
 import { DepartmentSheet } from './DepartmentSheet';
 import { useStore } from '../store/useStore.tsx';
 import {
@@ -19,6 +19,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 const ROLE_HIERARCHY: UserRole[] = ['Owner', 'Co-Owner', 'Coordinator', 'Team Lead', 'Member'];
 
@@ -36,6 +37,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     const [selectedTeam, setSelectedTeam] = useState<Assignee | null>(null);
     const { updateMember, currentUser, removeMember, addMember } = useStore();
     const { toast } = useToast();
+    const [isCreatingDepartment, setIsCreatingDepartment] = useState(false);
+    const [newDepartmentName, setNewDepartmentName] = useState('');
 
     useEffect(() => {
         console.log("Current user role in MembersPage:", currentUser?.role);
@@ -80,18 +83,23 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
     }
 
     const handleCreateDepartment = () => {
-        if (!addMember) return;
-        const departmentName = prompt("Enter new department name:");
-        if (departmentName && departmentName.trim() !== '') {
-            addMember({
-                name: departmentName,
-                type: 'team',
-            });
-            toast({
-                title: "Department Created",
-                description: `The "${departmentName}" department has been created.`
-            });
+        if (!addMember || !newDepartmentName.trim()) {
+            setIsCreatingDepartment(false);
+            setNewDepartmentName('');
+            return;
         }
+
+        addMember({
+            name: newDepartmentName,
+            type: 'team',
+            color: 'bg-gray-500' // Default color
+        });
+        toast({
+            title: "Department Created",
+            description: `The "${newDepartmentName}" department has been created.`
+        });
+        setIsCreatingDepartment(false);
+        setNewDepartmentName('');
     };
 
 
@@ -222,7 +230,7 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                         <div className="flex justify-between items-center mb-4">
                             <h2 className={`text-sm font-bold uppercase tracking-wider ${textMuted}`}>Departments</h2>
                             {currentUser.role === 'Owner' && (
-                                <Button variant="outline" size="sm" onClick={handleCreateDepartment}>
+                                <Button variant="outline" size="sm" onClick={() => setIsCreatingDepartment(true)}>
                                     <PlusCircle className="mr-2 h-4 w-4" />
                                     Create Department
                                 </Button>
@@ -236,8 +244,8 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                     className={`p-6 rounded-2xl border shadow-lg backdrop-blur-sm flex items-center justify-between cursor-pointer active:scale-[0.98] ${cardClass}`}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-lg ${team.color} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
-                                            {team.initials}
+                                        <div className={`w-12 h-12 rounded-lg ${team.color || 'bg-gray-500'} flex items-center justify-center text-white font-bold text-lg shadow-md`}>
+                                            {team.initials || team.name.substring(0,2)}
                                         </div>
                                         <div>
                                             <h3 className={`font-bold ${textMain}`}>{team.name}</h3>
@@ -246,6 +254,29 @@ export const Members: React.FC<MembersProps> = ({ tasks, theme, viewMode, member
                                     </div>
                                 </div>
                             ))}
+                            {isCreatingDepartment && (
+                                <div className={`p-6 rounded-2xl border-2 border-dashed flex items-center justify-center ${isLight ? 'border-brand-300 bg-brand-50' : 'border-brand-500/50 bg-brand-500/10'}`}>
+                                    <div className="flex items-center gap-4 w-full">
+                                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${isLight ? 'bg-slate-200 text-slate-500' : 'bg-white/10 text-white/50'}`}>
+                                            <Folder size={24} />
+                                        </div>
+                                        <Input 
+                                            autoFocus
+                                            value={newDepartmentName}
+                                            onChange={(e) => setNewDepartmentName(e.target.value)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleCreateDepartment();
+                                                if (e.key === 'Escape') setIsCreatingDepartment(false);
+                                            }}
+                                            onBlur={() => {
+                                                if (!newDepartmentName) setIsCreatingDepartment(false);
+                                            }}
+                                            placeholder="New Department..."
+                                            className={`h-auto p-0 bg-transparent border-0 font-bold text-base ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 ${textMain} placeholder:text-slate-500`}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
