@@ -170,7 +170,7 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
                                 <h3 className={`text-sm font-bold uppercase tracking-wider mb-4 ${textMuted}`}>Team Structure</h3>
                                  <div className="space-y-2">
                                     {members.slice(0, 5).map(m => (
-                                        <div key={m.name} className="flex items-center gap-3 p-2">
+                                        <div key={m.id} className="flex items-center gap-3 p-2">
                                             <div className={`w-8 h-8 rounded-full ${m.color} flex items-center justify-center text-white font-bold text-xs`}>
                                                 {m.initials}
                                             </div>
@@ -190,7 +190,7 @@ const Content: React.FC<DepartmentSheetProps & { department: Assignee }> = ({
                     <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {[...members].map(member => (
-                                <div key={member.name} className={`p-5 rounded-2xl border flex flex-col gap-4 ${cardClass}`}>
+                                <div key={member.id} className={`p-5 rounded-2xl border flex flex-col gap-4 ${cardClass}`}>
                                     <div className="flex items-center gap-4">
                                         <div className={`w-14 h-14 rounded-full ${member.color} flex items-center justify-center text-white font-bold text-xl shadow-md`}>
                                             {member.initials}
@@ -272,3 +272,4 @@ export const DepartmentSheet: React.FC<DepartmentSheetProps> = (props) => {
         </>
     );
 };
+
