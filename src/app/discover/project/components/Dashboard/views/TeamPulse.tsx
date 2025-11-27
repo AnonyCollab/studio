@@ -46,8 +46,8 @@ export const TeamPulseView = () => {
         const total = Object.values(data).reduce((a: any, b: any) => a + b, 0) as number;
         return (
             <div className={`p-6 rounded-2xl border flex flex-col ${containerClass} backdrop-blur-xl shadow-xl`}>
-                <h3 className={`text-lg font-bold mb-6 ${textMain}`}>{title}</h3>
-                <div className="flex-1 flex items-end gap-3 px-2 pb-2 h-[180px]">
+                <h3 className={`text-lg font-bold mb-4 ${textMain}`}>{title}</h3>
+                <div className="flex-1 flex items-end gap-3 px-2 h-[250px]">
                     {Object.entries(data).map(([key, value]: any) => {
                         const height = total > 0 ? (value / total) * 100 : 0;
                         let color = 'bg-slate-500';
@@ -58,14 +58,14 @@ export const TeamPulseView = () => {
                         }
                         return (
                             <div key={key} className="flex-1 flex flex-col items-center gap-2 group h-full justify-end">
-                                <div className={`text-xs font-bold ${textMain} opacity-0 group-hover:opacity-100 transition-opacity`}>{value}</div>
+                                <div className={`text-lg font-bold ${textMain} transition-opacity`}>{value}</div>
                                 <div className="w-full bg-slate-800/10 rounded-t-md relative overflow-hidden group-hover:bg-slate-800/20 transition-colors h-full flex items-end">
                                     <div
                                         className={`w-full rounded-t-md transition-all duration-1000 ${color} opacity-80 group-hover:opacity-100`}
                                         style={{ height: `${Math.max(height, 5)}%` }}
                                     />
                                 </div>
-                                <span className="text-[9px] uppercase font-bold tracking-wider text-slate-500 truncate w-full text-center">{key}</span>
+                                <span className="text-[10px] uppercase font-bold tracking-wider text-slate-500 truncate w-full text-center">{key}</span>
                             </div>
                         );
                     })}
