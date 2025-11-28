@@ -2,7 +2,7 @@
 'use client';
 
 import { ReactNode, useState, useMemo, useEffect } from "react";
-import { Check, Copy, Twitter, Linkedin, Facebook, Send } from "lucide-react";
+import { Check, Copy, Twitter, Linkedin, Facebook, Send, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -166,6 +166,7 @@ export function SharePopover({ children, postId }: SharePopoverProps) {
             <Button variant="ghost" size="icon"><Twitter className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon"><Linkedin className="h-5 w-5" /></Button>
             <Button variant="ghost" size="icon"><Facebook className="h-5 w-5" /></Button>
+            <Button variant="ghost" size="icon"><Instagram className="h-5 w-5" /></Button>
           </div>
           <Separator />
            <div className="p-4 space-y-2">
@@ -205,5 +206,3 @@ export function SharePopover({ children, postId }: SharePopoverProps) {
     </Popover>
   );
 }
-
-    
