@@ -34,7 +34,7 @@ export function ArticleCard({
 
   if (featured) {
     return (
-      <Link href={`/news/${id}`} passHref>
+      <Link href={`/news/article/${id}`} passHref>
         <article className={`mb-12 pb-12 ${isDark ? "border-white/5" : "border-gray-100"} border-b cursor-pointer group`}>
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1">
@@ -82,7 +82,7 @@ export function ArticleCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                     className={`h-8 w-8 ${
                       isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                     }`}
@@ -112,7 +112,7 @@ export function ArticleCard({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                         className={`h-8 w-8 ${
                           isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                         }`}
@@ -167,7 +167,7 @@ export function ArticleCard({
   }
 
   return (
-    <Link href={`/news/${id}`} passHref>
+    <Link href={`/news/article/${id}`} passHref>
       <article className={`mb-10 pb-10 ${isDark ? "border-white/5" : "border-gray-100"} border-b last:border-b-0 cursor-pointer group`}>
         <div className="flex gap-6">
           <div className="flex-1">
@@ -212,7 +212,7 @@ export function ArticleCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                   className={`h-8 w-8 ${
                     isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                   }`}
@@ -242,7 +242,7 @@ export function ArticleCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                       className={`h-8 w-8 ${
                         isDark ? "hover:bg-white/5 hover:text-cyan-400" : "hover:bg-gray-100 hover:text-cyan-600"
                       }`}
