@@ -21,12 +21,9 @@ import { Loader } from 'lucide-react';
 interface Article {
     id: string;
     title: string;
-    description: string;
     authorName: string;
     authorImage: string;
-    date: string;
     readTime: string;
-    image: string;
     category: string;
     content: string; 
     createdAt?: Timestamp | string;
