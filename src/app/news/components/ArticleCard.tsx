@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bookmark, Minus, MoreHorizontal } from "lucide-react";
+import { Bookmark, Minus, MoreHorizontal, Edit } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import type { Article } from '../data';
 import { SaveToCollectionDialog } from "@/app/posts/components/SaveToCollectionDialog";
+import { useUser } from "@/firebase";
 
 interface ArticleCardProps {
   article: Article;
@@ -24,9 +25,11 @@ export function ArticleCard({
   article,
   theme,
 }: ArticleCardProps) {
-  const { id, title, description, authorName, authorImage, date, readTime, image, category, featured } = article;
+  const { id, title, description, authorName, authorImage, date, readTime, image, category, featured, authorId } = article;
   const isDark = theme === "dark";
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const { user } = useUser();
+  const isAuthor = user && user.uid === authorId;
 
 
   if (featured) {
@@ -69,6 +72,13 @@ export function ArticleCard({
                 </div>
                 
                 <div className="flex items-center gap-2">
+                   {isAuthor && (
+                    <Link href={`/news/write?edit=${id}`} passHref>
+                      <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-cyan-400 hover:bg-cyan-400/10 hover:text-cyan-400">
+                        <Edit className="w-5 h-5" />
+                      </Button>
+                    </Link>
+                   )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -192,6 +202,13 @@ export function ArticleCard({
               </div>
               
               <div className="flex items-center gap-2">
+                {isAuthor && (
+                  <Link href={`/news/write?edit=${id}`} passHref>
+                     <Button asChild variant="ghost" size="icon" className="h-8 w-8 text-cyan-400 hover:bg-cyan-400/10 hover:text-cyan-400">
+                        <Edit className="w-5 h-5" />
+                      </Button>
+                  </Link>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"

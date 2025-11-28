@@ -6,6 +6,7 @@ export interface Article {
     id: string;
     title: string;
     description: string;
+    authorId: string;
     authorName: string;
     authorImage: string;
     date: string;
@@ -22,6 +23,7 @@ export const mockArticles: Article[] = [
     id: uuidv4(),
     title: 'The Future of Anonymous Collaboration',
     description: 'How new technologies are enabling teams to work together without revealing their identities, fostering a more meritocratic environment.',
+    authorId: 'user1',
     authorName: 'Jane Doe',
     authorImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=jane',
     date: 'Oct 24, 2024',
@@ -40,6 +42,7 @@ export const mockArticles: Article[] = [
     id: uuidv4(),
     title: 'Designing for Privacy: A UI/UX Guide',
     description: 'Best practices for creating user interfaces that respect user privacy and build trust, with practical examples and case studies.',
+    authorId: 'user2',
     authorName: 'John Smith',
     authorImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=john',
     date: 'Oct 23, 2024',
@@ -55,6 +58,7 @@ export const mockArticles: Article[] = [
     id: uuidv4(),
     title: 'The Psychology of Anonymity in Teams',
     description: 'An in-depth look at how anonymity affects team dynamics, creativity, and communication, backed by recent studies.',
+    authorId: 'user3',
     authorName: 'Emily White',
     authorImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=emily',
     date: 'Oct 22, 2024',
@@ -70,6 +74,7 @@ export const mockArticles: Article[] = [
     id: uuidv4(),
     title: 'Building Secure Real-Time Applications',
     description: 'A technical deep-dive into the architecture and security considerations for building real-time collaboration tools.',
+    authorId: 'user4',
     authorName: 'Michael Brown',
     authorImage: 'https://api.dicebear.com/7.x/avataaars/svg?seed=michael',
     date: 'Oct 21, 2024',

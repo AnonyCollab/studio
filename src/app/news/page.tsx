@@ -5,7 +5,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { ArticleCard } from './components/ArticleCard';
 import { CategoryNav } from './components/CategoryNav';
 import { TrendingTopics } from './components/TrendingTopics';
-import type { Article } from './data';
+import { Article as ArticleType } from './data';
 import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, orderBy, Timestamp } from 'firebase/firestore';
 import { useMemo } from 'react';
@@ -20,7 +20,7 @@ export default function NewsPage() {
     return query(collection(firestore, 'news'), orderBy('createdAt', 'desc'));
   }, [firestore]);
 
-  const { data: articlesData, isLoading } = useCollection<Article>(articlesQuery);
+  const { data: articlesData, isLoading } = useCollection<ArticleType>(articlesQuery);
 
   const articles = useMemo(() => {
     if (!articlesData) return [];
@@ -28,7 +28,6 @@ export default function NewsPage() {
       ...article,
       id: article.id, // ensure id is present
       date: article.createdAt ? formatDistanceToNow(new Date((article.createdAt as Timestamp).seconds * 1000)) + ' ago' : 'Just now',
-      description: '...', // Placeholder as it is not in the DB model
       image: `https://picsum.photos/seed/${article.id}/1080/600`, // Placeholder image
     }));
   }, [articlesData]);
