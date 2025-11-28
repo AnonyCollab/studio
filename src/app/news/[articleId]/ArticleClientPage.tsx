@@ -51,7 +51,7 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
 
   const articleRef = useMemoFirebase(() => {
     if (!firestore || !articleId) return null;
-    return doc(firestore, 'articles', articleId);
+    return doc(firestore, 'news', articleId);
   }, [firestore, articleId]);
 
   const { data: articleData, isLoading } = useDoc<Article>(articleRef);
@@ -160,5 +160,3 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
     </div>
   );
 }
-
-    

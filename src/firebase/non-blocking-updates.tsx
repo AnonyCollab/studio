@@ -250,10 +250,10 @@ export function deleteReply(firestore: Firestore, postId: string, commentId: str
 
 
 /**
- * Publishes a new article to the 'articles' collection.
+ * Publishes a new article to the 'news' collection.
  */
 export function publishArticle(firestore: Firestore, article: { title: string; content: string }, user: User) {
-  const articlesCollection = collection(firestore, 'articles');
+  const articlesCollection = collection(firestore, 'news');
   
   const articleData = {
     title: article.title,
