@@ -17,7 +17,6 @@ import { SaveToCollectionDialog } from "@/app/posts/components/SaveToCollectionD
 
 interface ArticleCardProps {
   article: Article;
-  featured?: boolean;
   theme: "light" | "dark";
 }
 
@@ -84,7 +83,7 @@ export function ArticleCard({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                       className={`h-8 w-8 ${
                         isBookmarked
                           ? isDark
@@ -207,7 +206,7 @@ export function ArticleCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
                     className={`h-8 w-8 ${
                       isBookmarked
                         ? isDark

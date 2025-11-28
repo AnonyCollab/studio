@@ -48,14 +48,14 @@ export default function NewsPage() {
               {featuredArticle && (
                 <ArticleCard 
                   key={featuredArticle.id} 
-                  article={{...featuredArticle, author: { name: featuredArticle.authorName, image: featuredArticle.authorImage}, featured: true }} 
+                  article={{...featuredArticle, featured: true }} 
                   theme={theme}
                 />
               )}
               {regularArticles.map((article) => (
                 <ArticleCard 
                   key={article.id} 
-                  article={{...article, author: { name: article.authorName, image: article.authorImage}, featured: false}} 
+                  article={{...article, featured: false}} 
                   theme={theme}
                 />
               ))}
