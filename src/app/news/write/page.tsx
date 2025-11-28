@@ -13,17 +13,25 @@ import {
 import Link from 'next/link';
 import { useTheme } from '@/context/ThemeContext';
 import dynamic from 'next/dynamic';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import "@blocknote/mantine/style.css";
 import { Input } from '@/components/ui/input';
-import { useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser, useDoc, useMemoFirebase } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { publishArticle } from '@/firebase/non-blocking-updates';
 import { v4 as uuidv4 } from 'uuid';
+import { doc, Timestamp } from 'firebase/firestore';
+
+interface Article {
+    id: string;
+    title: string;
+    content: string; 
+    createdAt?: Timestamp | string;
+}
 
 // Lazily load the editor component
-const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
+const Editor = dynamic(() => import("../components/Editor"), { ssr: false, loading: () => <div className="h-96 w-full bg-muted/50 animate-pulse rounded-lg" /> });
 
 export default function WritePage() {
     const { theme } = useTheme();
@@ -35,10 +43,28 @@ export default function WritePage() {
     const { user } = useUser();
     const { toast } = useToast();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
-    // Generate a unique ID for this new article's collaboration session
-    const collaborationId = useMemo(() => `article-${uuidv4()}`, []);
+    const articleIdToEdit = searchParams.get('edit');
 
+    // Generate a unique ID only if we are creating a new article
+    const collaborationId = useMemo(() => articleIdToEdit || `article-${uuidv4()}`, [articleIdToEdit]);
+
+    // Fetch existing article data if in edit mode
+    const articleRef = useMemoFirebase(() => {
+        if (!firestore || !articleIdToEdit) return null;
+        return doc(firestore, 'news', articleIdToEdit);
+    }, [firestore, articleIdToEdit]);
+
+    const { data: existingArticleData, isLoading: isLoadingArticle } = useDoc<Article>(articleRef);
+    
+    // Populate form with existing data when it loads
+    useEffect(() => {
+        if (existingArticleData) {
+            setTitle(existingArticleData.title);
+            setContent(existingArticleData.content);
+        }
+    }, [existingArticleData]);
 
     const handlePublish = async () => {
         if (!title.trim()) {
@@ -56,8 +82,9 @@ export default function WritePage() {
 
         setIsSubmitting(true);
         try {
-            await publishArticle(firestore, { title, content }, user);
-            toast({ title: 'Success!', description: 'Your article has been published.' });
+            // Pass the article ID if we are editing, otherwise it's undefined
+            await publishArticle(firestore, { title, content }, user, articleIdToEdit || undefined);
+            toast({ title: 'Success!', description: `Your article has been ${articleIdToEdit ? 'updated' : 'published'}.` });
             router.push('/news');
         } catch (error) {
             console.error("Publishing error: ", error);
@@ -68,8 +95,17 @@ export default function WritePage() {
     };
 
     const editorComponent = useMemo(() => {
-        return <Editor onChange={setContent} editable={true} collaborationId={collaborationId} />;
-    }, [collaborationId]);
+        // Show a loading state for the editor if we're in edit mode and data is still fetching
+        if (isLoadingArticle) {
+            return <div className="h-96 w-full bg-muted/50 animate-pulse rounded-lg mt-8" />;
+        }
+        return <Editor 
+            initialContent={content} 
+            onChange={setContent} 
+            editable={true} 
+            collaborationId={collaborationId} 
+        />;
+    }, [collaborationId, content, isLoadingArticle]);
 
   return (
     <div className={`min-h-screen flex flex-col items-center w-full ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
@@ -129,5 +165,3 @@ export default function WritePage() {
     </div>
   );
 }
-
-    

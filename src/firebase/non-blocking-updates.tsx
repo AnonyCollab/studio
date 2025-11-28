@@ -250,22 +250,31 @@ export function deleteReply(firestore: Firestore, postId: string, commentId: str
 
 
 /**
- * Publishes a new article to the 'news' collection.
+ * Publishes a new article to the 'news' collection or updates an existing one.
  */
-export function publishArticle(firestore: Firestore, article: { title: string; content: string }, user: User) {
+export function publishArticle(firestore: Firestore, article: { title: string; content: string }, user: User, articleId?: string) {
   const articlesCollection = collection(firestore, 'news');
   
-  const articleData = {
-    title: article.title,
-    content: article.content,
-    authorId: user.uid,
-    authorName: user.displayName || 'Anonymous User',
-    authorImage: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
-    createdAt: serverTimestamp(),
-    // These are placeholders, a real implementation might calculate them
-    category: 'Technology',
-    readTime: `${Math.ceil(JSON.stringify(article.content).length / 1500)} min read`,
-  };
-
-  return addDocumentNonBlocking(articlesCollection, articleData);
+  if (articleId) {
+    // We are updating an existing article
+    const articleRef = doc(firestore, 'news', articleId);
+    return updateDocumentNonBlocking(articleRef, {
+      title: article.title,
+      content: article.content,
+      // You might want to add an 'updatedAt' field as well
+    });
+  } else {
+    // We are creating a new article
+    const articleData = {
+      title: article.title,
+      content: article.content,
+      authorId: user.uid,
+      authorName: user.displayName || 'Anonymous User',
+      authorImage: user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.uid}`,
+      createdAt: serverTimestamp(),
+      category: 'Technology', // Placeholder, consider making this editable
+      readTime: `${Math.ceil(JSON.stringify(article.content).length / 1500)} min read`,
+    };
+    return addDocumentNonBlocking(articlesCollection, articleData);
+  }
 }
