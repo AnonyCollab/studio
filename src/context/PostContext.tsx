@@ -32,18 +32,14 @@ interface Post {
 interface PostContextType {
   selectedPost: Post | null;
   setSelectedPost: (post: Post | null) => void;
-  showCreatePost: boolean;
-  setShowCreatePost: (show: boolean) => void;
   isDetailOpen: boolean;
   handleCloseDetail: () => void;
-  handleOpenCreatePost: () => void;
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-  const [showCreatePost, setShowCreatePost] = useState(false);
   const firestore = useFirestore();
 
   const postRef = useMemoFirebase<DocumentReference<DocumentData> | null>(() => {
@@ -55,32 +51,20 @@ export function PostProvider({ children }: { children: ReactNode }) {
 
   const handleSetSelectedPost = (post: Post | null) => {
     setSelectedPostId(post ? post.id : null);
-    if(post) {
-      setShowCreatePost(false);
-    }
   };
 
-  const isDetailOpen = selectedPostId !== null || showCreatePost;
+  const isDetailOpen = selectedPostId !== null;
 
   const handleCloseDetail = () => {
     setSelectedPostId(null);
-    setShowCreatePost(false);
-  };
-
-  const handleOpenCreatePost = () => {
-    setSelectedPostId(null);
-    setShowCreatePost(true);
   };
 
   const value = useMemo(() => ({
     selectedPost,
     setSelectedPost: handleSetSelectedPost,
-    showCreatePost,
-    setShowCreatePost,
     isDetailOpen,
     handleCloseDetail,
-    handleOpenCreatePost,
-  }), [selectedPost, showCreatePost, isDetailOpen]);
+  }), [selectedPost, isDetailOpen]);
 
   return (
     <PostContext.Provider value={value}>

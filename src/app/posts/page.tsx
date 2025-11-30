@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { PostCard } from "./components/PostCard";
 import { PostDetail } from "./components/PostDetail";
-import { CreatePost } from "./components/CreatePost";
 import { FilterPanel } from "./components/FilterPanel";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -174,7 +173,7 @@ const mockPosts: Post[] = [
       name: "Olivia Martinez",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=olivia",
     },
-    imageUrl: "https://images.unsplash.com/photo-1514747975201-4715db583da9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxvY2VhbiUyMHdhdmVzfGVufDF8fHx8MTc2MTIwNjQ5MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    imageUrl: "https://images.unsplash.com/photo-1514747975201-4715db583da9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxvY2VhbiUyMHdhdmVzfGVufDF8fHx8MTc2MTIwNjQ5MHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Ocean Waves",
     description: "The rhythmic beauty of the sea captured in motion.",
     tags: ["Ocean", "Nature", "Waves"],
@@ -259,7 +258,6 @@ function PostsPageContent() {
   const { 
     selectedPost, 
     setSelectedPost, 
-    showCreatePost,
     isDetailOpen,
     handleCloseDetail
   } = usePosts();
@@ -380,15 +378,13 @@ function PostsPageContent() {
                   theme === 'dark' ? 'border-l border-white/10' : 'border-l',
                   isMobile ? 'rounded-t-2xl' : ''
                 )}>
-                  {showCreatePost ? (
-                    <CreatePost onClose={handleCloseDetail} theme={theme} />
-                  ) : selectedPost ? (
+                  {selectedPost && (
                     <PostDetail
                       post={selectedPost}
                       onClose={handleCloseDetail}
                       theme={theme}
                     />
-                  ) : null}
+                  )}
                 </div>
               </div>
             </>

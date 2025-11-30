@@ -7,7 +7,6 @@ import { Search, Plus, Bell, SlidersHorizontal, Handshake, Home, Compass, Newspa
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
-import { usePosts } from "@/context/PostContext";
 import { usePathname, useRouter } from "next/navigation";
 import type { Theme } from "@/context/ThemeContext";
 
@@ -21,12 +20,12 @@ interface TopNavProps {
 
 export function TopNav({ onToggleFilter, theme = "dark", onSetTheme, onCreateProject }: TopNavProps) {
   const isDark = theme === "dark";
-  const { handleOpenCreatePost } = usePosts();
   const pathname = usePathname();
   const router = useRouter();
 
   const isNewsPage = pathname.startsWith('/news');
   const isDiscoverPage = pathname.startsWith('/discover');
+  const isPostsPage = pathname.startsWith('/posts');
 
   const handleCreateClick = () => {
     if (isDiscoverPage && onCreateProject) {
@@ -34,7 +33,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onSetTheme, onCreatePro
     } else if (isNewsPage) {
       router.push('/news/write');
     } else {
-      handleOpenCreatePost();
+      router.push('/posts/create');
     }
   };
   
@@ -90,14 +89,16 @@ export function TopNav({ onToggleFilter, theme = "dark", onSetTheme, onCreatePro
           </Button>
 
           {/* Filter Icon */}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className={`p-2 transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
-            onClick={onToggleFilter}
-          >
-            <SlidersHorizontal className="w-5 h-5" />
-          </Button>
+          {onToggleFilter && (
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className={`p-2 transition-colors ${isDark ? "text-gray-400 hover:text-white" : "text-gray-600 hover:text-gray-900"}`}
+              onClick={onToggleFilter}
+            >
+              <SlidersHorizontal className="w-5 h-5" />
+            </Button>
+          )}
 
           {/* Create Button */}
           <Button 
