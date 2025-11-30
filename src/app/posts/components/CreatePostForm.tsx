@@ -11,7 +11,7 @@ import {
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
 import { suggestTags, suggestCategoryAndType } from '../services/geminiService';
 import { detailedSectorsData } from '@/app/data/naics';
-import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -128,19 +128,16 @@ interface CustomSelectProps {
   disabled?: boolean;
   isActive: boolean;
   onToggle: () => void;
-  onClickOutside: () => void;
-  className?: string;
 }
 
 const CustomSelect: React.FC<CustomSelectProps> = ({
-  value, onChange, options, placeholder, disabled, isActive, onToggle, onClickOutside, className
+  value, onChange, options, placeholder, disabled, isActive, onToggle
 }) => {
   const isMobile = useIsMobile();
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleSelect = (option: string) => {
     onChange(option);
-    setIsOpen(false);
+    onToggle(); // Close on select
   };
 
   const TriggerButton = (
@@ -149,7 +146,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       disabled={disabled}
       onClick={onToggle}
       className={`
-        w-full h-full rounded-xl px-4 py-3 text-sm font-medium text-left flex items-center justify-between
+        h-full rounded-xl px-4 py-3 text-sm font-medium text-left flex items-center justify-between
         bg-slate-100 dark:bg-slate-800 
         border border-transparent
         ${isActive 
@@ -158,7 +155,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         }
         text-slate-900 dark:text-slate-200 
         transition-all duration-300
-        ${className}
       `}
     >
       <span className="truncate block pr-2">
@@ -198,10 +194,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       )}
     </div>
   );
-
+  
   if (isMobile) {
-     return (
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+    return (
+      <Drawer open={isActive} onOpenChange={onToggle}>
         <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
         <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <DrawerHeader>
@@ -237,11 +233,12 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     );
   }
 
+
   return (
-    <div className={`relative transition-all duration-300 ease-in-out w-full sm:w-0 sm:flex-1`}>
+    <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-60 overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="bottom" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-60 overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
           {DropdownContent}
         </PopoverContent>
       </Popover>
@@ -1096,7 +1093,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                 onChange={(val) => handleInputChange('audienceSector', val)}
                 isActive={openAudienceDropdown === 'sector'}
                 onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'sector' ? null : 'sector')}
-                onClickOutside={() => setOpenAudienceDropdown(null)}
               />
                
               <CustomSelect 
@@ -1107,7 +1103,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                 disabled={!form.audienceSector}
                 isActive={openAudienceDropdown === 'subSector'}
                 onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'subSector' ? null : 'subSector')}
-                onClickOutside={() => setOpenAudienceDropdown(null)}
               />
 
               <CustomSelect 
@@ -1118,7 +1113,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                 disabled={!form.audienceSubSector}
                 isActive={openAudienceDropdown === 'industry'}
                 onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'industry' ? null : 'industry')}
-                onClickOutside={() => setOpenAudienceDropdown(null)}
               />
            </div>
         </div>
