@@ -10,8 +10,7 @@ import {
 } from 'lucide-react';
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
 import { suggestTags, suggestCategoryAndType, suggestAudience } from '../services/geminiService';
-import { SECTORS_DATA } from '../types';
-
+import { detailedSectorsData } from '@/app/data/naics';
 
 // --- Configuration Data ---
 
@@ -149,16 +148,18 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [isActive, onClickOutside]);
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`
         relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
         w-full sm:w-auto
-        sm:${isActive ? 'flex-[3]' : 'flex-[1]'}
+        sm:flex-1
+        ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}
         ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
     >
       <button
+        type="button"
         onClick={onToggle}
         className={`
           w-full h-full rounded-xl px-4 py-3 sm:py-2.5 text-sm font-medium text-left flex items-center justify-between
@@ -483,7 +484,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Derived Data for Audience
-  const selectedSectorData = SECTORS_DATA.find(s => s.name === form.audienceSector);
+  const selectedSectorData = detailedSectorsData.find(s => s.name === form.audienceSector);
   const selectedSubSectorData = selectedSectorData?.subSectors.find(s => s.name === form.audienceSubSector);
 
   // --- Handlers ---
@@ -507,10 +508,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
       // Reset hierarchical fields if parent changes
       if (field === 'audienceSector') {
         newState.audienceSubSector = '';
-        newState.industry = '';
+        newState.audienceIndustry = '';
       }
       if (field === 'audienceSubSector') {
-        newState.industry = '';
+        newState.audienceIndustry = '';
       }
       return newState;
     });
@@ -1044,7 +1045,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                <CustomSelect 
                   placeholder="Sector"
                   value={form.audienceSector}
-                  options={SECTORS_DATA.map(s => s.name)}
+                  options={detailedSectorsData.map(s => s.name)}
                   onChange={(val) => handleInputChange('audienceSector', val)}
                   isActive={openAudienceDropdown === 'sector'}
                   onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'sector' ? null : 'sector')}
@@ -1065,7 +1066,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                <CustomSelect 
                   placeholder="Industry"
                   value={form.audienceIndustry}
-                  options={selectedSubSectorData?.industries || []}
+                  options={selectedSubSectorData?.industries.map(i => i.name) || []}
                   onChange={(val) => handleInputChange('audienceIndustry', val)}
                   disabled={!form.audienceSubSector}
                   isActive={openAudienceDropdown === 'industry'}
@@ -1147,4 +1148,3 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
 };
 
 export default CreatePostForm;
-

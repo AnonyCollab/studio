@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Layers, Network, ChevronRight, ChevronDown, Sprout, Rocket, TrendingUp, Building2, Store, Zap, Briefcase, Building, User, LayoutTemplate, CheckCircle2 } from 'lucide-react';
 import { BusinessStage, BusinessModel, UserProfile } from '../types';
-import { SECTORS_DATA } from '../types';
+import { detailedSectorsData } from '@/app/data/naics';
 
 interface ProfileSetupProps {
   onComplete: (profile: UserProfile) => void;
@@ -146,7 +146,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
 const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) => {
   const [profile, setProfile] = useState<UserProfile>(initialData);
 
-  const selectedSectorData = SECTORS_DATA.find(s => s.name === profile.sector);
+  const selectedSectorData = detailedSectorsData.find(s => s.name === profile.sector);
   const selectedSubSectorData = selectedSectorData?.subSectors.find(s => s.name === profile.subSector);
 
   const handleInputChange = (field: keyof UserProfile, value: any) => {
@@ -166,7 +166,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
   const isComplete = profile.stage && profile.businessModel && profile.sector && profile.subSector && profile.industry;
 
   return (
-    <div className="w-full max-w-2xl mx-auto h-full text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col">
+    <div className="w-full h-full text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col">
       
       <div className="p-6 sm:p-10 space-y-8 flex-1 overflow-y-auto">
         <div className="text-center space-y-2 mt-4 sm:mt-0">
@@ -262,7 +262,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
                 <ModernSelect
                     placeholder="Select Primary Sector"
                     value={profile.sector}
-                    options={SECTORS_DATA.map(s => s.name)}
+                    options={detailedSectorsData.map(s => s.name)}
                     onChange={(val) => handleInputChange('sector', val)}
                 />
                 
@@ -277,7 +277,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
                 <ModernSelect
                     placeholder="Select Industry"
                     value={profile.industry}
-                    options={selectedSubSectorData?.industries || []}
+                    options={selectedSubSectorData?.industries.map(i => i.name) || []}
                     onChange={(val) => handleInputChange('industry', val)}
                     disabled={!profile.subSector}
                 />

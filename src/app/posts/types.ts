@@ -60,27 +60,3 @@ export interface PostFormState {
     tags: string[];
     images: File[];
 }
-
-export const SECTORS_DATA = [
-  {
-    name: "Agriculture, Forestry, Fishing and Hunting",
-    subSectors: [
-      { name: "Crop Production", industries: ["Soybean Farming", "Corn Farming", "Wheat Farming"] },
-      { name: "Animal Production", industries: ["Cattle Ranching", "Hog and Pig Farming", "Poultry and Egg Production"] },
-    ],
-  },
-  {
-    name: "Information",
-    subSectors: [
-      { name: "Software Publishing", industries: ["Application Software", "Game Software", "Operating Systems"] },
-      { name: "Telecommunications", industries: ["Wireless Carriers", "Wired Carriers", "Satellite Telecommunications"] },
-    ],
-  },
-  {
-    name: "Professional, Scientific, and Technical Services",
-    subSectors: [
-      { name: "Computer Systems Design and Related Services", industries: ["Custom Computer Programming", "Computer Systems Design", "Computer Facilities Management"] },
-      { name: "Management, Scientific, and Technical Consulting Services", industries: ["Administrative Management Consulting", "Human Resources Consulting", "Marketing Consulting"] },
-    ],
-  }
-];
