@@ -147,11 +147,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       onClick={onToggle}
       className={`
         w-full text-left rounded-xl px-4 py-3 flex items-center justify-between
-        bg-slate-100 dark:bg-slate-800 
         border border-transparent
         ${isActive 
           ? 'bg-white dark:bg-slate-700 ring-2 ring-cyan-500/40 shadow-lg' 
-          : 'hover:bg-slate-200 dark:hover:bg-slate-700'
+          : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700'
         }
         text-slate-900 dark:text-slate-200 
         transition-all duration-300
@@ -167,8 +166,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
   const DropdownContent = (
     <>
-      <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-          Select {placeholder}
+        <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+            Select {placeholder}
         </div>
         <ScrollArea className="h-auto max-h-60 p-1">
             {options.length > 0 ? (
@@ -194,7 +193,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
               </div>
             )}
         </ScrollArea>
-      </>
+    </>
   );
   
   if (isMobile) {
@@ -207,7 +206,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
               <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
             </DrawerHeader>
             <div className="flex-1 min-h-0">
-              <ScrollArea className="h-full p-4 pt-0">
+                <ScrollArea className="h-full p-4 pt-0">
                 {options.length > 0 ? (
                   options.map((option) => (
                     <button
@@ -239,10 +238,15 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
 
   return (
-    <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
+    <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
+        <PopoverContent 
+          className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" 
+          side="bottom" 
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           {DropdownContent}
         </PopoverContent>
       </Popover>
@@ -770,7 +774,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
   };
 
   return (
-    <div className="w-full h-full text-slate-900 dark:text-slate-100 flex flex-col">
+    <div className="w-full h-full text-slate-900 dark:text-slate-100 flex flex-col pt-0">
       
       {/* Mobile Editor Overlay */}
       {renderMobileEditor()}

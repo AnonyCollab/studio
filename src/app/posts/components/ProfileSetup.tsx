@@ -177,7 +177,12 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
   return (
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
+        <PopoverContent 
+          className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" 
+          side="bottom" 
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           {DropdownContent}
         </PopoverContent>
       </Popover>
@@ -208,7 +213,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
   const isComplete = profile.stage && profile.businessModel && profile.sector && profile.subSector && profile.industry;
 
   return (
-    <div className="w-full h-full text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col">
+    <div className="w-full h-full text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col pt-0">
       
       <div className="p-6 sm:p-10 space-y-8 flex-1 overflow-y-auto">
         <div className="text-center space-y-2">
