@@ -110,8 +110,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
   );
 
   const DropdownContent = (
-      <div className="p-2">
-        <ScrollArea className="h-auto max-h-60">
+      <ScrollArea className="h-auto max-h-60 p-2">
           {options.length > 0 ? (
             options.map((option) => (
               <button
@@ -134,8 +133,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
                No options available
             </div>
           )}
-        </ScrollArea>
-      </div>
+      </ScrollArea>
   );
   
   if (isMobile) {
@@ -146,31 +144,31 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="p-4 pt-0">
-            {options.length > 0 ? (
-              options.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => handleSelect(option)}
-                  className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
-                    ${value === option 
-                      ? 'bg-cyan-500 text-white shadow-md' 
-                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }
-                  `}
-                >
-                  {option}
-                  {value === option && <CheckCircle2 className="w-5 h-5" />}
-                </button>
-              ))
-            ) : (
-               <div className="px-3 py-12 text-center text-base text-slate-400">
-                  No options available
-               </div>
-            )}
-            </div>
-          </ScrollArea>
+          <div className="flex-1 min-h-0">
+            <ScrollArea className="h-full p-4 pt-0">
+              {options.length > 0 ? (
+                options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleSelect(option)}
+                    className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
+                      ${value === option 
+                        ? 'bg-cyan-500 text-white shadow-md' 
+                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      }
+                    `}
+                  >
+                    {option}
+                    {value === option && <CheckCircle2 className="w-5 h-5" />}
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-12 text-center text-base text-slate-400">
+                    No options available
+                </div>
+              )}
+            </ScrollArea>
+          </div>
         </DrawerContent>
       </Drawer>
     );

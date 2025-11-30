@@ -170,7 +170,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
           Select {placeholder}
         </div>
-        <ScrollArea className="h-auto max-h-60">
+        <ScrollArea className="h-auto max-h-60 p-1">
             {options.length > 0 ? (
               options.map((option) => (
                 <button
@@ -206,31 +206,31 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
             <DrawerHeader>
               <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
             </DrawerHeader>
-            <ScrollArea className="flex-1 min-h-0">
-              <div className="p-4 pt-0">
-              {options.length > 0 ? (
-                options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => handleSelect(option)}
-                    className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
-                      ${value === option 
-                        ? 'bg-cyan-500 text-white shadow-md' 
-                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
-                      }
-                    `}
-                  >
-                    {option}
-                    {value === option && <CheckCircle2 className="w-5 h-5" />}
-                  </button>
-                ))
-              ) : (
-                <div className="px-3 py-12 text-center text-base text-slate-400">
-                    No options available
-                </div>
-              )}
-              </div>
-            </ScrollArea>
+            <div className="flex-1 min-h-0">
+              <ScrollArea className="h-full p-4 pt-0">
+                {options.length > 0 ? (
+                  options.map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => handleSelect(option)}
+                      className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
+                        ${value === option 
+                          ? 'bg-cyan-500 text-white shadow-md' 
+                          : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                        }
+                      `}
+                    >
+                      {option}
+                      {value === option && <CheckCircle2 className="w-5 h-5" />}
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-3 py-12 text-center text-base text-slate-400">
+                      No options available
+                  </div>
+                )}
+              </ScrollArea>
+            </div>
           </DrawerContent>
         </Drawer>
       </div>
@@ -242,7 +242,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-1 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
           {DropdownContent}
         </PopoverContent>
       </Popover>
