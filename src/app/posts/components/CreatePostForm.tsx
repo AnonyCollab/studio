@@ -153,7 +153,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       className={`
         relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
         w-full
-        sm:flex-1
+        sm:w-0 sm:flex-1
         ${isActive ? 'sm:flex-[3]' : ''}
         ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
@@ -1041,7 +1041,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            </div>
            
            {/* Full Width Audience Selection with Custom Expanding Dropdowns */}
-           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:h-[50px]">
+           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4">
                <CustomSelect 
                   placeholder="Sector"
                   value={form.audienceSector}
