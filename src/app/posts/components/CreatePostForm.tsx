@@ -165,7 +165,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   );
 
   const DropdownContent = (
-    <ScrollArea className="h-auto max-h-60">
       <div className="p-1">
         <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
           Select {placeholder}
@@ -194,14 +193,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           </div>
         )}
       </div>
-    </ScrollArea>
   );
   
   if (isMobile) {
     return (
       <Drawer open={isActive} onOpenChange={onToggle}>
         <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-[70vh]">
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
@@ -237,11 +235,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
 
   return (
-    <div className={`relative sm:w-0 transition-all duration-300 ease-in-out ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
+    <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
-          {DropdownContent}
+          <ScrollArea className="h-auto max-h-60">{DropdownContent}</ScrollArea>
         </PopoverContent>
       </Popover>
     </div>
@@ -305,47 +303,45 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
   );
 
   const DropdownContent = (
-    <ScrollArea className="h-auto max-h-96">
-      <div className="p-1.5">
-        {options.map((opt) => {
-          const meta = metaMap[opt];
-          const isSelected = value === opt;
-          return (
-            <button
-              key={opt}
-              onClick={() => handleSelect(opt)}
-              className={`
-                w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors mb-0.5 last:mb-0
-                ${isSelected 
-                  ? 'bg-slate-100 dark:bg-slate-800' 
-                  : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                }
-              `}
-            >
-              <div className={`p-2 rounded-lg flex-shrink-0 ${meta.color}`}>
-                  {React.cloneElement(meta.icon, { className: "w-5 h-5" })}
-              </div>
-              <div className="min-w-0">
-                  <div className={`text-sm font-bold ${isSelected ? 'text-cyan-500' : 'text-slate-900 dark:text-white'}`}>
-                    {opt}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                    {meta.desc}
-                  </div>
-              </div>
-              {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-500 ml-auto mt-1" />}
-            </button>
-          );
-        })}
-      </div>
-    </ScrollArea>
+    <div className="p-1.5">
+      {options.map((opt) => {
+        const meta = metaMap[opt];
+        const isSelected = value === opt;
+        return (
+          <button
+            key={opt}
+            onClick={() => handleSelect(opt)}
+            className={`
+              w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors mb-0.5 last:mb-0
+              ${isSelected 
+                ? 'bg-slate-100 dark:bg-slate-800' 
+                : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+              }
+            `}
+          >
+            <div className={`p-2 rounded-lg flex-shrink-0 ${meta.color}`}>
+                {React.cloneElement(meta.icon, { className: "w-5 h-5" })}
+            </div>
+            <div className="min-w-0">
+                <div className={`text-sm font-bold ${isSelected ? 'text-cyan-500' : 'text-slate-900 dark:text-white'}`}>
+                  {opt}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  {meta.desc}
+                </div>
+            </div>
+            {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-500 ml-auto mt-1" />}
+          </button>
+        );
+      })}
+    </div>
   );
   
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-[70vh]">
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
@@ -359,13 +355,14 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
     <div className="flex-1 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="top" align="start">
-          {DropdownContent}
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="bottom" align="start">
+          <ScrollArea className="h-auto max-h-96">{DropdownContent}</ScrollArea>
         </PopoverContent>
       </Popover>
     </div>
   );
 };
+
 
 // --- Mention Textarea ---
 
@@ -1089,7 +1086,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            </div>
            
            {/* Full Width Audience Selection with Custom Expanding Dropdowns */}
-           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4">
+           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:w-0">
               <CustomSelect 
                 placeholder="Sector"
                 value={form.audienceSector}
