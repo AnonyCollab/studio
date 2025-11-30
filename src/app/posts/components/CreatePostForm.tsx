@@ -6,7 +6,7 @@ import {
   Target, Share2, HelpCircle, MessageSquare, AlertCircle, Trophy, 
   BookOpen, Bell, FileText, Sparkles, X, Upload, Check, ChevronDown, 
   LayoutGrid, Image as ImageIcon, Globe, User, ArrowLeft, Trash2,
-  Plus, CheckCircle2
+  Plus, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
 import { suggestTags, suggestCategoryAndType, suggestAudience } from '../services/geminiService';
@@ -154,7 +154,6 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       className={`
         relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
         w-full sm:w-auto
-        ${/* Desktop Animation: Expand flex */ ''}
         sm:${isActive ? 'flex-[3]' : 'flex-[1]'}
         ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
@@ -629,7 +628,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
      } finally {
          setIsAiAudienceLoading(false);
      }
-  }
+  };
 
   // --- Render Mobile Full Page Editor ---
   const renderMobileEditor = () => {
@@ -895,7 +894,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                     <div>
                     <SectionLabel>Summary</SectionLabel>
                     <MinimalInput 
-                        placeholder="TL;DR: My churn increased by 5%...",
+                        placeholder="TL;DR: My churn increased by 5%..."
                         value={form.summaryProblem}
                         onChange={(e) => handleInputChange('summaryProblem', e.target.value)}
                         maxLength={140}
@@ -943,7 +942,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                     <div>
                     <SectionLabel>Summary</SectionLabel>
                     <MinimalInput 
-                        placeholder="Goal: Bring churn below 2%...",
+                        placeholder="Goal: Bring churn below 2%..."
                         value={form.summaryOutcome}
                         onChange={(e) => handleInputChange('summaryOutcome', e.target.value)}
                         maxLength={140}
@@ -1149,5 +1148,3 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
 
 export default CreatePostForm;
 
-
-    
