@@ -155,7 +155,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         }
         text-slate-900 dark:text-slate-200 
         transition-all duration-300
-        sm:h-full
+        sm:h-[50px]
       `}
     >
       <span className="truncate block pr-2 text-sm font-medium">
@@ -199,45 +199,47 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   
   if (isMobile) {
     return (
-      <Drawer open={isActive} onOpenChange={onToggle}>
-        <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
-          <DrawerHeader>
-            <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
-          </DrawerHeader>
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="p-4 pt-0">
-            {options.length > 0 ? (
-              options.map((option) => (
-                <button
-                  key={option}
-                  onClick={() => handleSelect(option)}
-                  className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
-                    ${value === option 
-                      ? 'bg-cyan-500 text-white shadow-md' 
-                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
-                    }
-                  `}
-                >
-                  {option}
-                  {value === option && <CheckCircle2 className="w-5 h-5" />}
-                </button>
-              ))
-            ) : (
-               <div className="px-3 py-12 text-center text-base text-slate-400">
-                  No options available
-               </div>
-            )}
-            </div>
-          </ScrollArea>
-        </DrawerContent>
-      </Drawer>
+      <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] w-full`}>
+        <Drawer open={isActive} onOpenChange={onToggle}>
+          <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
+          <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
+            <DrawerHeader>
+              <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
+            </DrawerHeader>
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="p-4 pt-0">
+              {options.length > 0 ? (
+                options.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => handleSelect(option)}
+                    className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
+                      ${value === option 
+                        ? 'bg-cyan-500 text-white shadow-md' 
+                        : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                      }
+                    `}
+                  >
+                    {option}
+                    {value === option && <CheckCircle2 className="w-5 h-5" />}
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-12 text-center text-base text-slate-400">
+                    No options available
+                </div>
+              )}
+              </div>
+            </ScrollArea>
+          </DrawerContent>
+        </Drawer>
+      </div>
     );
   }
 
 
   return (
-    <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-[1]'}`}>
+    <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-1 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
@@ -341,15 +343,17 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
   
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
-          <DrawerHeader>
-            <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
-          </DrawerHeader>
-          <ScrollArea className="flex-1 min-h-0">{DropdownContent}</ScrollArea>
-        </DrawerContent>
-      </Drawer>
+      <div className="flex-1">
+        <Drawer open={isOpen} onOpenChange={setIsOpen}>
+          <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
+          <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
+            <DrawerHeader>
+              <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
+            </DrawerHeader>
+            <ScrollArea className="flex-1 min-h-0">{DropdownContent}</ScrollArea>
+          </DrawerContent>
+        </Drawer>
+      </div>
     );
   }
 
@@ -675,7 +679,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
     if (!mobileEditorSection) return null;
 
     const config = {
-      problem: { title: "The Problem", summaryKey: "summaryProblem", detailsKey: "detailsProblem", placeholder: "TL;DR: My churn increased..." },
+      problem: { title: "The Problem", summaryKey: "summaryProblem", detailsKey: "detailsProblem", placeholder: "TL;DR: My churn increased by 5%..." },
       tried: { title: "What I've Tried", summaryKey: "summaryTried", detailsKey: "detailsTried", placeholder: "Action: Sent survey..." },
       outcome: { title: "Expected Outcome", summaryKey: "summaryOutcome", detailsKey: "detailsOutcome", placeholder: "Goal: Bring churn below 2%..." },
       media: { title: "Media Attachments", summaryKey: "", detailsKey: "" }
@@ -1077,7 +1081,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
             </button>
            </div>
            
-           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:h-[50px]">
+           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4">
               <CustomSelect 
                 placeholder="Sector"
                 value={form.audienceSector}

@@ -331,7 +331,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
       </div>
 
       {/* Footer */}
-      <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
+      <div className="px-6 py-2 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <button 
             disabled={!isComplete}
             onClick={() => onComplete(profile)}
