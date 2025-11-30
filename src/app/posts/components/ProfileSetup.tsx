@@ -92,8 +92,9 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
     <button
       type="button"
       disabled={disabled}
+      onClick={() => setIsOpen(!isOpen)}
       className={`
-        w-full text-left rounded-xl px-4 py-3 flex items-center justify-between border transition-all duration-200
+        w-full text-left rounded-xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200
         ${isOpen 
           ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
           : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -110,36 +111,38 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
 
   const DropdownContent = (
       <div className="p-2">
-        {options.length > 0 ? (
-          options.map((option) => (
-            <button
-              key={option}
-              onClick={() => handleSelect(option)}
-              className={`
-                w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between transition-colors mb-0.5
-                ${value === option 
-                  ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-medium' 
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }
-              `}
-            >
-              {option}
-              {value === option && <CheckCircle2 className="w-4 h-4 text-cyan-500" />}
-            </button>
-          ))
-        ) : (
-          <div className="px-3 py-4 text-center text-sm text-slate-400">
-             No options available
-          </div>
-        )}
+        <ScrollArea className="h-auto max-h-60">
+          {options.length > 0 ? (
+            options.map((option) => (
+              <button
+                key={option}
+                onClick={() => handleSelect(option)}
+                className={`
+                  w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between transition-colors mb-0.5
+                  ${value === option 
+                    ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-medium' 
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  }
+                `}
+              >
+                {option}
+                {value === option && <CheckCircle2 className="w-4 h-4 text-cyan-500" />}
+              </button>
+            ))
+          ) : (
+            <div className="px-3 py-4 text-center text-sm text-slate-400">
+               No options available
+            </div>
+          )}
+        </ScrollArea>
       </div>
   );
-
+  
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-[70vh]">
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
@@ -176,8 +179,8 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
   return (
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-60 overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
-          <ScrollArea className="h-auto max-h-60">{DropdownContent}</ScrollArea>
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
+          {DropdownContent}
         </PopoverContent>
       </Popover>
   );
@@ -210,7 +213,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
     <div className="w-full h-full text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col">
       
       <div className="p-6 sm:p-10 space-y-8 flex-1 overflow-y-auto">
-        <div className="text-center space-y-2 mt-4 sm:mt-0">
+        <div className="text-center space-y-2 mt-0">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Complete Your Profile</h1>
           <p className="text-slate-500 dark:text-slate-400">Tell us a bit about you so we can tailor the community experience.</p>
         </div>
@@ -328,7 +331,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-2 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
+      <div className="px-8 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <button 
             disabled={!isComplete}
             onClick={() => onComplete(profile)}
