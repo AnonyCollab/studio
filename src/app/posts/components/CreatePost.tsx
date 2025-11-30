@@ -5,10 +5,11 @@ import CreatePostForm from './CreatePostForm';
 import ProfileSetup from './ProfileSetup';
 import { UserProfile } from '../types';
 import { useTheme } from '@/context/ThemeContext';
+import { usePosts } from '@/context/PostContext';
 
 const CreatePost: React.FC = () => {
   const [step, setStep] = useState<'profile' | 'create-post'>('profile');
-  const { theme, setTheme } = useTheme();
+  const { theme } = useTheme();
   const [userProfile, setUserProfile] = useState<UserProfile>({
     stage: null,
     businessModel: null,
@@ -18,6 +19,7 @@ const CreatePost: React.FC = () => {
   });
 
   const isDarkMode = theme === 'dark';
+  const { isCreateOpen } = usePosts();
 
   const handleProfileComplete = (profile: UserProfile) => {
     setUserProfile(profile);

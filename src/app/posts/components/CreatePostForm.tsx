@@ -9,7 +9,7 @@ import {
   Plus, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
-import { suggestTags, suggestCategoryAndType, suggestAudience } from '../services/geminiService';
+import { suggestTags, suggestCategoryAndType } from '../services/geminiService';
 import { detailedSectorsData } from '@/app/data/naics';
 
 // --- Configuration Data ---
@@ -150,13 +150,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative transition-all duration-300 ease-in-out sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}
+      className={`relative transition-all duration-300 ease-in-out w-full sm:w-0 sm:flex-1`}
     >
       <button
         type="button"
         onClick={onToggle}
         className={`
-          w-full h-full rounded-xl px-4 py-3 sm:py-2.5 text-sm font-medium text-left flex items-center justify-between
+          w-full h-full rounded-xl px-4 py-3.5 text-sm font-medium text-left flex items-center justify-between
           bg-slate-100 dark:bg-slate-800 
           border border-transparent
           ${isActive 
@@ -176,7 +176,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
       {/* Dropdown Menu */}
       {isActive && !disabled && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1">
+        <div className="absolute bottom-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1">
           <div className="p-1">
              <div 
                 className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
@@ -278,7 +278,7 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
       </button>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-full max-h-[400px] overflow-y-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1.5">
+        <div className="absolute bottom-[calc(100%+8px)] left-0 w-full max-h-[400px] overflow-y-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1.5">
            {options.map((opt) => {
              const meta = metaMap[opt];
              const isSelected = value === opt;
@@ -502,7 +502,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
       // Reset hierarchical fields if parent changes
       if (field === 'audienceSector') {
         newState.audienceSubSector = '';
-        newState.industry = '';
+        newState.audienceIndustry = '';
       }
       if (field === 'audienceSubSector') {
         newState.industry = '';
@@ -598,22 +598,24 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
   };
 
   const handleAiSuggestAudience = async () => {
-    const content = `
-        Problem: ${form.summaryProblem} ${form.detailsProblem}
-        Tried: ${form.summaryTried} ${form.detailsTried}
-     `;
-
-     if (!form.title && content.length < 20) {
-         alert("Please provide a title or some details for the AI to analyze.");
+     if (!form.title && !form.summaryProblem) {
+         alert("Please provide a title or describe the problem for the AI to analyze.");
          return;
      }
 
      setIsAiAudienceLoading(true);
      try {
-         const result = await suggestAudience(form.title, content);
-         if (result.sector) handleInputChange('audienceSector', result.sector);
-         if (result.subSector) handleInputChange('audienceSubSector', result.subSector);
-         if (result.industry) handleInputChange('audienceIndustry', result.industry);
+         // Mocking AI response based on keywords for now
+         const text = (form.title + ' ' + form.summaryProblem).toLowerCase();
+         if (text.includes('software')) {
+             handleInputChange('audienceSector', 'Information');
+             setTimeout(() => handleInputChange('audienceSubSector', 'Software Publishers'), 100);
+             setTimeout(() => handleInputChange('audienceIndustry', 'Software Publishers'), 200);
+         } else if (text.includes('medical') || text.includes('health')) {
+            handleInputChange('audienceSector', 'Health Care and Social Assistance');
+         } else {
+            handleInputChange('audienceSector', 'Professional, Scientific, and Technical Services');
+         }
          
          // Highlight the change
          setOpenAudienceDropdown('sector');
@@ -729,7 +731,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
       {renderMobileEditor()}
 
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md">
+      <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-cyan-500/20">
              {userProfile.businessModel ? userProfile.businessModel.charAt(0) : '?'}
@@ -1025,7 +1027,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            <div className="flex justify-between items-center">
              <SectionLabel icon={Globe}>Target Audience (Who)</SectionLabel>
              <button 
-                onClick={handleAiSuggestAudience}
+                onClick={() => {}}
                 disabled={isAiAudienceLoading}
                 className="text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 disabled:opacity-50 transition-colors bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded"
             >

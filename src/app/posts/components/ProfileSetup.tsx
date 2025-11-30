@@ -114,7 +114,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
       </button>
 
       {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1">
+        <div className="absolute bottom-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1">
           {options.length > 0 ? (
             options.map((option) => (
               <button
@@ -287,7 +287,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-6 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
+      <div className="px-8 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <button 
             disabled={!isComplete}
             onClick={() => onComplete(profile)}

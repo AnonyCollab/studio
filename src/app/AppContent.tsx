@@ -15,7 +15,7 @@ const AnimatedBackground = lazy(() => import('@/components/layout/AnimatedBackgr
 export default function AppContent({ children }: { children: ReactNode }) {
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
-  const { handleOpenCreatePost } = usePosts();
+  const { isCreateOpen } = usePosts();
   const isMobile = useIsMobile();
 
   const [hydrated, setHydrated] = useState(false);
@@ -27,8 +27,8 @@ export default function AppContent({ children }: { children: ReactNode }) {
   const isProjectPage = /^\/discover\//.test(pathname) && pathname.split('/').length > 2;
   const isDiscoverPage = pathname.startsWith('/discover');
   
-  const showHeader = !isLandingPage && !isProjectPage;
-  const showBottomNav = hydrated && isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage;
+  const showHeader = !isLandingPage && !isProjectPage && !(isMobile && isCreateOpen);
+  const showBottomNav = hydrated && isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage && !isCreateOpen;
 
   useEffect(() => {
     const bodyClass = cn(
@@ -49,7 +49,7 @@ export default function AppContent({ children }: { children: ReactNode }) {
       </head>
       <body>
         <div className="flex flex-col h-screen">
-          {showHeader && <TopNav theme={theme} onSetTheme={setTheme} onCreateProject={isDiscoverPage ? handleCreateProject : undefined} />}
+          {showHeader && <TopNav theme={theme} onSetTheme={setTheme} />}
           <div className="relative isolate flex-1 min-h-0">
             {!isLandingPage && (
               <Suspense fallback={null}>
@@ -65,8 +65,4 @@ export default function AppContent({ children }: { children: ReactNode }) {
       </body>
     </html>
   );
-}
-
-function handleCreateProject() {
-    window.dispatchEvent(new CustomEvent('create-new-project'));
 }
