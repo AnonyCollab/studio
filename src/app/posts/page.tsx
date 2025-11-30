@@ -380,9 +380,9 @@ function PostsPageContent() {
                   'md:w-3/5 xl:w-1/2'
                 )}
                 style={{
-                   // @ts-ignore
+                  // @ts-ignore
                   '--header-height': '3.5rem',
-                  height: 'calc(100vh - var(--header-height))',
+                  height: isMobile ? '100vh' : 'calc(100vh - var(--header-height))',
                   top: isMobile ? 0 : 'var(--header-height)',
                 }}
               >
