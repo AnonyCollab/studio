@@ -4,6 +4,14 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Layers, Network, ChevronRight, ChevronDown, Sprout, Rocket, TrendingUp, Building2, Store, Zap, Briefcase, Building, User, LayoutTemplate, CheckCircle2 } from 'lucide-react';
 import { BusinessStage, BusinessModel, UserProfile } from '../types';
 import { detailedSectorsData } from '@/app/data/naics';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 
 interface ProfileSetupProps {
   onComplete: (profile: UserProfile) => void;
@@ -73,75 +81,108 @@ interface ModernSelectProps {
 
 const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, placeholder, disabled }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
-
-  const handleToggle = () => {
-    if (!disabled) setIsOpen(!isOpen);
-  };
+  const isMobile = useIsMobile();
 
   const handleSelect = (option: string) => {
     onChange(option);
     setIsOpen(false);
   };
+  
+  const TriggerButton = (
+    <button
+      type="button"
+      disabled={disabled}
+      className={`
+        w-full text-left rounded-xl px-4 py-3 flex items-center justify-between border transition-all duration-200
+        ${isOpen 
+          ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
+          : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
+        }
+        ${disabled ? 'opacity-50 pointer-events-none' : ''}
+      `}
+    >
+      <span className={`text-sm font-medium ${value ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+        {value || placeholder}
+      </span>
+      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-cyan-500' : ''}`} />
+    </button>
+  );
+
+  const DropdownContent = (
+      <div className="p-2">
+        {options.length > 0 ? (
+          options.map((option) => (
+            <button
+              key={option}
+              onClick={() => handleSelect(option)}
+              className={`
+                w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between transition-colors mb-0.5
+                ${value === option 
+                  ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-medium' 
+                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }
+              `}
+            >
+              {option}
+              {value === option && <CheckCircle2 className="w-4 h-4 text-cyan-500" />}
+            </button>
+          ))
+        ) : (
+          <div className="px-3 py-4 text-center text-sm text-slate-400">
+             No options available
+          </div>
+        )}
+      </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <DrawerHeader>
+            <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
+          </DrawerHeader>
+          <ScrollArea className="h-full max-h-[60vh]">
+            <div className="p-4 pt-0">
+            {options.length > 0 ? (
+              options.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => handleSelect(option)}
+                  className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
+                    ${value === option 
+                      ? 'bg-cyan-500 text-white shadow-md' 
+                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }
+                  `}
+                >
+                  {option}
+                  {value === option && <CheckCircle2 className="w-5 h-5" />}
+                </button>
+              ))
+            ) : (
+               <div className="px-3 py-12 text-center text-base text-slate-400">
+                  No options available
+               </div>
+            )}
+            </div>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
 
   return (
-    <div ref={containerRef} className={`relative w-full ${disabled ? 'opacity-50 pointer-events-none' : ''}`}>
-      <button
-        type="button"
-        onClick={handleToggle}
-        className={`
-          w-full text-left rounded-xl px-4 py-3 flex items-center justify-between border transition-all duration-200
-          ${isOpen 
-            ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
-            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
-          }
-        `}
-      >
-        <span className={`text-sm font-medium ${value ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-          {value || placeholder}
-        </span>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-cyan-500' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1">
-          {options.length > 0 ? (
-            options.map((option) => (
-              <button
-                key={option}
-                onClick={() => handleSelect(option)}
-                className={`
-                  w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between transition-colors mb-0.5
-                  ${value === option 
-                    ? 'bg-cyan-50 dark:bg-cyan-900/20 text-cyan-700 dark:text-cyan-400 font-medium' 
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                  }
-                `}
-              >
-                {option}
-                {value === option && <CheckCircle2 className="w-4 h-4 text-cyan-500" />}
-              </button>
-            ))
-          ) : (
-            <div className="px-3 py-4 text-center text-sm text-slate-400">
-               No options available
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-60 overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
+          {DropdownContent}
+        </PopoverContent>
+      </Popover>
   );
 };
+
 
 const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) => {
   const [profile, setProfile] = useState<UserProfile>(initialData);
@@ -287,7 +328,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
+      <div className="px-8 py-2 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <button 
             disabled={!isComplete}
             onClick={() => onComplete(profile)}
@@ -302,3 +343,5 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
 };
 
 export default ProfileSetup;
+
+    
