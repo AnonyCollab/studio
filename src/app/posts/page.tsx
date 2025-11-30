@@ -14,6 +14,7 @@ import { collection, query, orderBy, getDoc, doc } from "firebase/firestore";
 import type { Timestamp } from "firebase/firestore";
 import { useSearchParams } from "next/navigation";
 import React from 'react';
+import CreatePost from "./components/CreatePost";
 
 
 interface Post {
@@ -21,6 +22,7 @@ interface Post {
   author: {
     name: string;
     avatar: string;
+    uid: string;
   };
   imageUrl: string;
   title: string;
@@ -47,6 +49,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Alex Thompson",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=alex",
+      uid: "user1"
     },
     imageUrl: "https://images.unsplash.com/photo-1617634667039-8e4cb277ab46?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXR1cmUlMjBsYW5kc2NhcGV8ZW58MXx8fHwxNzYxMTcyNDI5fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Peaceful Morning in the Valley",
@@ -72,6 +75,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Jessica Wu",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=jessica",
+      uid: "user2"
     },
     imageUrl: "https://images.unsplash.com/photo-1617381519460-d87050ddeb92?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaXR5JTIwYXJjaGl0ZWN0dXJlfGVufDF8fHx8MTc2MTE2MDU4N3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Modern Architecture",
@@ -97,6 +101,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Marcus Rivera",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=marcus",
+      uid: "user3"
     },
     imageUrl: "https://images.unsplash.com/photo-1615184697985-c9bde1b07da7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGFydHxlbnwxfHx8fDE3NjEyMDQxMDh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Abstract Expressions",
@@ -122,6 +127,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Sophie Laurent",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sophie",
+      uid: "user4"
     },
     imageUrl: "https://images.unsplash.com/photo-1532980400857-e8d9d275d858?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmb29kJTIwcGhvdG9ncmFwaHl8ZW58MXx8fHwxNzYxMTI5MzM1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Culinary Artistry",
@@ -147,6 +153,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Ryan Park",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=ryan",
+      uid: "user5"
     },
     imageUrl: "https://images.unsplash.com/photo-1623715537851-8bc15aa8c145?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHx0ZWNobm9sb2d5JTIwd29ya3NwYWNlfGVufDF8fHx8MTc2MTE3NTc2MHww&ixlibrb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Workspace Inspiration",
@@ -172,6 +179,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Olivia Martinez",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=olivia",
+      uid: "user6"
     },
     imageUrl: "https://images.unsplash.com/photo-1514747975201-4715db583da9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxvY2VhbiUyMHdhdmVzfGVufDF8fHx8MTc2MTIwNjQ5MHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Ocean Waves",
@@ -197,6 +205,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Daniel Foster",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=daniel",
+      uid: "user7"
     },
     imageUrl: "https://images.unsplash.com/photo-1519414442781-fbd745c5b497?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxtb3VudGFpbiUyMHN1bnNldHxlbnwxfHx8fDE3NjExNjkxNjh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Mountain Sunset",
@@ -222,6 +231,7 @@ const mockPosts: Post[] = [
     author: {
       name: "Emma Collins",
       avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma",
+      uid: "user8"
     },
     imageUrl: "https://images.unsplash.com/photo-1628803184377-c5167a0cb6fd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w7Nzg4Nzd8MHwxfHxzdHJlZXQlMjBwaG90b2dyYXBoeXxlbnwxfHx8fDE3NjExOTgzMjR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     title: "Street Stories",
@@ -259,7 +269,9 @@ function PostsPageContent() {
     selectedPost, 
     setSelectedPost, 
     isDetailOpen,
-    handleCloseDetail
+    handleCloseDetail,
+    isCreateOpen,
+    handleCloseCreatePost
   } = usePosts();
 
   const [showFilter, setShowFilter] = useState(false);
@@ -306,6 +318,7 @@ function PostsPageContent() {
     }
   }, [searchParams, firestore, setSelectedPost]);
 
+  const showRightPanel = isDetailOpen || isCreateOpen;
 
   return (
     <div className="min-h-screen">
@@ -314,7 +327,7 @@ function PostsPageContent() {
           <div
             className={cn(
               'p-0 md:p-6 transition-all duration-300 ease-in-out',
-              isDetailOpen ? 'w-full md:w-2/5 xl:w-1/2' : 'w-full'
+              showRightPanel ? 'w-full md:w-2/5 xl:w-1/2' : 'w-full'
             )}
           >
             {showFilter && (
@@ -326,9 +339,9 @@ function PostsPageContent() {
             <ClientOnlyMasonry
               columnsCountBreakPoints={{
                 350: 1,
-                768: isDetailOpen ? 1 : 2,
-                1280: isDetailOpen ? 2 : 3,
-                1536: isDetailOpen ? 2 : 4,
+                768: showRightPanel ? 1 : 2,
+                1280: showRightPanel ? 2 : 3,
+                1536: showRightPanel ? 2 : 4,
               }}
               className={cn(
                 "[&>div]:w-full"
@@ -353,12 +366,12 @@ function PostsPageContent() {
             </ClientOnlyMasonry>
           </div>
 
-          {isDetailOpen && (
+          {showRightPanel && (
             <>
               {isMobile && (
                 <div
                   className="fixed inset-0 bg-black/70 z-40 md:hidden"
-                  onClick={handleCloseDetail}
+                  onClick={isDetailOpen ? handleCloseDetail : handleCloseCreatePost}
                 />
               )}
               <div
@@ -378,12 +391,17 @@ function PostsPageContent() {
                   theme === 'dark' ? 'border-l border-white/10' : 'border-l',
                   isMobile ? 'rounded-t-2xl' : ''
                 )}>
-                  {selectedPost && (
+                  {isDetailOpen && selectedPost && (
                     <PostDetail
                       post={selectedPost}
                       onClose={handleCloseDetail}
                       theme={theme}
                     />
+                  )}
+                  {isCreateOpen && (
+                    <div className="h-full overflow-y-auto">
+                        <CreatePost />
+                    </div>
                   )}
                 </div>
               </div>

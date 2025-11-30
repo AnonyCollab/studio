@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { ProfileDropdown } from "@/components/layout/ProfileDropdown";
 import { usePathname, useRouter } from "next/navigation";
 import type { Theme } from "@/context/ThemeContext";
+import { usePosts } from "@/context/PostContext";
 
 
 interface TopNavProps {
@@ -22,6 +23,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onSetTheme, onCreatePro
   const isDark = theme === "dark";
   const pathname = usePathname();
   const router = useRouter();
+  const { handleOpenCreatePost } = usePosts();
 
   const isNewsPage = pathname.startsWith('/news');
   const isDiscoverPage = pathname.startsWith('/discover');
@@ -33,7 +35,7 @@ export function TopNav({ onToggleFilter, theme = "dark", onSetTheme, onCreatePro
     } else if (isNewsPage) {
       router.push('/news/write');
     } else {
-      router.push('/posts/create');
+      handleOpenCreatePost();
     }
   };
   

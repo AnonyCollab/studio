@@ -1,11 +1,10 @@
 
-'use client';
 import React, { useState, useEffect } from 'react';
-import CreatePostForm from '../components/CreatePostForm';
-import ProfileSetup from '../components/ProfileSetup';
+import CreatePostForm from './CreatePostForm';
+import ProfileSetup from './ProfileSetup';
 import { UserProfile } from '../types';
 
-const App: React.FC = () => {
+const CreatePost: React.FC = () => {
   const [step, setStep] = useState<'profile' | 'create-post'>('profile');
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -68,4 +67,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default CreatePost;

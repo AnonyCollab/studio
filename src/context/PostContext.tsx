@@ -10,6 +10,7 @@ interface Post {
   author: {
     name: string;
     avatar: string;
+    uid: string;
   };
   imageUrl: string;
   title: string;
@@ -34,12 +35,16 @@ interface PostContextType {
   setSelectedPost: (post: Post | null) => void;
   isDetailOpen: boolean;
   handleCloseDetail: () => void;
+  isCreateOpen: boolean;
+  handleOpenCreatePost: () => void;
+  handleCloseCreatePost: () => void;
 }
 
 const PostContext = createContext<PostContextType | undefined>(undefined);
 
 export function PostProvider({ children }: { children: ReactNode }) {
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const firestore = useFirestore();
 
   const postRef = useMemoFirebase<DocumentReference<DocumentData> | null>(() => {
@@ -50,7 +55,12 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const { data: selectedPost } = useDoc<Post>(postRef);
 
   const handleSetSelectedPost = (post: Post | null) => {
-    setSelectedPostId(post ? post.id : null);
+    if (post) {
+      setIsCreateOpen(false); // Close create view if a post is selected
+      setSelectedPostId(post.id);
+    } else {
+      setSelectedPostId(null);
+    }
   };
 
   const isDetailOpen = selectedPostId !== null;
@@ -58,13 +68,26 @@ export function PostProvider({ children }: { children: ReactNode }) {
   const handleCloseDetail = () => {
     setSelectedPostId(null);
   };
+  
+  const handleOpenCreatePost = () => {
+    setSelectedPostId(null); // Close detail view if create is opened
+    setIsCreateOpen(true);
+  };
+  
+  const handleCloseCreatePost = () => {
+    setIsCreateOpen(false);
+  };
+
 
   const value = useMemo(() => ({
     selectedPost,
     setSelectedPost: handleSetSelectedPost,
     isDetailOpen,
     handleCloseDetail,
-  }), [selectedPost, isDetailOpen]);
+    isCreateOpen,
+    handleOpenCreatePost,
+    handleCloseCreatePost,
+  }), [selectedPost, isDetailOpen, isCreateOpen]);
 
   return (
     <PostContext.Provider value={value}>
