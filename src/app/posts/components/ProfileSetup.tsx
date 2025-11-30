@@ -139,11 +139,11 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
     return (
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-[70vh]">
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea className="h-full max-h-[60vh]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-4 pt-0">
             {options.length > 0 ? (
               options.map((option) => (

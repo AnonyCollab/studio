@@ -146,7 +146,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       disabled={disabled}
       onClick={onToggle}
       className={`
-        h-full rounded-xl px-4 py-3 text-sm font-medium text-left flex items-center justify-between
+        h-full rounded-xl px-4 py-3.5 text-sm font-medium text-left flex items-center justify-between
         bg-slate-100 dark:bg-slate-800 
         border border-transparent
         ${isActive 
@@ -201,11 +201,11 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     return (
       <Drawer open={isActive} onOpenChange={onToggle}>
         <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-[70vh]">
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea className="h-full max-h-[60vh]">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-4 pt-0">
             {options.length > 0 ? (
               options.map((option) => (
@@ -237,7 +237,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
 
   return (
-    <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
+    <div className={`relative sm:w-0 transition-all duration-300 ease-in-out ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
@@ -345,11 +345,11 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
     return (
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
         <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
-        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-[70vh]">
           <DrawerHeader>
             <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
           </DrawerHeader>
-          <ScrollArea className="h-full max-h-[60vh]">{DropdownContent}</ScrollArea>
+          <ScrollArea className="flex-1 min-h-0">{DropdownContent}</ScrollArea>
         </DrawerContent>
       </Drawer>
     );
@@ -359,7 +359,7 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
     <div className="flex-1 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="bottom" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="top" align="start">
           {DropdownContent}
         </PopoverContent>
       </Popover>
