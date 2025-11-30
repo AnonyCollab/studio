@@ -5,8 +5,8 @@ import {
   Briefcase, TrendingUp, Users, Settings, Wrench, Scale, DollarSign, 
   Target, Share2, HelpCircle, MessageSquare, AlertCircle, Trophy, 
   BookOpen, Bell, FileText, Sparkles, X, Upload, Check, ChevronDown, 
-  LayoutGrid, Image as ImageIcon, Globe, User, Moon, Sun, ArrowLeft, Trash2,
-  Plus, CheckCircle2, AtSign, ChevronRight, Undo2, Redo2, Save
+  LayoutGrid, Image as ImageIcon, Globe, User, ArrowLeft, Trash2,
+  Plus, CheckCircle2
 } from 'lucide-react';
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
 import { suggestTags, suggestCategoryAndType, suggestAudience } from '../services/geminiService';
@@ -221,6 +221,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     </div>
   );
 };
+
 
 // --- Rich Select for Category/Type ---
 
@@ -653,17 +654,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            </button>
            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white">{section.title}</h3>
            <div className="flex items-center gap-1">
-              <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                 <Undo2 className="w-5 h-5" />
-              </button>
-              <button className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
-                 <Redo2 className="w-5 h-5" />
-              </button>
               <button 
                 onClick={() => setMobileEditorSection(null)}
                 className="px-4 py-1.5 rounded-full bg-cyan-600 dark:bg-[#22d3ee] hover:bg-cyan-700 dark:hover:bg-cyan-300 text-white dark:text-slate-900 text-xs font-bold ml-1 shadow-md shadow-cyan-500/20"
               >
-                 Save
+                 Done
               </button>
            </div>
         </div>
@@ -743,7 +738,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
       <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-cyan-500/20">
-             FF
+             {userProfile.businessModel ? userProfile.businessModel.charAt(0) : '?'}
           </div>
           <div>
             <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight leading-none">Create Post</h1>
@@ -900,7 +895,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                     <div>
                     <SectionLabel>Summary</SectionLabel>
                     <MinimalInput 
-                        placeholder="TL;DR: My churn increased by 5%..."
+                        placeholder="TL;DR: My churn increased by 5%...",
                         value={form.summaryProblem}
                         onChange={(e) => handleInputChange('summaryProblem', e.target.value)}
                         maxLength={140}
@@ -948,7 +943,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                     <div>
                     <SectionLabel>Summary</SectionLabel>
                     <MinimalInput 
-                        placeholder="Goal: Bring churn below 2%..."
+                        placeholder="Goal: Bring churn below 2%...",
                         value={form.summaryOutcome}
                         onChange={(e) => handleInputChange('summaryOutcome', e.target.value)}
                         maxLength={140}
@@ -1153,3 +1148,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
 };
 
 export default CreatePostForm;
+
+
+    
