@@ -82,7 +82,7 @@ export default function ArticleClientPage({ articleId }: { articleId: string }) 
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-background' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen ${isDark ? 'bg-background bg-green-500' : 'bg-gray-50 bg-green-200'}`}>
         <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="mb-8">
                 <Link href="/news" passHref>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Bookmark, Minus, MoreHorizontal, Edit } from "lucide-react";
+import { Bookmark, Minus, MoreHorizontal, Edit, Instagram } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,7 @@ export function ArticleCard({
 
   if (featured) {
     return (
-      <Link href={`/news/article/${id}`} passHref>
+      <Link href={`/news/${id}`} passHref>
         <article className={`mb-12 pb-12 ${isDark ? "border-white/5" : "border-gray-100"} border-b cursor-pointer group`}>
           <div className="flex flex-col md:flex-row gap-8">
             <div className="flex-1">
@@ -167,7 +167,7 @@ export function ArticleCard({
   }
 
   return (
-    <Link href={`/news/article/${id}`} passHref>
+    <Link href={`/news/${id}`} passHref>
       <article className={`mb-10 pb-10 ${isDark ? "border-white/5" : "border-gray-100"} border-b last:border-b-0 cursor-pointer group`}>
         <div className="flex gap-6">
           <div className="flex-1">
