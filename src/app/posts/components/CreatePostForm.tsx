@@ -150,13 +150,13 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative transition-all duration-300 ease-in-out w-full sm:w-0 sm:flex-1`}
+      className={`relative transition-all duration-300 ease-in-out w-full sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}
     >
       <button
         type="button"
         onClick={onToggle}
         className={`
-          w-full h-full rounded-xl px-4 py-3.5 text-sm font-medium text-left flex items-center justify-between
+          w-full h-full rounded-xl px-4 py-3 text-sm font-medium text-left flex items-center justify-between
           bg-slate-100 dark:bg-slate-800 
           border border-transparent
           ${isActive 
@@ -278,7 +278,7 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
       </button>
 
       {isOpen && (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 w-full max-h-[400px] overflow-y-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1.5">
+        <div className="absolute top-[calc(100%+8px)] left-0 w-full max-h-[400px] overflow-y-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1.5">
            {options.map((opt) => {
              const meta = metaMap[opt];
              const isSelected = value === opt;

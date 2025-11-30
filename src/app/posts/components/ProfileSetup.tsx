@@ -100,7 +100,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
         type="button"
         onClick={handleToggle}
         className={`
-          w-full text-left rounded-xl px-4 py-3.5 flex items-center justify-between border transition-all duration-200
+          w-full text-left rounded-xl px-4 py-3 flex items-center justify-between border transition-all duration-200
           ${isOpen 
             ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
             : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700'
@@ -287,11 +287,11 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-4 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
+      <div className="px-8 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <button 
             disabled={!isComplete}
             onClick={() => onComplete(profile)}
-            className="flex items-center gap-2 bg-cyan-600 dark:bg-[#22d3ee] hover:bg-cyan-700 dark:hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-slate-900 px-8 py-3.5 rounded-full font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-95"
+            className="flex items-center gap-2 bg-cyan-600 dark:bg-[#22d3ee] hover:bg-cyan-700 dark:hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold text-sm shadow-lg shadow-cyan-500/20 transition-all hover:scale-[1.02] active:scale-95"
         >
             Continue to Post
             <ChevronRight className="w-4 h-4" />
