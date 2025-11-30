@@ -199,7 +199,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   
   if (isMobile) {
     return (
-      <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] w-full`}>
+      <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
         <Drawer open={isActive} onOpenChange={onToggle}>
           <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
           <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 flex flex-col h-auto max-h-[70vh]">
@@ -239,7 +239,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
 
   return (
-    <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
+    <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] w-full sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] p-1 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
@@ -1081,7 +1081,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
             </button>
            </div>
            
-           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4">
+           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:h-[50px]">
               <CustomSelect 
                 placeholder="Sector"
                 value={form.audienceSector}
