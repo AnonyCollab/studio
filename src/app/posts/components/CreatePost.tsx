@@ -36,7 +36,7 @@ const CreatePost: React.FC = () => {
         <div className={`absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[100px] transition-colors duration-1000 opacity-40 ${isDarkMode ? 'bg-teal-500/10 mix-blend-screen' : 'bg-teal-400/10 mix-blend-multiply'}`}></div>
       </div>
       
-      <div className="relative z-10 w-full flex justify-center h-full">
+      <div className="relative z-10 w-full flex justify-center h-full pt-0">
          {step === 'profile' ? (
            <ProfileSetup 
              onComplete={handleProfileComplete} 

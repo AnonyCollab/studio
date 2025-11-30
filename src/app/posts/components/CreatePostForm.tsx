@@ -146,7 +146,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       disabled={disabled}
       onClick={onToggle}
       className={`
-        h-full rounded-xl px-4 py-3.5 text-sm font-medium text-left flex items-center justify-between
+        w-full text-left rounded-xl px-4 py-3 text-sm font-medium flex items-center justify-between
         bg-slate-100 dark:bg-slate-800 
         border border-transparent
         ${isActive 
@@ -155,6 +155,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         }
         text-slate-900 dark:text-slate-200 
         transition-all duration-300
+        sm:h-[50px]
       `}
     >
       <span className="truncate block pr-2">
@@ -236,10 +237,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
 
   return (
-    <div className={`relative transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 sm:flex-1 ${isActive ? 'sm:flex-[3]' : ''}`}>
+    <div className={`relative transition-all duration-300 ease-in-out sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="bottom" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
           {DropdownContent}
         </PopoverContent>
       </Popover>
@@ -274,7 +275,7 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
       type="button"
       onClick={() => setIsOpen(!isOpen)}
       className={`
-        w-full text-left rounded-xl p-3 border transition-all duration-200 flex items-center justify-between group
+        w-full text-left rounded-xl p-3 border transition-all duration-200 flex items-center justify-between group sm:h-[50px]
         ${isOpen 
           ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
           : 'bg-slate-100 dark:bg-slate-800/60 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -356,7 +357,7 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
     <div className="flex-1 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="bottom" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="top" align="start">
           <ScrollArea className="h-auto max-h-96">{DropdownContent}</ScrollArea>
         </PopoverContent>
       </Popover>
@@ -710,7 +711,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
         </div>
         
         {/* Content */}
-        <div className="flex-1 overflow-y-auto flex flex-col">
+        <ScrollArea className="flex-1 min-h-0">
            {isMedia ? (
                <div className="p-6">
                  {/* Re-using Upload Logic for Mobile View */}
@@ -755,10 +756,8 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                        onChange={(e) => handleInputChange(section.summaryKey as any, e.target.value)}
                     />
                  </div>
-                 {/* Textarea Container - Removed flex-1 to allow auto growth inside scrollable parent */}
                  <div className="px-5 pt-4 pb-20 min-h-0">
                     <MentionTextarea
-                        // Passed minHeight explicitly and removed flex-1 so it grows with content
                         className="w-full bg-transparent border-none p-0 text-base leading-relaxed text-slate-700 dark:text-slate-300 resize-none focus:ring-0 focus:outline-none outline-none shadow-none placeholder-slate-400 dark:placeholder-slate-600"
                         minHeight="50vh"
                         placeholder="Type detailed description here..."
@@ -769,7 +768,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
                  </div>
                </>
            )}
-        </div>
+        </ScrollArea>
       </div>
     );
   };
@@ -1087,7 +1086,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            </div>
            
            {/* Full Width Audience Selection with Custom Expanding Dropdowns */}
-           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4">
+           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:w-0">
               <CustomSelect 
                 placeholder="Sector"
                 value={form.audienceSector}
@@ -1169,7 +1168,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
       </div>
 
       {/* Footer Action Bar */}
-      <div className="px-6 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-between items-center sticky bottom-0 z-20">
+      <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <div className="text-[10px] text-slate-500 font-medium hidden sm:block">
            <span className="text-red-500 dark:text-red-400">*</span> Required
         </div>
