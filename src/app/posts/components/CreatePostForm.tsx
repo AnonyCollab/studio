@@ -150,13 +150,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`
-        relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
-        w-full
-        sm:w-0 sm:flex-1
-        ${isActive ? 'sm:flex-[3]' : ''}
-        ${disabled ? 'opacity-50 pointer-events-none' : ''}
-      `}
+      className={`relative transition-all duration-300 ease-in-out sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}
     >
       <button
         type="button"
@@ -508,10 +502,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
       // Reset hierarchical fields if parent changes
       if (field === 'audienceSector') {
         newState.audienceSubSector = '';
-        newState.audienceIndustry = '';
+        newState.industry = '';
       }
       if (field === 'audienceSubSector') {
-        newState.audienceIndustry = '';
+        newState.industry = '';
       }
       return newState;
     });
@@ -1033,7 +1027,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
              <button 
                 onClick={handleAiSuggestAudience}
                 disabled={isAiAudienceLoading}
-                className="text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 disabled:opacity-50 transition-colors"
+                className="text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 disabled:opacity-50 transition-colors bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded"
             >
                 {isAiAudienceLoading ? <Sparkles className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
                 AI Suggest
