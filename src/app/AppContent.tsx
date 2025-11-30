@@ -27,7 +27,7 @@ export default function AppContent({ children }: { children: ReactNode }) {
   const isProjectPage = /^\/discover\//.test(pathname) && pathname.split('/').length > 2;
   const isDiscoverPage = pathname.startsWith('/discover');
   
-  const showHeader = !isLandingPage && !isProjectPage;
+  const showHeader = !isLandingPage && !isProjectPage && !(isCreateOpen && isMobile);
   const showBottomNav = hydrated && isMobile && !isLandingPage && !pathname.startsWith('/messages') && !isProjectPage && !isCreateOpen;
 
   useEffect(() => {
