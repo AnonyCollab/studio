@@ -177,7 +177,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
         <PopoverContent className="w-[--radix-popover-trigger-width] max-h-60 overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
-          {DropdownContent}
+          <ScrollArea className="h-auto max-h-60">{DropdownContent}</ScrollArea>
         </PopoverContent>
       </Popover>
   );
@@ -343,5 +343,3 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
 };
 
 export default ProfileSetup;
-
-    
