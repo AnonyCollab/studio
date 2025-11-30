@@ -383,7 +383,7 @@ function PostsPageContent() {
                    // @ts-ignore
                   '--header-height': '3.5rem',
                   height: 'calc(100vh - var(--header-height))',
-                  top: 'var(--header-height)',
+                  top: isMobile ? 0 : 'var(--header-height)',
                 }}
               >
                 <div className={cn(
