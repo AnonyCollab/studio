@@ -9,7 +9,7 @@ import {
   Plus, CheckCircle2, ChevronRight
 } from 'lucide-react';
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
-import { suggestTags, suggestCategoryAndType } from '../services/geminiService';
+import { suggestTags, suggestCategoryAndType, suggestAudience } from '../services/geminiService';
 import { detailedSectorsData } from '@/app/data/naics';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
@@ -146,7 +146,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       disabled={disabled}
       onClick={onToggle}
       className={`
-        w-full text-left rounded-xl px-4 py-3 text-sm font-medium flex items-center justify-between
+        w-full text-left rounded-xl px-4 py-3 flex items-center justify-between
         bg-slate-100 dark:bg-slate-800 
         border border-transparent
         ${isActive 
@@ -155,10 +155,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
         }
         text-slate-900 dark:text-slate-200 
         transition-all duration-300
-        sm:h-[50px]
+        sm:h-full
       `}
     >
-      <span className="truncate block pr-2">
+      <span className="truncate block pr-2 text-sm font-medium">
         {value || <span className="text-slate-400 dark:text-slate-500 font-normal">{placeholder}</span>}
       </span>
       <ChevronDown className={`flex-shrink-0 w-4 h-4 text-slate-400 transition-transform duration-300 ${isActive ? 'rotate-180 text-cyan-500' : ''}`} />
@@ -166,8 +166,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
   );
 
   const DropdownContent = (
-    <div className="p-1">
-        <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+    <>
+      <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
           Select {placeholder}
         </div>
         <ScrollArea className="h-auto max-h-60">
@@ -194,7 +194,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
               </div>
             )}
         </ScrollArea>
-      </div>
+      </>
   );
   
   if (isMobile) {
@@ -237,10 +237,10 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
 
 
   return (
-    <div className={`relative transition-all duration-300 ease-in-out sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}>
+    <div className={`relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-[1]'}`}>
       <Popover open={isActive} onOpenChange={onToggle}>
         <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-1 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="top" align="start">
           {DropdownContent}
         </PopoverContent>
       </Popover>
@@ -357,7 +357,7 @@ const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaM
     <div className="flex-1 relative">
       <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
-        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="top" align="start">
+        <PopoverContent className="w-[--radix-popover-trigger-width] p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="bottom" align="start">
           <ScrollArea className="h-auto max-h-96">{DropdownContent}</ScrollArea>
         </PopoverContent>
       </Popover>
@@ -656,19 +656,11 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
 
      setIsAiAudienceLoading(true);
      try {
-         // Mocking AI response based on keywords for now
-         const text = (form.title + ' ' + form.summaryProblem).toLowerCase();
-         if (text.includes('software')) {
-             handleInputChange('audienceSector', 'Information');
-             setTimeout(() => handleInputChange('audienceSubSector', 'Software Publishers'), 100);
-             setTimeout(() => handleInputChange('audienceIndustry', 'Software Publishers'), 200);
-         } else if (text.includes('medical') || text.includes('health')) {
-            handleInputChange('audienceSector', 'Health Care and Social Assistance');
-         } else {
-            handleInputChange('audienceSector', 'Professional, Scientific, and Technical Services');
-         }
+         const { sector, subSector, industry } = await suggestAudience(form.title, form.summaryProblem);
+         if (sector) handleInputChange('audienceSector', sector);
+         if (subSector) setTimeout(() => handleInputChange('audienceSubSector', subSector), 100);
+         if (industry) setTimeout(() => handleInputChange('audienceIndustry', industry), 200);
          
-         // Highlight the change
          setOpenAudienceDropdown('sector');
          setTimeout(() => setOpenAudienceDropdown(null), 1000);
      } catch(e) {
@@ -1076,7 +1068,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            <div className="flex justify-between items-center">
              <SectionLabel icon={Globe}>Target Audience (Who)</SectionLabel>
              <button 
-                onClick={() => {}}
+                onClick={handleAiSuggestAudience}
                 disabled={isAiAudienceLoading}
                 className="text-[10px] uppercase font-bold tracking-wider flex items-center gap-1 text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300 disabled:opacity-50 transition-colors bg-cyan-500/10 border border-cyan-500/20 px-2 py-1 rounded"
             >
@@ -1085,8 +1077,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
             </button>
            </div>
            
-           {/* Full Width Audience Selection with Custom Expanding Dropdowns */}
-           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:w-0">
+           <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4 sm:h-[50px]">
               <CustomSelect 
                 placeholder="Sector"
                 value={form.audienceSector}
@@ -1177,7 +1168,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
             Save Draft
           </button>
           <button 
-            className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-cyan-600 dark:bg-[#22d3ee] hover:bg-cyan-700 dark:hover:bg-cyan-300 text-white dark:text-slate-900 font-semibold shadow-lg shadow-cyan-500/30 transition-all transform active:scale-95 flex items-center justify-center gap-2 text-xs"
+            className="flex-1 sm:flex-none px-6 py-2.5 rounded-full bg-cyan-600 dark:bg-[#22d3ee] hover:bg-cyan-700 dark:hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-slate-900 font-semibold shadow-lg shadow-cyan-500/30 transition-all transform active:scale-95 flex items-center justify-center gap-2 text-xs"
             onClick={() => console.log('Submitting', form, userProfile)}
           >
             <Share2 className="w-3.5 h-3.5" />
