@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useRef, useEffect } from 'react';
 import { Layers, Network, ChevronRight, ChevronDown, Sprout, Rocket, TrendingUp, Building2, Store, Zap, Briefcase, Building, User, LayoutTemplate, CheckCircle2 } from 'lucide-react';
@@ -110,7 +109,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
   );
 
   const DropdownContent = (
-      <ScrollArea className="h-auto max-h-60 p-2">
+      <div className="p-2">
           {options.length > 0 ? (
             options.map((option) => (
               <button
@@ -133,7 +132,7 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
                No options available
             </div>
           )}
-      </ScrollArea>
+      </div>
   );
   
   if (isMobile) {
@@ -183,7 +182,9 @@ const ModernSelect: React.FC<ModernSelectProps> = ({ value, onChange, options, p
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          {DropdownContent}
+          <ScrollArea className="h-auto max-h-60">
+            {DropdownContent}
+          </ScrollArea>
         </PopoverContent>
       </Popover>
   );

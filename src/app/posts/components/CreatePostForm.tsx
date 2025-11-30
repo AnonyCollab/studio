@@ -247,7 +247,9 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
           align="start"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
-          {DropdownContent}
+          <ScrollArea className="h-auto max-h-60">
+            {DropdownContent}
+          </ScrollArea>
         </PopoverContent>
       </Popover>
     </div>
