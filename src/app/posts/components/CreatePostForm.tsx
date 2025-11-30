@@ -11,6 +11,10 @@ import {
 import { PostCategory, PostType, PostFormState, UserProfile } from '../types';
 import { suggestTags, suggestCategoryAndType } from '../services/geminiService';
 import { detailedSectorsData } from '@/app/data/naics';
+import { useIsMobile } from '@/hooks/use-is-mobile';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from '@/components/ui/drawer';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 // --- Configuration Data ---
 
@@ -131,87 +135,116 @@ interface CustomSelectProps {
 const CustomSelect: React.FC<CustomSelectProps> = ({
   value, onChange, options, placeholder, disabled, isActive, onToggle, onClickOutside, className
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
+  const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        onClickOutside();
-      }
-    };
-    if (isActive) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isActive, onClickOutside]);
+  const handleSelect = (option: string) => {
+    onChange(option);
+    setIsOpen(false);
+  };
 
-  return (
-    <div
-      ref={containerRef}
-      className={`relative transition-all duration-300 ease-in-out w-full sm:w-0 ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}`}
+  const TriggerButton = (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onToggle}
+      className={`
+        w-full h-full rounded-xl px-4 py-3 text-sm font-medium text-left flex items-center justify-between
+        bg-slate-100 dark:bg-slate-800 
+        border border-transparent
+        ${isActive 
+          ? 'bg-white dark:bg-slate-700 ring-2 ring-cyan-500/40 shadow-lg' 
+          : 'hover:bg-slate-200 dark:hover:bg-slate-700'
+        }
+        text-slate-900 dark:text-slate-200 
+        transition-all duration-300
+        ${className}
+      `}
     >
-      <button
-        type="button"
-        onClick={onToggle}
-        className={`
-          w-full h-full rounded-xl px-4 py-3 text-sm font-medium text-left flex items-center justify-between
-          bg-slate-100 dark:bg-slate-800 
-          border border-transparent
-          ${isActive 
-            ? 'bg-white dark:bg-slate-700 ring-2 ring-cyan-500/40 shadow-lg' 
-            : 'hover:bg-slate-200 dark:hover:bg-slate-700'
-          }
-          text-slate-900 dark:text-slate-200 
-          transition-all duration-300
-          ${className}
-        `}
-      >
-        <span className="truncate block pr-2">
-          {value || <span className="text-slate-400 dark:text-slate-500 font-normal">{placeholder}</span>}
-        </span>
-        <ChevronDown className={`flex-shrink-0 w-4 h-4 text-slate-400 transition-transform duration-300 ${isActive ? 'rotate-180 text-cyan-500' : ''}`} />
-      </button>
+      <span className="truncate block pr-2">
+        {value || <span className="text-slate-400 dark:text-slate-500 font-normal">{placeholder}</span>}
+      </span>
+      <ChevronDown className={`flex-shrink-0 w-4 h-4 text-slate-400 transition-transform duration-300 ${isActive ? 'rotate-180 text-cyan-500' : ''}`} />
+    </button>
+  );
 
-      {/* Dropdown Menu */}
-      {isActive && !disabled && (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 w-full max-h-60 overflow-y-auto rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1">
-          <div className="p-1">
-             <div 
-                className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
-             >
-                Select {placeholder}
-             </div>
-             {options.length > 0 ? (
-                options.map((option) => (
-                  <button
-                    key={option}
-                    onClick={() => {
-                      onChange(option);
-                      onClickOutside(); // Close on select
-                    }}
-                    className={`
-                      w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between
-                      ${value === option 
-                        ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-medium' 
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
-                      }
-                      transition-colors
-                    `}
-                  >
-                    <span className="truncate">{option}</span>
-                    {value === option && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500" />}
-                  </button>
-                ))
-             ) : (
-               <div className="px-3 py-4 text-center text-sm text-slate-400">
-                  No options available
-               </div>
-             )}
-          </div>
+  const DropdownContent = (
+    <div className="p-1">
+      <div className="px-3 py-2 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+        Select {placeholder}
+      </div>
+      {options.length > 0 ? (
+        options.map((option) => (
+          <button
+            key={option}
+            onClick={() => handleSelect(option)}
+            className={`
+              w-full text-left px-3 py-2.5 rounded-lg text-sm flex items-center justify-between
+              ${value === option 
+                ? 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-medium' 
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+              }
+              transition-colors
+            `}
+          >
+            <span className="truncate">{option}</span>
+            {value === option && <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500" />}
+          </button>
+        ))
+      ) : (
+        <div className="px-3 py-4 text-center text-sm text-slate-400">
+          No options available
         </div>
       )}
+    </div>
+  );
+
+  if (isMobile) {
+     return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild disabled={disabled}>{TriggerButton}</DrawerTrigger>
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <DrawerHeader>
+            <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
+          </DrawerHeader>
+          <ScrollArea className="h-full max-h-[60vh]">
+            <div className="p-4 pt-0">
+            {options.length > 0 ? (
+              options.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => handleSelect(option)}
+                  className={`w-full p-4 rounded-xl text-left font-bold text-lg mb-2 flex items-center justify-between
+                    ${value === option 
+                      ? 'bg-cyan-500 text-white shadow-md' 
+                      : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700'
+                    }
+                  `}
+                >
+                  {option}
+                  {value === option && <CheckCircle2 className="w-5 h-5" />}
+                </button>
+              ))
+            ) : (
+               <div className="px-3 py-12 text-center text-base text-slate-400">
+                  No options available
+               </div>
+            )}
+            </div>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <div className={`relative transition-all duration-300 ease-in-out w-full sm:w-0 sm:flex-1`}>
+      <Popover open={isActive} onOpenChange={onToggle}>
+        <PopoverTrigger asChild disabled={disabled}>{TriggerButton}</PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-60 overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800" side="bottom" align="start">
+          {DropdownContent}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
@@ -230,87 +263,105 @@ interface RichSelectProps {
 
 const RichSelect: React.FC<RichSelectProps> = ({ value, onChange, options, metaMap, placeholder, icon: Icon }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
-
+  const isMobile = useIsMobile();
   const selectedMeta = value ? metaMap[value] : null;
 
-  return (
-    <div ref={containerRef} className="relative flex-1">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={`
-          w-full text-left rounded-xl p-3 border transition-all duration-200 flex items-center justify-between group
-          ${isOpen 
-            ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
-            : 'bg-slate-100 dark:bg-slate-800/60 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
-          }
-        `}
-      >
-        <div className="flex items-center gap-3 min-w-0">
-           {selectedMeta ? (
-             <>
-               <div className={`p-2 rounded-lg ${selectedMeta.color}`}>
-                  {React.cloneElement(selectedMeta.icon, { className: "w-5 h-5" })}
-               </div>
-               <div className="min-w-0">
-                  <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{value}</div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{selectedMeta.desc}</div>
-               </div>
-             </>
-           ) : (
-             <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 px-1 py-1">
-                {Icon && <Icon className="w-5 h-5" />}
-                <span className="font-medium text-sm">{placeholder}</span>
+  const handleSelect = (option: string) => {
+    onChange(option);
+    setIsOpen(false);
+  };
+  
+  const TriggerButton = (
+    <button
+      type="button"
+      onClick={() => setIsOpen(!isOpen)}
+      className={`
+        w-full text-left rounded-xl p-3 border transition-all duration-200 flex items-center justify-between group
+        ${isOpen 
+          ? 'bg-white dark:bg-slate-800 border-cyan-500 ring-2 ring-cyan-500/20 shadow-lg' 
+          : 'bg-slate-100 dark:bg-slate-800/60 border-transparent hover:bg-slate-200 dark:hover:bg-slate-700'
+        }
+      `}
+    >
+      <div className="flex items-center gap-3 min-w-0">
+         {selectedMeta ? (
+           <>
+             <div className={`p-2 rounded-lg ${selectedMeta.color}`}>
+                {React.cloneElement(selectedMeta.icon, { className: "w-5 h-5" })}
              </div>
-           )}
-        </div>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
+             <div className="min-w-0">
+                <div className="text-sm font-bold text-slate-900 dark:text-white truncate">{value}</div>
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{selectedMeta.desc}</div>
+             </div>
+           </>
+         ) : (
+           <div className="flex items-center gap-2 text-slate-400 dark:text-slate-500 px-1 py-1">
+              {Icon && <Icon className="w-5 h-5" />}
+              <span className="font-medium text-sm">{placeholder}</span>
+           </div>
+         )}
+      </div>
+      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+    </button>
+  );
 
-      {isOpen && (
-        <div className="absolute top-[calc(100%+8px)] left-0 w-full max-h-[400px] overflow-y-auto rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200 p-1.5">
-           {options.map((opt) => {
-             const meta = metaMap[opt];
-             const isSelected = value === opt;
-             return (
-               <button
-                 key={opt}
-                 onClick={() => { onChange(opt); setIsOpen(false); }}
-                 className={`
-                   w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors mb-0.5 last:mb-0
-                   ${isSelected 
-                     ? 'bg-slate-100 dark:bg-slate-800' 
-                     : 'hover:bg-slate-50 dark:hover:bg-slate-800'
-                   }
-                 `}
-               >
-                 <div className={`p-2 rounded-lg flex-shrink-0 ${meta.color}`}>
-                    {React.cloneElement(meta.icon, { className: "w-5 h-5" })}
-                 </div>
-                 <div className="min-w-0">
-                    <div className={`text-sm font-bold ${isSelected ? 'text-cyan-500' : 'text-slate-900 dark:text-white'}`}>
-                      {opt}
-                    </div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
-                      {meta.desc}
-                    </div>
-                 </div>
-                 {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-500 ml-auto mt-1" />}
-               </button>
-             );
-           })}
-        </div>
-      )}
+  const DropdownContent = (
+    <div className="p-1.5">
+       {options.map((opt) => {
+         const meta = metaMap[opt];
+         const isSelected = value === opt;
+         return (
+           <button
+             key={opt}
+             onClick={() => handleSelect(opt)}
+             className={`
+               w-full flex items-start gap-3 p-3 rounded-lg text-left transition-colors mb-0.5 last:mb-0
+               ${isSelected 
+                 ? 'bg-slate-100 dark:bg-slate-800' 
+                 : 'hover:bg-slate-50 dark:hover:bg-slate-800'
+               }
+             `}
+           >
+             <div className={`p-2 rounded-lg flex-shrink-0 ${meta.color}`}>
+                {React.cloneElement(meta.icon, { className: "w-5 h-5" })}
+             </div>
+             <div className="min-w-0">
+                <div className={`text-sm font-bold ${isSelected ? 'text-cyan-500' : 'text-slate-900 dark:text-white'}`}>
+                  {opt}
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                  {meta.desc}
+                </div>
+             </div>
+             {isSelected && <CheckCircle2 className="w-4 h-4 text-cyan-500 ml-auto mt-1" />}
+           </button>
+         );
+       })}
+    </div>
+  );
+  
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerTrigger asChild>{TriggerButton}</DrawerTrigger>
+        <DrawerContent className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+          <DrawerHeader>
+            <DrawerTitle className="text-center">{placeholder}</DrawerTitle>
+          </DrawerHeader>
+          <ScrollArea className="h-full max-h-[60vh]">{DropdownContent}</ScrollArea>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <div className="flex-1 relative">
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>{TriggerButton}</PopoverTrigger>
+        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-[400px] overflow-y-auto p-0 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900" side="bottom" align="start">
+          {DropdownContent}
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
@@ -1038,37 +1089,37 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
            
            {/* Full Width Audience Selection with Custom Expanding Dropdowns */}
            <div className="flex flex-col sm:flex-row w-full gap-2 sm:gap-4">
-               <CustomSelect 
-                  placeholder="Sector"
-                  value={form.audienceSector}
-                  options={detailedSectorsData.map(s => s.name)}
-                  onChange={(val) => handleInputChange('audienceSector', val)}
-                  isActive={openAudienceDropdown === 'sector'}
-                  onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'sector' ? null : 'sector')}
-                  onClickOutside={() => setOpenAudienceDropdown(null)}
-               />
+              <CustomSelect 
+                placeholder="Sector"
+                value={form.audienceSector}
+                options={detailedSectorsData.map(s => s.name)}
+                onChange={(val) => handleInputChange('audienceSector', val)}
+                isActive={openAudienceDropdown === 'sector'}
+                onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'sector' ? null : 'sector')}
+                onClickOutside={() => setOpenAudienceDropdown(null)}
+              />
                
-               <CustomSelect 
-                  placeholder="Sub-sector"
-                  value={form.audienceSubSector}
-                  options={selectedSectorData?.subSectors.map(s => s.name) || []}
-                  onChange={(val) => handleInputChange('audienceSubSector', val)}
-                  disabled={!form.audienceSector}
-                  isActive={openAudienceDropdown === 'subSector'}
-                  onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'subSector' ? null : 'subSector')}
-                  onClickOutside={() => setOpenAudienceDropdown(null)}
-               />
+              <CustomSelect 
+                placeholder="Sub-sector"
+                value={form.audienceSubSector}
+                options={selectedSectorData?.subSectors.map(s => s.name) || []}
+                onChange={(val) => handleInputChange('audienceSubSector', val)}
+                disabled={!form.audienceSector}
+                isActive={openAudienceDropdown === 'subSector'}
+                onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'subSector' ? null : 'subSector')}
+                onClickOutside={() => setOpenAudienceDropdown(null)}
+              />
 
-               <CustomSelect 
-                  placeholder="Industry"
-                  value={form.audienceIndustry}
-                  options={selectedSubSectorData?.industries.map(i => i.name) || []}
-                  onChange={(val) => handleInputChange('audienceIndustry', val)}
-                  disabled={!form.audienceSubSector}
-                  isActive={openAudienceDropdown === 'industry'}
-                  onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'industry' ? null : 'industry')}
-                  onClickOutside={() => setOpenAudienceDropdown(null)}
-               />
+              <CustomSelect 
+                placeholder="Industry"
+                value={form.audienceIndustry}
+                options={selectedSubSectorData?.industries.map(i => i.name) || []}
+                onChange={(val) => handleInputChange('audienceIndustry', val)}
+                disabled={!form.audienceSubSector}
+                isActive={openAudienceDropdown === 'industry'}
+                onToggle={() => setOpenAudienceDropdown(openAudienceDropdown === 'industry' ? null : 'industry')}
+                onClickOutside={() => setOpenAudienceDropdown(null)}
+              />
            </div>
         </div>
 
