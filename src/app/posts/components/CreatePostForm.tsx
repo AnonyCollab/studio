@@ -152,9 +152,9 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
       ref={containerRef}
       className={`
         relative transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]
-        w-full sm:w-auto
+        w-full
         sm:flex-1
-        ${isActive ? 'sm:flex-[3]' : 'sm:flex-1'}
+        ${isActive ? 'sm:flex-[3]' : ''}
         ${disabled ? 'opacity-50 pointer-events-none' : ''}
       `}
     >
@@ -627,7 +627,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, is
      } catch(e) {
          console.error(e);
      } finally {
-         setIsAiAudienceLoading(false);
+        setIsAiAudienceLoading(false);
      }
   };
 
