@@ -447,11 +447,10 @@ const MentionTextarea: React.FC<MentionTextareaProps> = ({ value, onChange, plac
 interface CreatePostFormProps {
   userProfile: UserProfile;
   onBack: () => void;
-  toggleTheme: () => void;
   isDarkMode: boolean;
 }
 
-const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, toggleTheme, isDarkMode }) => {
+const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, isDarkMode }) => {
   // State
   const [form, setForm] = useState<PostFormState>({
     title: '',
@@ -508,10 +507,10 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, to
       // Reset hierarchical fields if parent changes
       if (field === 'audienceSector') {
         newState.audienceSubSector = '';
-        newState.audienceIndustry = '';
+        newState.industry = '';
       }
       if (field === 'audienceSubSector') {
-        newState.audienceIndustry = '';
+        newState.industry = '';
       }
       return newState;
     });
@@ -735,13 +734,13 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, to
   };
 
   return (
-    <div className="w-full h-full min-h-screen sm:min-h-0 sm:h-auto sm:max-w-3xl mx-auto sm:my-10 bg-white dark:bg-slate-950 sm:bg-white/80 sm:dark:bg-slate-900/80 sm:backdrop-blur-2xl rounded-none sm:rounded-[24px] shadow-none sm:shadow-2xl border-0 sm:border border-white/20 dark:border-slate-800 text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col">
+    <div className="w-full h-full text-slate-900 dark:text-slate-100 flex flex-col">
       
       {/* Mobile Editor Overlay */}
       {renderMobileEditor()}
 
       {/* Header */}
-      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md rounded-none sm:rounded-t-[24px]">
+      <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-white/50 dark:bg-slate-900/50 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white shadow-lg shadow-cyan-500/20">
              FF
@@ -754,14 +753,6 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, to
           </div>
         </div>
         <div className="flex items-center gap-3">
-            <button 
-                onClick={toggleTheme}
-                className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors"
-                title="Switch Theme"
-            >
-                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
             <button onClick={onBack} className="text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1">
                 <ArrowLeft className="w-3 h-3" />
                 <span className="hidden sm:inline">Back to Profile</span>
@@ -1140,7 +1131,7 @@ const CreatePostForm: React.FC<CreatePostFormProps> = ({ userProfile, onBack, to
       </div>
 
       {/* Footer Action Bar */}
-      <div className="px-6 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-between items-center rounded-none sm:rounded-b-[24px] sticky bottom-0 z-20">
+      <div className="px-6 py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur border-t border-slate-200 dark:border-slate-800 flex justify-between items-center sticky bottom-0 z-20">
         <div className="text-[10px] text-slate-500 font-medium hidden sm:block">
            <span className="text-red-500 dark:text-red-400">*</span> Required
         </div>

@@ -166,9 +166,9 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
   const isComplete = profile.stage && profile.businessModel && profile.sector && profile.subSector && profile.industry;
 
   return (
-    <div className="w-full min-h-screen sm:min-h-0 sm:max-w-2xl sm:mx-auto sm:my-10 bg-white dark:bg-slate-900 sm:bg-white/80 sm:dark:bg-slate-900/80 sm:backdrop-blur-2xl rounded-none sm:rounded-[24px] shadow-none sm:shadow-2xl border-0 sm:border border-white/20 dark:border-slate-800 text-slate-900 dark:text-slate-100 animate-in fade-in zoom-in-95 duration-500 flex flex-col sm:block">
+    <div className="w-full max-w-2xl mx-auto h-full text-slate-900 dark:text-slate-100 animate-in fade-in duration-500 flex flex-col">
       
-      <div className="p-6 sm:p-10 space-y-8 flex-1">
+      <div className="p-6 sm:p-10 space-y-8 flex-1 overflow-y-auto">
         <div className="text-center space-y-2 mt-4 sm:mt-0">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Complete Your Profile</h1>
           <p className="text-slate-500 dark:text-slate-400">Tell us a bit about you so we can tailor the community experience.</p>
@@ -287,7 +287,7 @@ const ProfileSetup: React.FC<ProfileSetupProps> = ({ onComplete, initialData }) 
       </div>
 
       {/* Footer */}
-      <div className="px-8 py-6 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sm:rounded-b-[24px] sticky bottom-0 z-20 backdrop-blur-md">
+      <div className="px-8 py-6 border-t border-slate-200 dark:border-slate-800 flex justify-end bg-slate-50/80 dark:bg-slate-900/50 sticky bottom-0 z-20 backdrop-blur-md">
         <button 
             disabled={!isComplete}
             onClick={() => onComplete(profile)}

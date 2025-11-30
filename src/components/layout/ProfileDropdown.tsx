@@ -63,9 +63,6 @@ const HamburgerIcon = ({ isOpen }: { isOpen: boolean }) => (
 const themeOptions: { name: Theme; color: string; isLight: boolean }[] = [
     { name: 'light', color: '#f8fafc', isLight: true },
     { name: 'dark', color: '#09090b', isLight: false },
-    { name: 'Sephiroa', color: '#FDFCF0', isLight: true },
-    { name: 'Green', color: '#F0F5F0', isLight: true },
-    { name: 'Blue', color: '#020817', isLight: false },
 ];
 
 
@@ -120,7 +117,7 @@ const DropdownContent = ({ theme, onSetTheme, user }: ProfileDropdownProps & { u
                         }`}
                     >
                         {themeOptions.map(t => (
-                            <DropdownMenuItem key={t.name} onClick={() => onSetTheme(t.name)} className={itemClass}>
+                            <DropdownMenuItem key={t.name} onClick={() => onSetTheme(t.name as Theme)} className={itemClass}>
                                 <div className="w-4 h-4 rounded-full border mr-2" style={{ backgroundColor: t.color, borderColor: t.isLight ? '#e2e8f0' : '#475569' }} />
                                 {t.name}
                                 {theme === t.name && <Check className="ml-auto h-4 w-4" />}
@@ -188,7 +185,7 @@ const MobileMenu = ({
               <span>Theme</span>
                 <div className="flex flex-wrap gap-3">
                     {themeOptions.map(t => (
-                        <button key={t.name} onClick={() => onSetTheme(t.name)} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${theme === t.name ? 'ring-2 ring-cyan-500 scale-110 border-cyan-500' : 'border-transparent opacity-70'}`} style={{ backgroundColor: t.color }}>
+                        <button key={t.name} onClick={() => onSetTheme(t.name as Theme)} className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${theme === t.name ? 'ring-2 ring-cyan-500 scale-110 border-cyan-500' : 'border-transparent opacity-70'}`} style={{ backgroundColor: t.color }}>
                             {theme === t.name && <Check size={16} className={t.isLight ? 'text-black' : 'text-white'} />}
                         </button>
                     ))}
