@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FilePreview } from './FilePreview';
 import { NewFileEditor } from './NewFileEditor';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AddFromUrlDialog } from './AddFromUrlDialog';
 
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
@@ -45,6 +47,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
     const [isCreatingFile, setIsCreatingFile] = useState(false);
+    const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
     
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:bg-white" : "bg-[#18181b]/80 border-white/5 hover:bg-[#202023]";
@@ -112,6 +115,21 @@ export const Resources: React.FC<ResourcesProps> = () => {
         });
         setIsCreatingFile(false);
       };
+      
+    const handleSaveFromUrl = (name: string, url: string) => {
+        let fileType = 'link';
+        if (url.endsWith('.pdf')) fileType = 'application/pdf';
+        // Add more file type detections if needed
+        addFile({
+          name,
+          type: 'file',
+          fileType: fileType,
+          url: url,
+          parentId: currentFolderId,
+          size: 'Link'
+        });
+        setIsUrlDialogOpen(false);
+    };
 
     return (
         <>
@@ -155,9 +173,23 @@ export const Resources: React.FC<ResourcesProps> = () => {
                             <Button onClick={() => setIsCreatingFolder(true)} className="flex items-center gap-2">
                                 <Plus size={16} /> New Folder
                             </Button>
-                            <Button variant="outline" onClick={() => document.getElementById('file-upload-input')?.click()}>
-                                <Upload size={16} className="mr-2"/> Upload File
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline">
+                                        <Upload size={16} className="mr-2"/> Upload
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent className={theme === 'dark' ? 'bg-[#18181b] border-white/10 text-white' : ''}>
+                                    <DropdownMenuItem onClick={() => document.getElementById('file-upload-input')?.click()}>
+                                        <Upload className="mr-2 h-4 w-4" />
+                                        Upload from computer
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setIsUrlDialogOpen(true)}>
+                                        <Link className="mr-2 h-4 w-4" />
+                                        Add from URL
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <input type="file" id="file-upload-input" className="hidden" onChange={handleFileUpload} />
                         </div>
                     </div>
@@ -258,6 +290,13 @@ export const Resources: React.FC<ResourcesProps> = () => {
                 isOpen={isCreatingFile}
                 onClose={() => setIsCreatingFile(false)}
                 onSave={handleSaveNewFile}
+                theme={theme}
+            />
+
+            <AddFromUrlDialog 
+                isOpen={isUrlDialogOpen}
+                onOpenChange={setIsUrlDialogOpen}
+                onSave={handleSaveFromUrl}
                 theme={theme}
             />
 
