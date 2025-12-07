@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { X, Search, FileText, Image, Video, Archive, Link, Folder, CheckCircle2 } from 'lucide-react';
+import { X, Search, FileText, Image, Video, Archive, Link, Folder, CheckCircle2, File as FileIcon } from 'lucide-react';
 import { Attachment, FileItem, Theme } from '../../types';
 import { useStore } from '../../store/useStore';
 
@@ -10,12 +10,12 @@ import { useStore } from '../../store/useStore';
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
     if (type === 'application/json') return <FileText size={size} />;
-    if (!type) return <File size={size} />;
+    if (!type) return <FileIcon size={size} />;
     if (type.startsWith('image/')) return <Image size={size} />;
     if (type.startsWith('video/')) return <Video size={size} />;
     if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
     if (type.includes('pdf')) return <FileText size={size} />;
-    return <File size={size} />;
+    return <FileIcon size={size} />;
 };
 
 const getFileColor = (type?: string) => {
