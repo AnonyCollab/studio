@@ -4,7 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { X, Search, FileText, Image, Video, Archive, Link, Folder, CheckCircle2 } from 'lucide-react';
 import { Attachment, FileItem, Theme } from '../../types';
-import { useStore } from '../store/useStore';
+import { useStore } from '../../store/useStore';
 
 
 const getFileIcon = (type?: string, size = 20) => {
