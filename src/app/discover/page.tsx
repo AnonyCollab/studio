@@ -92,51 +92,6 @@ export default function App() {
 
   const projectsToDisplay = getProjectsForSection(activeSection);
   
-  const handleCreateNewProject = async () => {
-    if (!user || !firestore) {
-      // Handle not logged in case
-      router.push('/login');
-      return;
-    }
-    const newProjectId = uuidv4();
-    const newProject: ProjectType = {
-      id: newProjectId,
-      title: "New Untitled Project",
-      description: "A brand new project, ready for ideas.",
-      image: `https://picsum.photos/seed/${newProjectId}/1080/600`,
-      sector: "New",
-      owner: {
-        uid: user.uid,
-        name: user.displayName || "You",
-        avatar: user.photoURL || "",
-        initials: user.displayName ? user.displayName.charAt(0) : "U",
-      },
-      members: [user.uid],
-      totalMembers: 1,
-      createdDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
-      lastEditDate: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric'}),
-      tags: ["new-project"],
-    };
-
-    const batch = writeBatch(firestore);
-
-    const projectRef = doc(firestore, 'projects', newProjectId);
-    batch.set(projectRef, newProject);
-
-    // Also add the owner to the members subcollection
-    const memberRef = doc(firestore, 'projects', newProjectId, 'members', user.uid);
-    batch.set(memberRef, {
-        uid: user.uid,
-        displayName: user.displayName || "Owner",
-        role: "owner",
-        joinedAt: new Date(),
-    });
-
-    await batch.commit();
-
-    router.push(`/discover/${newProjectId}`);
-  };
-
   const handleJoinProject = async (projectId: string) => {
     if (!user || !firestore) {
       router.push('/login');
@@ -163,15 +118,6 @@ export default function App() {
 
     await batch.commit();
   };
-
-  useEffect(() => {
-    const createProjectHandler = () => handleCreateNewProject();
-    window.addEventListener('create-new-project', createProjectHandler);
-    return () => {
-      window.removeEventListener('create-new-project', createProjectHandler);
-    };
-  }, [handleCreateNewProject]);
-
 
   const renderContent = () => {
     if (activeSection === "overview") {
