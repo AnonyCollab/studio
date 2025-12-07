@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, Edit, Upload, Trash2 } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File as FileIcon, Video, Archive, Plus, ChevronRight, Edit, Upload, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
     if (type === 'application/json') return <FileText size={size} />;
-    if (!type) return <File size={size} />;
+    if (!type) return <FileIcon size={size} />;
     if (type.startsWith('image/')) return <Image size={size} />;
     if (type.startsWith('video/')) return <Video size={size} />;
     if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
     if (type.includes('pdf')) return <FileText size={size} />;
-    return <File size={size} />;
+    return <FileIcon size={size} />;
 };
 
 const getFileColor = (type?: string) => {
