@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle } from 'lucide-react';
+import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle, Maximize2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DocumentHeader } from './DocumentHeader';
 import { PropertiesSection } from './PropertiesSection';
@@ -73,6 +73,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const [showParentPicker, setShowParentPicker] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [activeTab, setActiveTab] = useState('comments');
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   const task = allTasks.find(t => t.id === initialTask.id) || initialTask;
 
@@ -373,7 +374,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     <>
         <div className={`fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm p-0 lg:p-8 ${overlayClass}`} onClick={onClose}>
         <div 
-            className={`w-full max-w-6xl h-full lg:h-[90vh] rounded-none lg:rounded-2xl flex flex-col lg:flex-row overflow-hidden border transition-colors duration-300 ${containerClass}`}
+            className={`w-full h-full flex flex-col lg:flex-row overflow-hidden border transition-all duration-300 ${containerClass} ${isFullScreen ? 'max-w-full h-full rounded-none' : 'max-w-6xl lg:h-[90vh] lg:rounded-2xl'}`}
             onClick={e => e.stopPropagation()}
         >
             {/* Main Content */}
@@ -524,7 +525,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
             <div className={`hidden lg:flex w-80 border-l p-6 flex-col flex-shrink-0 overflow-y-auto custom-scrollbar h-full ${sidebarClass}`}>
                 <div className="flex items-center justify-end gap-2 mb-8">
                     <div className="flex items-center gap-2">
-                        <button className={`p-2 rounded transition-colors ${iconHover}`}><Minimize2 size={18}/></button>
+                        <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
+                          {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                        </button>
                         {!isReadOnly && <button className={`p-2 rounded transition-colors ${iconHover}`}><MoreHorizontal size={18}/></button>}
                         <button onClick={onClose} className={`p-2 rounded transition-colors ${iconHover}`}><X size={18}/></button>
                     </div>
