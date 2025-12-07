@@ -40,6 +40,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
     const isVideo = file.fileType?.startsWith('video/');
     const isAudio = file.fileType?.startsWith('audio/');
     const isBlockNote = file.fileType === 'application/json';
+    const isPdf = file.fileType === 'application/pdf';
 
     const isOfficeDoc = file.fileType && (
         file.fileType.includes('msword') ||
@@ -53,7 +54,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
     // General embeddable types, including PDF but excluding office docs
     const canEmbed = file.fileType && (
         file.fileType.startsWith('text/') ||
-        file.fileType === 'application/pdf'
+        isPdf
     ) && !isOfficeDoc;
 
     const renderPreview = () => {
@@ -128,7 +129,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
                     </div>
                 </DialogHeader>
 
-                <div className={`flex-1 flex items-center justify-center p-4 overflow-auto ${isBlockNote ? '' : 'bg-black/10'}`}>
+                <div className={`flex-1 flex items-center justify-center p-4 overflow-auto ${isBlockNote ? '' : (isLight ? 'bg-gray-50' : 'bg-black/20')}`}>
                     {renderPreview()}
                 </div>
             </DialogContent>
