@@ -1,7 +1,34 @@
 
+'use client';
+
 import React, { useState, useMemo } from 'react';
 import { X, Search, FileText, Image, Video, Archive, Link, Folder, CheckCircle2 } from 'lucide-react';
-import { Attachment } from '../../types';
+import { Attachment, FileItem, Theme } from '../../types';
+import { useStore } from '../store/useStore';
+
+
+const getFileIcon = (type?: string, size = 20) => {
+    if (type === 'folder') return <Folder size={size} />;
+    if (type === 'application/json') return <FileText size={size} />;
+    if (!type) return <File size={size} />;
+    if (type.startsWith('image/')) return <Image size={size} />;
+    if (type.startsWith('video/')) return <Video size={size} />;
+    if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
+    if (type.includes('pdf')) return <FileText size={size} />;
+    return <File size={size} />;
+};
+
+const getFileColor = (type?: string) => {
+    if (type === 'folder') return 'text-brand-500';
+    if (type === 'application/json') return 'text-green-500';
+    if (!type) return 'text-gray-400';
+    if (type.startsWith('image/')) return 'text-emerald-500';
+    if (type.startsWith('video/')) return 'text-pink-500';
+    if (type.includes('zip') || type.includes('archive')) return 'text-blue-500';
+    if (type.includes('pdf')) return 'text-red-500';
+    return 'text-gray-400';
+};
+
 
 interface ResourcePickerModalProps {
   onClose: () => void;
@@ -10,27 +37,20 @@ interface ResourcePickerModalProps {
 }
 
 export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClose, onSelect, isLight }) => {
+  const { files: allFiles } = useStore();
   const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
   const [filter, setFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock Files (Consistent with Resources Page)
-  const allFiles = [
-      { id: 'f1', name: 'Brand_Guidelines_v2.pdf', type: 'PDF', size: '4.2 MB', date: 'Oct 12', icon: FileText, color: 'text-red-500', bg: 'bg-red-500/10' },
-      { id: 'f2', name: 'Q4_Roadmap_Presentation.pptx', type: 'PPTX', size: '12.5 MB', date: 'Oct 10', icon: FileText, color: 'text-orange-500', bg: 'bg-orange-500/10' },
-      { id: 'f3', name: 'Hero_Banner_Assets.zip', type: 'ZIP', size: '145 MB', date: 'Oct 08', icon: Archive, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-      { id: 'f4', name: 'UI_Kit_v3.fig', type: 'Figma', size: 'Link', date: 'Oct 05', icon: Link, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-      { id: 'f5', name: 'Landing_Page_Mockup.png', type: 'Image', size: '2.1 MB', date: 'Sep 28', icon: Image, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-      { id: 'f6', name: 'Demo_Walkthrough.mp4', type: 'Video', size: '450 MB', date: 'Sep 25', icon: Video, color: 'text-pink-500', bg: 'bg-pink-500/10' },
-      { id: 'f7', name: 'Legal_Contracts.pdf', type: 'PDF', size: '1.2 MB', date: 'Sep 20', icon: FileText, color: 'text-red-500', bg: 'bg-red-500/10' },
-      { id: 'f8', name: 'Social_Media_Kit.zip', type: 'ZIP', size: '56 MB', date: 'Sep 15', icon: Archive, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  ];
-
-  const filters = ['All', 'PDF', 'Image', 'Video', 'ZIP'];
+  const filters = ['All', 'PDF', 'Image', 'Video', 'ZIP', 'Document'];
 
   const filteredFiles = useMemo(() => {
-      return allFiles.filter(file => {
-          const matchesFilter = filter === 'All' || file.type === filter || (filter === 'Image' && file.type === 'PNG');
+      return (allFiles || []).filter(file => {
+          if (file.type === 'folder') return false; // Exclude folders
+          const matchesFilter = filter === 'All' 
+              || (file.fileType && file.fileType.toLowerCase().includes(filter.toLowerCase()))
+              || (filter === 'Document' && file.fileType === 'application/json');
+
           const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
           return matchesFilter && matchesSearch;
       });
@@ -41,7 +61,7 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
       if (file) {
           onSelect({
               name: file.name,
-              type: file.type,
+              type: file.fileType || 'file',
               id: file.id
           });
       }
@@ -107,30 +127,32 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
                         <p>No files found.</p>
                     </div>
                 )}
-                {filteredFiles.map(file => (
-                    <div 
-                        key={file.id}
-                        onClick={() => setSelectedFileId(file.id)}
-                        className={`flex items-center gap-4 p-3 rounded-xl border cursor-pointer transition-all group ${selectedFileId === file.id ? selectedClass : itemClass}`}
-                    >
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${file.bg} ${file.color}`}>
-                            <file.icon size={20} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <h4 className={`font-bold text-sm truncate ${textMain}`}>{file.name}</h4>
-                            <div className={`flex items-center gap-2 text-xs ${textMuted}`}>
-                                <span>{file.type}</span>
-                                <span>•</span>
-                                <span>{file.size}</span>
-                                <span>•</span>
-                                <span>{file.date}</span>
+                {filteredFiles.map(file => {
+                    const icon = getFileIcon(file.fileType, 20);
+                    const color = getFileColor(file.fileType);
+                    return (
+                        <div 
+                            key={file.id}
+                            onClick={() => setSelectedFileId(file.id)}
+                            className={`flex items-center gap-4 p-3 rounded-xl border cursor-pointer transition-all group ${selectedFileId === file.id ? selectedClass : itemClass}`}
+                        >
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-opacity-10 ${color}`}>
+                                {icon}
                             </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className={`font-bold text-sm truncate ${textMain}`}>{file.name}</h4>
+                                <div className={`flex items-center gap-2 text-xs ${textMuted}`}>
+                                    <span>{file.fileType || 'File'}</span>
+                                    {file.size && <><span>•</span><span>{file.size}</span></>}
+                                    {file.createdAt && <><span>•</span><span>{new Date(file.createdAt.seconds * 1000).toLocaleDateString()}</span></>}
+                                </div>
+                            </div>
+                            {selectedFileId === file.id && (
+                                <CheckCircle2 size={20} className="text-brand-500" />
+                            )}
                         </div>
-                        {selectedFileId === file.id && (
-                            <CheckCircle2 size={20} className="text-brand-500" />
-                        )}
-                    </div>
-                ))}
+                    )
+                })}
             </div>
 
             {/* Footer */}
