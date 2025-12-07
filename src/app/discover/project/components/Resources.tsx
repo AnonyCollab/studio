@@ -3,7 +3,7 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
-import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, Edit, Upload } from 'lucide-react';
+import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File, Video, Archive, Plus, ChevronRight, Edit, Upload, Trash2 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { FilePreview } from './FilePreview';
 import { NewFileEditor } from './NewFileEditor';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AddFromUrlDialog } from './AddFromUrlDialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
@@ -38,7 +39,7 @@ interface ResourcesProps {
 }
 
 export const Resources: React.FC<ResourcesProps> = () => {
-    const { files, addFile, resourcePath, setResourcePath, currentUser, theme } = useStore();
+    const { files, addFile, deleteFile, resourcePath, setResourcePath, currentUser, theme } = useStore();
     useEffect(() => {
         console.log("Current user role in ResourcesPage:", currentUser?.role);
     }, [currentUser]);
@@ -199,14 +200,44 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                 <div 
                                     key={folder.id} 
                                     onClick={() => handleNavigate(folder.id)}
-                                    className={`p-4 rounded-xl border flex items-center gap-4 cursor-pointer transition-all ${cardClass}`}
+                                    className={`p-4 rounded-xl border flex items-center justify-between gap-4 cursor-pointer transition-all ${cardClass}`}
                                 >
-                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
-                                        {getFileIcon(folder.type, 24)}
+                                    <div className="flex items-center gap-4 min-w-0">
+                                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center bg-brand-500/10 text-brand-500 flex-shrink-0`}>
+                                            {getFileIcon(folder.type, 24)}
+                                        </div>
+                                        <div className="min-w-0">
+                                            <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder.name}</h3>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <h3 className={`font-bold text-sm truncate ${textMain}`}>{folder.name}</h3>
-                                    </div>
+                                     <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                                <MoreVertical size={16} />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end" className={isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}>
+                                            <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                        <Trash2 size={14} className="mr-2" /> Delete Folder
+                                                    </DropdownMenuItem>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent className={isLight ? 'bg-white' : 'bg-[#18181b] border-white/10'}>
+                                                    <AlertDialogHeader>
+                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                        <AlertDialogDescription className={textMuted}>
+                                                           This will permanently delete the folder and all its contents. This action cannot be undone.
+                                                        </AlertDialogDescription>
+                                                    </AlertDialogHeader>
+                                                    <AlertDialogFooter>
+                                                        <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'}>Cancel</AlertDialogCancel>
+                                                        <AlertDialogAction onClick={() => deleteFile(folder.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                                    </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                            </AlertDialog>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                 </div>
                             ))}
                              {isCreatingFolder && (
@@ -260,13 +291,39 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                 <div className={`col-span-2 text-sm font-mono ${textMuted}`}>{file.size}</div>
                                                 <div className={`col-span-2 text-sm ${textMuted}`}>{file.createdAt ? new Date(file.createdAt.seconds * 1000).toLocaleDateString() : 'N/A'}</div>
                                                 <div className="col-span-1 flex justify-end">
-                                                    {file.url && (
-                                                         <div onClick={(e) => e.stopPropagation()} className={`p-2 rounded opacity-100 md:opacity-0 group-hover:opacity-100 transition-all ${isLight ? 'hover:bg-white shadow-sm' : 'hover:bg-white/10'}`}>
-                                                            <a href={file.url} download={file.name}>
-                                                                <Download size={16} className={textMuted} />
-                                                            </a>
-                                                        </div>
-                                                    )}
+                                                     <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+                                                                <MoreVertical size={16} />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end" className={isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}>
+                                                            {file.url && (
+                                                                <a href={file.url} download={file.name}>
+                                                                    <DropdownMenuItem><Download size={14} className="mr-2" /> Download</DropdownMenuItem>
+                                                                </a>
+                                                            )}
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                                        <Trash2 size={14} className="mr-2" /> Delete
+                                                                    </DropdownMenuItem>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent className={isLight ? 'bg-white' : 'bg-[#18181b] border-white/10'}>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                                        <AlertDialogDescription className={textMuted}>
+                                                                           This will permanently delete the file. This action cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'}>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction onClick={() => deleteFile(file.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </div>
                                         ))}

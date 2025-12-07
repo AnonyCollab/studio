@@ -23,6 +23,7 @@ export interface ExtendedAppState extends AppState {
   addMember: (member: Partial<Assignee>) => void;
   setResourcePath: (path: (string | null)[]) => void;
   addFile: (file: Partial<FileItem>) => void;
+  deleteFile: (fileId: string) => void;
   addTask: (task: Partial<TaskNode>) => string;
   updateTask: (id: string, updates: Partial<TaskNode>) => void;
   onUpdateTaskConnections: (startId: string, targetId: string) => void;
@@ -549,28 +550,62 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   const addFile = useCallback((file: Partial<FileItem>) => {
     if (!firestore || !projectId) return;
     const resourcesCollection = collection(firestore, 'projects', projectId, 'resources');
+    const newFileId = uuidv4();
     
-    console.log("Creating folder with data:", file);
     const newFileDoc = {
+      id: newFileId,
       ...file,
       createdAt: serverTimestamp(),
       parentId: state.resourcePath[state.resourcePath.length - 1],
     };
 
-    addDoc(resourcesCollection, newFileDoc)
-      .then((docRef) => {
-        console.log("Folder stored successfully in database! Document ID:", docRef.id);
-      })
-      .catch(error => {
-        const permissionError = new FirestorePermissionError({
-          path: resourcesCollection.path,
-          operation: 'create',
-          requestResourceData: newFileDoc,
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        console.error("Error adding document, emitting permission error:", error);
-      });
+    const docRef = doc(firestore, 'projects', projectId, 'resources', newFileId);
+    setDocumentNonBlocking(docRef, newFileDoc, {})
   }, [firestore, projectId, state.resourcePath]);
+
+   const deleteFile = useCallback((fileId: string) => {
+    if (!firestore || !projectId) return;
+
+    setState(prev => {
+        const fileToDelete = prev.files.find(f => f.id === fileId);
+        if (!fileToDelete) return prev;
+
+        const filesToDelete = new Set<string>();
+        const queue: string[] = [fileId];
+        filesToDelete.add(fileId);
+
+        if (fileToDelete.type === 'folder') {
+            const findChildren = (parentId: string) => {
+                prev.files.forEach(f => {
+                    if (f.parentId === parentId) {
+                        filesToDelete.add(f.id);
+                        if (f.type === 'folder') {
+                            findChildren(f.id);
+                        }
+                    }
+                });
+            };
+            findChildren(fileId);
+        }
+
+        const batch = writeBatch(firestore);
+        filesToDelete.forEach(id => {
+            const fileRef = doc(firestore, 'projects', projectId, 'resources', id);
+            batch.delete(fileRef);
+        });
+
+        batch.commit().catch(error => {
+             errorEmitter.emit('permission-error', new FirestorePermissionError({
+                path: `batch delete on resources`,
+                operation: 'delete'
+            }));
+        });
+        
+        // Optimistically update local state
+        const newFiles = prev.files.filter(f => !filesToDelete.has(f.id));
+        return { ...prev, files: newFiles };
+    });
+  }, [firestore, projectId]);
 
   const leaveProject = useCallback(async () => {
     if (!firestore || !projectId || !authUser) throw new Error("Not initialized");
@@ -650,6 +685,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     addMember,
     removeMember,
     addFile,
+    deleteFile,
     updateMember,
     setResourcePath,
     setDrillDownStack,
@@ -659,7 +695,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   }), [
       state, setCurrentUser, setTasks, addTask, updateTask, onUpdateTaskConnections, deleteTask, duplicateTask, moveTask, 
       selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
-      addPost, addMember, removeMember, addFile, updateMember, setResourcePath, setDrillDownStack, 
+      addPost, addMember, removeMember, addFile, deleteFile, updateMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading
   ]);
 
