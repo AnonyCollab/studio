@@ -22,4 +22,5 @@ cors:
       - x-goog-upload-header-content-type
       - x-goog-upload-offset
       - x-goog-upload-protocol
+      - origin
     maxAge: 3600
