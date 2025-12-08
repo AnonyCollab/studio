@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { ResourcePickerModal } from './DocumentModal/ResourcePickerModal';
 import { useStore } from '../store/useStore.tsx';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const Editor = dynamic(() => import('@/app/news/components/Editor'), { 
     ssr: false,
@@ -110,7 +111,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             return <audio src={file.url} controls className="w-full" />;
         }
         if (canEmbed) {
-            return <embed src={file.url} type={file.fileType} className="w-full h-[75vh] rounded-lg border" />;
+            return <embed src={file.url} type={file.fileType} className="w-full h-full border" />;
         }
 
         return (
@@ -137,7 +138,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
          const newAttachment: Attachment = {
             id: resource.id || `RES-${Math.random()}`,
             name: resource.name || 'Unknown File',
-            type: resource.fileType || 'file'
+            type: file.fileType || 'file'
         };
         onUpdateAttachments(newAttachment);
         setShowResourcePicker(false);
@@ -152,43 +153,41 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             )}
         >
             <div className={`flex flex-row items-center justify-between p-2 pl-3 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
-                <div className="flex items-center gap-1 min-w-0">
-                    <ScrollArea className="max-w-[450px] whitespace-nowrap">
-                        <div className="flex items-center gap-1">
-                            {attachments.map(att => (
-                                <button
-                                    key={att.id}
-                                    onClick={() => {
-                                        if (onSelectAttachment) {
-                                            const fullFile = files.find(f => f.id === att.id);
-                                            if (fullFile) {
-                                                onSelectAttachment(fullFile);
-                                            }
+                <ScrollArea className="max-w-[calc(100vw-150px)] whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                        {attachments.map(att => (
+                            <button
+                                key={att.id}
+                                onClick={() => {
+                                    if (onSelectAttachment) {
+                                        const fullFile = files.find(f => f.id === att.id);
+                                        if (fullFile) {
+                                            onSelectAttachment(fullFile);
                                         }
-                                    }}
-                                    className={cn(
-                                        "flex items-center gap-2 pr-1 pl-3 py-1.5 rounded-md transition-colors whitespace-nowrap group",
-                                        file.id === att.id ? (isLight ? 'bg-slate-100' : 'bg-white/10') : (isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5')
-                                    )}
-                                >
-                                    {getFileIcon(att.type, 14)}
-                                    <span className={cn("text-xs font-medium", isLight ? 'text-slate-700' : 'text-slate-300')}>{att.name}</span>
-                                    {onDetachResource && (
-                                        <span 
-                                            onClick={(e) => { e.stopPropagation(); onDetachResource(att.id); }}
-                                            className="p-1 rounded-full text-transparent group-hover:text-slate-400 hover:!text-red-500 hover:bg-red-500/10"
-                                        >
-                                            <X size={12}/>
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
-                             <button onClick={() => setShowResourcePicker(true)} className={cn("p-2 rounded-md", isLight ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/10 text-slate-400')}>
-                                <Plus size={14} />
+                                    }
+                                }}
+                                className={cn(
+                                    "flex items-center gap-2 pr-1 pl-3 py-1.5 rounded-md transition-colors whitespace-nowrap group",
+                                    file.id === att.id ? (isLight ? 'bg-slate-100' : 'bg-white/10') : (isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5')
+                                )}
+                            >
+                                {getFileIcon(att.type, 14)}
+                                <span className={cn("text-xs font-medium", isLight ? 'text-slate-700' : 'text-slate-300')}>{att.name}</span>
+                                {onDetachResource && (
+                                    <span 
+                                        onClick={(e) => { e.stopPropagation(); onDetachResource(att.id); }}
+                                        className="p-1 rounded-full text-transparent group-hover:text-slate-400 hover:!text-red-500 hover:bg-red-500/10"
+                                    >
+                                        <X size={12}/>
+                                    </span>
+                                )}
                             </button>
-                        </div>
-                    </ScrollArea>
-                </div>
+                        ))}
+                         <button onClick={() => setShowResourcePicker(true)} className={cn("p-2 rounded-md", isLight ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/10 text-slate-400')}>
+                            <Plus size={14} />
+                        </button>
+                    </div>
+                </ScrollArea>
                 <div className="flex items-center gap-2 pl-2">
                     {file.url && (
                             <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
@@ -222,11 +221,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
     return (
         <div
-            className="fixed inset-0 z-[200] p-0 lg:p-4 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            className="fixed inset-0 z-[200] p-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
             onClick={onClose}
         >
             <div
-                className="w-full h-full lg:max-w-4xl lg:h-auto lg:max-h-[90vh]"
+                className="w-full h-full"
                 onClick={(e) => e.stopPropagation()}
             >
                 {content}
