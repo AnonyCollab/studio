@@ -120,7 +120,7 @@ export const AppContent: React.FC = () => {
               const userTeam = members.find(m => m.uid === currentUser.id)?.teamName;
               if (!userTeam) return [];
               const teamMemberIds = members.filter(m => m.teamName === userTeam).map(m => m.uid);
-              return tasks.filter((t: TaskNode) => t.assignee?.type === 'team' ? t.assignee.displayName === userTeam : teamMemberIds.includes(t.assignee.uid));
+              return tasks.filter((t: TaskNode) => t.assignee.type === 'team' ? t.assignee.displayName === userTeam : teamMemberIds.includes(t.assignee.uid));
   
           case 'Department':
               const userDepartment = members.find(m => m.uid === currentUser.id)?.department;
@@ -405,7 +405,7 @@ export const AppContent: React.FC = () => {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={closeAllModals}
             />
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full lg:h-auto flex items-center justify-center">
               {isModalOpen && selectedTask && (
                 <div
                   className={`
@@ -427,7 +427,7 @@ export const AppContent: React.FC = () => {
                 </div>
               )}
               {sideSelectedTask && (
-                <div className="w-full h-full lg:h-auto lg:w-1/2">
+                <div className="hidden lg:block w-full h-full lg:h-auto lg:w-1/2">
                   <DocumentModal
                     task={sideSelectedTask}
                     tasks={tasks}
@@ -443,7 +443,7 @@ export const AppContent: React.FC = () => {
                 </div>
               )}
               {sideSelectedResource && (
-                 <div className="w-full h-full lg:h-auto lg:w-1/2">
+                 <div className="hidden lg:block w-full h-full lg:h-auto lg:w-1/2">
                     <FilePreview 
                         file={sideSelectedResource}
                         isOpen={!!sideSelectedResource}

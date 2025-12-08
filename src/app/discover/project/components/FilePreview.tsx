@@ -105,45 +105,54 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
         );
     };
     
-    if (!isOpen) return null;
+    const content = (
+        <div
+            className={cn(
+                "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
+                isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
+                isSideView ? 'lg:h-full lg:rounded-r-2xl lg:rounded-l-none' : 'lg:h-[90vh] lg:rounded-2xl',
+                isSideView && !isLight ? 'lg:border-l-0' : ''
+            )}
+        >
+            <DialogHeader className={`flex flex-row items-center justify-between p-4 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
+                <DialogTitle className="flex items-center gap-2 min-w-0">
+                    <div className={`shrink-0 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{getFileIcon(file.fileType, 20)}</div>
+                    <span className={`truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>{file.name}</span>
+                </DialogTitle>
+                <div className="flex items-center gap-2">
+                    {file.url && (
+                            <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
+                            <Button variant={isLight ? 'outline' : 'secondary'} size="sm" className="gap-2">
+                                <Download size={16} />
+                                Download
+                            </Button>
+                        </a>
+                    )}
+                        <Button onClick={onClose} variant="ghost" size="icon" className={`h-9 w-9 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
+                        <X className="h-5 w-5" />
+                    </Button>
+                </div>
+            </DialogHeader>
 
-    const containerClass = cn(
-        "max-w-4xl w-[95vw] h-full flex flex-col p-0 gap-0 border overflow-hidden",
-        isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-        isSideView ? 'lg:h-[90vh] lg:rounded-r-2xl lg:rounded-l-none' : 'lg:h-[90vh] lg:rounded-2xl',
-        isSideView && !isLight ? 'lg:border-l-0' : ''
+            <div className={`flex-1 flex items-center justify-center p-4 overflow-auto ${isBlockNote ? '' : (isLight ? 'bg-gray-50' : 'bg-black/20')}`}>
+                {renderPreview()}
+            </div>
+        </div>
     );
+    
+    if (isSideView) {
+        return content;
+    }
 
+    if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent 
-                className={containerClass}
+                className="max-w-4xl w-[95vw] h-auto max-h-[90vh] p-0 gap-0"
                 hideCloseButton={true}
             >
-                <DialogHeader className={`flex flex-row items-center justify-between p-4 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
-                    <DialogTitle className="flex items-center gap-2 min-w-0">
-                        <div className={`shrink-0 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{getFileIcon(file.fileType, 20)}</div>
-                        <span className={`truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>{file.name}</span>
-                    </DialogTitle>
-                    <div className="flex items-center gap-2">
-                        {file.url && (
-                             <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
-                                <Button variant={isLight ? 'outline' : 'secondary'} size="sm" className="gap-2">
-                                    <Download size={16} />
-                                    Download
-                                </Button>
-                            </a>
-                        )}
-                         <Button onClick={onClose} variant="ghost" size="icon" className={`h-9 w-9 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
-                            <X className="h-5 w-5" />
-                        </Button>
-                    </div>
-                </DialogHeader>
-
-                <div className={`flex-1 flex items-center justify-center p-4 overflow-auto ${isBlockNote ? '' : (isLight ? 'bg-gray-50' : 'bg-black/20')}`}>
-                    {renderPreview()}
-                </div>
+                {content}
             </DialogContent>
         </Dialog>
     );
