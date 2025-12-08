@@ -305,7 +305,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                             )}
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
-                                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
                                                                         <Trash2 size={14} className="mr-2" /> Delete
                                                                     </DropdownMenuItem>
                                                                 </AlertDialogTrigger>
@@ -318,7 +318,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
                                                                         <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'}>Cancel</AlertDialogCancel>
-                                                                        <AlertDialogAction onClick={() => deleteFile(file.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                                                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
                                                             </AlertDialog>
