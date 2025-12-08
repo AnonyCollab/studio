@@ -30,6 +30,8 @@ interface DocumentModalProps {
   isFullScreen?: boolean;
   setIsFullScreen?: (isFullScreen: boolean) => void;
   selectSideResource?: (file: FileItem) => void;
+  onUpdateAttachments?: (newAttachment: Attachment) => void;
+  onDetachResource?: (resourceId: string) => void;
 }
 
 const MobileSection: React.FC<{ title: string, children: React.ReactNode, defaultOpen?: boolean, isLight: boolean }> = ({ title, children, defaultOpen = false, isLight }) => {
@@ -86,7 +88,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
   isSideView = false,
   isFullScreen: isExternalFullScreen = false,
   setIsFullScreen: setExternalFullScreen,
-  selectSideResource
+  selectSideResource,
+  onUpdateAttachments,
+  onDetachResource
 }) => {
   const { members, files, selectSideTask, closeSideResource } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
@@ -151,29 +155,26 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
     }
   };
 
-  const handleResourceSelect = (file: Partial<Attachment>) => {
-      if (isReadOnly) return;
-      const newAttachment: Attachment = {
-          id: file.id || `RES-${Math.random()}`,
-          name: file.name || 'Unknown File',
-          type: file.type || 'file'
-      };
-      onUpdate(task.id, { attachments: [...(task.attachments || []), newAttachment] });
-      setShowResourcePicker(false);
-  };
-  
-    const handleDetachResource = (resourceId: string) => {
-        if (!task) return;
-        const updatedAttachments = (task.attachments || []).filter(att => att.id !== resourceId);
-        onUpdate(task.id, { attachments: updatedAttachments });
-
-        // If we close the currently viewed resource, close the side panel too
-        const { sideSelectedResource } = useStore.getState();
-        if (sideSelectedResource?.id === resourceId) {
-            closeSideResource();
+    const handleResourceSelect = (file: Partial<Attachment>) => {
+        if (isReadOnly || !file.id) return;
+    
+        // Check if the attachment already exists to prevent duplicates
+        const existingAttachment = task.attachments?.find(att => att.id === file.id);
+        if (existingAttachment) {
+            setShowResourcePicker(false);
+            return; 
         }
-    };
 
+        const newAttachment: Attachment = {
+            id: file.id,
+            name: file.name || 'Unknown File',
+            type: file.fileType || 'file'
+        };
+
+        const updatedAttachments = [...(task.attachments || []), newAttachment];
+        onUpdate(task.id, { attachments: updatedAttachments });
+        setShowResourcePicker(false);
+    };
 
   const properties = {
       status: task.status,
@@ -412,8 +413,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                 "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
                 containerClass,
                 isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl",
-                isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "",
-                !isSideView && "lg:rounded-r-none"
+                isSideView ? "lg:rounded-none" : "lg:rounded-r-none"
               )}
             onClick={e => e.stopPropagation()}
         >

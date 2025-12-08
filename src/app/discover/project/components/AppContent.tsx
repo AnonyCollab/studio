@@ -33,9 +33,9 @@ export const AppContent: React.FC = () => {
   
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
-      selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
+      selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, onUpdateTaskConnections, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
-      isStoreLoading, projectData, projectId, onUpdateTaskConnections, sideSelectedResource, selectSideResource, closeSideResource
+      isStoreLoading, projectData, projectId, sideSelectedResource, selectSideResource, closeSideResource
   } = store;
   
   const [viewedProfile, setViewedProfile] = useState<Assignee | null>(null);
@@ -445,6 +445,26 @@ export const AppContent: React.FC = () => {
                          const fullFile = files.find(f => f.id === file.id);
                          if(fullFile) selectSideResource(fullFile);
                       }}
+                      onUpdateAttachments={(newAttachment) => {
+                        if (selectedTask) {
+                            const currentAttachments = selectedTask.attachments || [];
+                            // Prevent duplicates
+                            if (!currentAttachments.some(att => att.id === newAttachment.id)) {
+                                updateTask(selectedTask.id, {
+                                    attachments: [...currentAttachments, newAttachment]
+                                });
+                            }
+                        }
+                      }}
+                      onDetachResource={(resourceId) => {
+                            if (selectedTask) {
+                                const updatedAttachments = (selectedTask.attachments || []).filter(att => att.id !== resourceId);
+                                updateTask(selectedTask.id, { attachments: updatedAttachments });
+                            }
+                            if (sideSelectedResource?.id === resourceId) {
+                                closeSideResource();
+                            }
+                       }}
                     />
                   </div>
                 )}
@@ -478,14 +498,17 @@ export const AppContent: React.FC = () => {
                                 const fullFile = files.find(f => f.id === attachment.id);
                                 if (fullFile) selectSideResource(fullFile);
                            }}
-                           onUpdateAttachments={(newAttachment) => {
-                             if(selectedTask) {
-                               updateTask(selectedTask.id, {
-                                 attachments: [...(selectedTask.attachments || []), newAttachment]
-                               })
-                             }
-                           }}
-                           onDetachResource={(resourceId) => {
+                            onUpdateAttachments={(newAttachment) => {
+                                if (selectedTask) {
+                                    const currentAttachments = selectedTask.attachments || [];
+                                    if (!currentAttachments.some(att => att.id === newAttachment.id)) {
+                                        updateTask(selectedTask.id, {
+                                            attachments: [...currentAttachments, newAttachment]
+                                        });
+                                    }
+                                }
+                            }}
+                            onDetachResource={(resourceId) => {
                                 if (selectedTask) {
                                     const updatedAttachments = (selectedTask.attachments || []).filter(att => att.id !== resourceId);
                                     updateTask(selectedTask.id, { attachments: updatedAttachments });

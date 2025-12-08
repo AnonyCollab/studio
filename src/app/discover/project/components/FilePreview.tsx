@@ -18,13 +18,13 @@ const Editor = dynamic(() => import('@/app/news/components/Editor'), {
 
 const getFileIcon = (type?: string, size = 48) => {
     if (type === 'folder') return <Folder size={size} />;
+    if (type === 'application/json') return <FileText size={size} />;
     if (!type) return <File size={size} />;
     if (type.startsWith('image/')) return <ImageIcon size={size} />;
     if (type.startsWith('video/')) return <Video size={size} />;
     if (type.startsWith('audio/')) return <Music size={size} />;
     if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
     if (type.includes('pdf')) return <FileText size={size} />;
-    if (type.includes('application/json')) return <FileText size={size} />;
     if (type.includes('word') || type.includes('excel') || type.includes('spreadsheet') || type.includes('presentation')) return <FileText size={size} />;
     return <File size={size} />;
 };
@@ -123,7 +123,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
          const newAttachment: Attachment = {
             id: resource.id || `RES-${Math.random()}`,
             name: resource.name || 'Unknown File',
-            type: resource.type || 'file'
+            type: resource.fileType || 'file'
         };
         onUpdateAttachments(newAttachment);
         setShowResourcePicker(false);
@@ -134,7 +134,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "lg:rounded-xl"
+                isSideView ? "lg:rounded-none" : "lg:rounded-xl"
             )}
         >
             <div className={`flex flex-row items-center justify-between p-2 pl-3 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
