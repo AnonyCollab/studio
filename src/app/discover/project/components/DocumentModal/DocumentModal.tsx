@@ -375,9 +375,21 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
 
   return (
     <>
-        <div className={`fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm p-0 lg:p-8 ${overlayClass} ${isSideView ? 'lg:pl-4' : ''}`} onClick={onClose}>
         <div 
-            className={`w-full h-full flex flex-col lg:flex-row overflow-hidden border transition-all duration-300 ${containerClass} ${isFullScreen ? 'max-w-full h-full rounded-none' : (isSideView ? 'max-w-full lg:max-w-[calc(50%-1rem)] lg:h-[90vh] lg:rounded-2xl' : 'max-w-6xl lg:h-[90vh] lg:rounded-2xl')}`}
+          className={`
+            fixed inset-0 lg:inset-auto z-[100] backdrop-blur-sm
+            ${isSideView ? 'lg:w-1/2 lg:right-4' : 'lg:w-full'}
+            ${overlayClass}
+          `}
+          onClick={onClose}
+        />
+        <div 
+            className={`
+              w-full h-full lg:h-[90vh] flex flex-col lg:flex-row overflow-hidden border transition-all duration-300
+              fixed inset-0 lg:inset-auto z-[100]
+              ${containerClass}
+              ${isFullScreen ? 'max-w-full h-full rounded-none top-0 left-0' : (isSideView ? 'max-w-full lg:max-w-[calc(50%-1rem)] lg:h-[90vh] lg:rounded-2xl top-0 right-0 lg:top-auto lg:left-1/2' : 'max-w-6xl lg:h-[90vh] lg:rounded-2xl lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2')}
+            `}
             onClick={e => e.stopPropagation()}
         >
             {/* Main Content */}
@@ -524,80 +536,81 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                 </div>
             </div>
 
-            {/* Desktop Right Sidebar */}
-            <div className={`hidden lg:flex w-80 border-l p-6 flex-col flex-shrink-0 overflow-y-auto custom-scrollbar h-full ${sidebarClass}`}>
-                <div className="flex items-center justify-end gap-2 mb-8">
-                    <div className="flex items-center gap-2">
-                        {!isSideView && (
-                             <button onClick={() => setShowSideTaskPicker(true)} className={`p-2 rounded transition-colors ${iconHover}`} title="Side by Side View">
+            {/* Desktop Right Sidebar - Conditionally Rendered */}
+            {!isSideView && (
+              <div className={`hidden lg:flex w-80 border-l p-6 flex-col flex-shrink-0 overflow-y-auto custom-scrollbar h-full ${sidebarClass}`}>
+                  <div className="flex items-center justify-end gap-2 mb-8">
+                      <div className="flex items-center gap-2">
+                          {!isSideView && (
+                              <button onClick={() => setShowSideTaskPicker(true)} className={`p-2 rounded transition-colors ${iconHover}`} title="Side by Side View">
                                 <Columns size={18} />
-                             </button>
-                        )}
-                        <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
-                          {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-                        </button>
-                        {!isReadOnly && <button className={`p-2 rounded transition-colors ${iconHover}`}><MoreHorizontal size={18}/></button>}
-                        <button onClick={onClose} className={`p-2 rounded transition-colors ${iconHover}`}><X size={18}/></button>
-                    </div>
-                </div>
-                
-                <div className={isReadOnly ? 'pointer-events-none opacity-80' : ''}>
-                    <PropertiesSection 
-                        properties={properties}
-                        updateProperty={handleUpdateProperty}
-                        isLight={isLight}
-                        tasks={allTasks} 
-                        currentTaskId={task.id}
-                        showParentPicker={showParentPicker}
-                        setShowParentPicker={setShowParentPicker}
-                        members={members}
-                    />
-                </div>
+                              </button>
+                          )}
+                          <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
+                            {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                          </button>
+                          {!isReadOnly && <button className={`p-2 rounded transition-colors ${iconHover}`}><MoreHorizontal size={18}/></button>}
+                          <button onClick={onClose} className={`p-2 rounded transition-colors ${iconHover}`}><X size={18}/></button>
+                      </div>
+                  </div>
+                  
+                  <div className={isReadOnly ? 'pointer-events-none opacity-80' : ''}>
+                      <PropertiesSection 
+                          properties={properties}
+                          updateProperty={handleUpdateProperty}
+                          isLight={isLight}
+                          tasks={allTasks} 
+                          currentTaskId={task.id}
+                          showParentPicker={showParentPicker}
+                          setShowParentPicker={setShowParentPicker}
+                          members={members}
+                      />
+                  </div>
 
-                {/* Subtasks Section */}
-                <div className="mt-8">
-                    <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
-                        <Layers size={14} />
-                        {getSubtasksLabel()}
-                    </h3>
-                    {subTasks.length > 0 && (
-                        <div className="mb-4 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-                            <div 
-                                className="h-full bg-brand-500 transition-all duration-500" 
-                                style={{ width: `${(subTasks.filter(t => t.status === 'Done').length / subTasks.length) * 100}%` }} 
-                            />
-                        </div>
-                    )}
-                    <div className="space-y-2">
-                        {subTasks.length === 0 && (
-                            <div className={`text-xs italic pl-6 ${textMuted}`}>No subtasks yet.</div>
-                        )}
-                        {subTasks.map(sub => (
-                            <div key={sub.id} className={`p-3 rounded-xl border transition-all group cursor-pointer hover:border-brand-500/30 ${isLight ? 'bg-slate-50 border-slate-100 hover:bg-white' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className={`text-[10px] font-mono ${textMuted}`}>{sub.id}</span>
-                                    <StatusBadge status={sub.status} />
-                                </div>
-                                <div className={`text-sm font-medium leading-tight line-clamp-2 ${textMain}`}>{sub.title}</div>
-                            </div>
-                        ))}
-                        {!isReadOnly && (
-                            <button 
-                                onClick={() => onAddSubTask({ 
-                                    parentId: task.id, 
-                                    title: 'New Task',
-                                    type: getChildType(task.type), 
-                                    position: { x: task.position.x + 50, y: task.position.y + 50 } 
-                                })}
-                                className={`w-full py-2 mt-2 rounded-lg border border-dashed text-xs font-bold flex items-center justify-center gap-2 transition-colors ${isLight ? 'border-slate-300 text-slate-500 hover:bg-slate-50' : 'border-white/20 text-slate-400 hover:bg-white/5'}`}
-                            >
-                                <Plus size={14} /> Add {getSubtasksLabel().slice(0, -1)}
-                            </button>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
+                  {/* Subtasks Section */}
+                  <div className="mt-8">
+                      <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
+                          <Layers size={14} />
+                          {getSubtasksLabel()}
+                      </h3>
+                      {subTasks.length > 0 && (
+                          <div className="mb-4 h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
+                              <div 
+                                  className="h-full bg-brand-500 transition-all duration-500" 
+                                  style={{ width: `${(subTasks.filter(t => t.status === 'Done').length / subTasks.length) * 100}%` }} 
+                              />
+                          </div>
+                      )}
+                      <div className="space-y-2">
+                          {subTasks.length === 0 && (
+                              <div className={`text-xs italic pl-6 ${textMuted}`}>No subtasks yet.</div>
+                          )}
+                          {subTasks.map(sub => (
+                              <div key={sub.id} className={`p-3 rounded-xl border transition-all group cursor-pointer hover:border-brand-500/30 ${isLight ? 'bg-slate-50 border-slate-100 hover:bg-white' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                                  <div className="flex justify-between items-start mb-1">
+                                      <span className={`text-[10px] font-mono ${textMuted}`}>{sub.id}</span>
+                                      <StatusBadge status={sub.status} />
+                                  </div>
+                                  <div className={`text-sm font-medium leading-tight line-clamp-2 ${textMain}`}>{sub.title}</div>
+                              </div>
+                          ))}
+                          {!isReadOnly && (
+                              <button 
+                                  onClick={() => onAddSubTask({ 
+                                      parentId: task.id, 
+                                      title: 'New Task',
+                                      type: getChildType(task.type), 
+                                      position: { x: task.position.x + 50, y: task.position.y + 50 } 
+                                  })}
+                                  className={`w-full py-2 mt-2 rounded-lg border border-dashed text-xs font-bold flex items-center justify-center gap-2 transition-colors ${isLight ? 'border-slate-300 text-slate-500 hover:bg-slate-50' : 'border-white/20 text-slate-400 hover:bg-white/5'}`}
+                              >
+                                  <Plus size={14} /> Add {getSubtasksLabel().slice(0, -1)}
+                              </button>
+                          )}
+                      </div>
+                  </div>
+              </div>
+            )}
         </div>
 
         {/* Resource Picker Integration */}

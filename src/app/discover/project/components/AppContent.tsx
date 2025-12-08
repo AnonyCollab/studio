@@ -388,32 +388,37 @@ export const AppContent: React.FC = () => {
             theme={theme}
         />
 
-        {/* Global Document Modal */}
-        {selectedTask && isModalOpen && (
-            <DocumentModal 
-                task={selectedTask}
-                tasks={tasks}
-                currentUser={currentUser}
-                onClose={() => selectTask(null, false)}
-                onUpdate={(id, updates) => updateTask(id, updates)}
-                onAddSubTask={(taskData) => addTask(taskData)}
-                theme={theme}
-                projectId={projectId}
-            />
-        )}
-        
-        {sideSelectedTask && (
-            <DocumentModal 
-                task={sideSelectedTask}
-                tasks={tasks}
-                currentUser={currentUser}
-                onClose={() => closeSideTask && closeSideTask()}
-                onUpdate={(id, updates) => updateTask(id, updates)}
-                onAddSubTask={(taskData) => addTask(taskData)}
-                theme={theme}
-                projectId={projectId}
-                isSideView={true}
-            />
+        {/* Global Document Modal Container */}
+        {(selectedTask || sideSelectedTask) && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 lg:p-4">
+                {selectedTask && isModalOpen && (
+                    <DocumentModal 
+                        task={selectedTask}
+                        tasks={tasks}
+                        currentUser={currentUser}
+                        onClose={() => selectTask(null, false)}
+                        onUpdate={(id, updates) => updateTask(id, updates)}
+                        onAddSubTask={(taskData) => addTask(taskData)}
+                        theme={theme}
+                        projectId={projectId}
+                        isSideView={!!sideSelectedTask}
+                    />
+                )}
+                
+                {sideSelectedTask && (
+                    <DocumentModal 
+                        task={sideSelectedTask}
+                        tasks={tasks}
+                        currentUser={currentUser}
+                        onClose={() => closeSideTask && closeSideTask()}
+                        onUpdate={(id, updates) => updateTask(id, updates)}
+                        onAddSubTask={(taskData) => addTask(taskData)}
+                        theme={theme}
+                        projectId={projectId}
+                        isSideView={true}
+                    />
+                )}
+            </div>
         )}
     </main>
   );
