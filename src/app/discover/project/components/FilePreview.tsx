@@ -67,7 +67,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
             return (
                 <div className={`flex flex-col items-center justify-center text-center p-8 rounded-lg ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
                     <h3 className={`text-lg font-bold ${isLight ? 'text-gray-800' : 'text-white'}`}>No Preview Available</h3>
-                    <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>This file has no content to display.</p>
+                    <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>It may have been moved, edited, or deleted.</p>
                 </div>
             );
         }
@@ -90,7 +90,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
             <div className={`flex flex-col items-center justify-center text-center p-8 rounded-lg ${isLight ? 'bg-gray-100' : 'bg-white/5'}`}>
                 <div className={`mb-4 ${isLight ? 'text-gray-400' : 'text-gray-500'}`}>{getFileIcon(file.fileType, 64)}</div>
                 <h3 className={`text-lg font-bold ${isLight ? 'text-gray-800' : 'text-white'}`}>
-                    {isOfficeDoc ? 'Office Document' : 'No Preview Available'}
+                  {isOfficeDoc ? 'Office Document' : 'No Preview Available'}
                 </h3>
                 <p className={`text-sm mb-6 ${isLight ? 'text-gray-500' : 'text-gray-400'}`}>
                   This file type can't be shown here, but you can download it to view.
@@ -110,7 +110,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                isSideView ? 'lg:h-full lg:rounded-r-2xl lg:rounded-l-none' : 'lg:h-[90vh] lg:rounded-2xl',
+                isSideView ? 'lg:h-full lg:rounded-l-none lg:rounded-r-2xl' : 'lg:h-[90vh] lg:rounded-2xl',
                 isSideView && !isLight ? 'lg:border-l-0' : ''
             )}
         >

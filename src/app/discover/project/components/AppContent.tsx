@@ -404,11 +404,12 @@ export const AppContent: React.FC = () => {
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
               onClick={closeAllModals}
             />
-            <div className="relative w-full h-full lg:h-auto flex items-center justify-center">
+            <div className="relative w-full h-full lg:h-[90vh] flex items-center justify-center">
               {isModalOpen && selectedTask && (
                 <div
                   className={`
-                    w-full h-full lg:h-auto 
+                    h-full
+                    w-full
                     ${sideSelectedTask || sideSelectedResource ? 'lg:w-1/2' : 'lg:w-full'}
                   `}
                 >
@@ -422,11 +423,12 @@ export const AppContent: React.FC = () => {
                     onUpdateTaskConnections={onUpdateTaskConnections}
                     theme={theme}
                     projectId={projectId}
+                    isSideView={!!sideSelectedTask || !!sideSelectedResource}
                   />
                 </div>
               )}
               {sideSelectedTask && (
-                <div className="hidden lg:block w-full h-full lg:h-auto lg:w-1/2">
+                <div className="hidden lg:block w-1/2 h-full lg:h-full">
                   <DocumentModal
                     task={sideSelectedTask}
                     tasks={tasks}
@@ -442,7 +444,7 @@ export const AppContent: React.FC = () => {
                 </div>
               )}
               {sideSelectedResource && (
-                 <div className="hidden lg:block w-full h-full lg:h-auto lg:w-1/2">
+                 <div className="hidden lg:block w-1/2 h-full lg:h-full">
                     <FilePreview 
                         file={sideSelectedResource}
                         isOpen={!!sideSelectedResource}

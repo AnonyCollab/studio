@@ -137,7 +137,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       const newAttachment: Attachment = {
           id: file.id || `RES-${Math.random()}`,
           name: file.name || 'Unknown File',
-          type: file.type || 'File'
+          type: file.type || 'file'
       };
       onUpdate(task.id, { attachments: [...(task.attachments || []), newAttachment] });
       setShowResourcePicker(false);
@@ -377,10 +377,10 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
     <>
         <div 
             className={`
-              w-full h-full lg:h-[90vh] flex flex-col lg:flex-row overflow-hidden border transition-all duration-300
+              w-full h-full flex flex-col overflow-hidden border transition-all duration-300
               lg:rounded-2xl
-              ${containerClass}
               ${isSideView ? 'lg:border-l-0 lg:rounded-l-none' : ''}
+              ${isSideView ? '' : 'lg:border-r-0 lg:rounded-r-none'}
             `}
             onClick={e => e.stopPropagation()}
         >
