@@ -4,7 +4,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
 import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File as FileIcon, Video, Archive, Plus, ChevronRight, Edit, Upload, Trash2 } from 'lucide-react';
-import { useStore } from '../store/useStore';
+import { useStore } from '../../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FilePreview } from './FilePreview';
@@ -219,7 +219,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                         <DropdownMenuContent align="end" className={isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}>
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                     <DropdownMenuItem onSelect={(e) => {e.preventDefault(); e.stopPropagation();}} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
                                                         <Trash2 size={14} className="mr-2" /> Delete Folder
                                                     </DropdownMenuItem>
                                                 </AlertDialogTrigger>
@@ -305,7 +305,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                             )}
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
-                                                                     <DropdownMenuItem onSelect={(e) => {e.preventDefault(); e.stopPropagation()}} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
                                                                         <Trash2 size={14} className="mr-2" /> Delete
                                                                     </DropdownMenuItem>
                                                                 </AlertDialogTrigger>
