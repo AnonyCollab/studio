@@ -60,7 +60,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
     
     const currentItems = useMemo(() => {
         const items = files.filter(file => file.parentId === currentFolderId);
-        if (resourcesView === 'All') {
+        if (!resourcesView || resourcesView === 'All') {
             return items;
         }
         if (resourcesView === 'Folders') {
@@ -226,7 +226,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                     </div>
                                      <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={(e) => { e.stopPropagation(); }}>
                                                 <MoreVertical size={16} />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -245,7 +245,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                         </AlertDialogDescription>
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
-                                                        <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'}>Cancel</AlertDialogCancel>
+                                                        <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'} onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                                                         <AlertDialogAction onClick={(e) => { e.stopPropagation(); deleteFile(folder.id);}} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
@@ -307,7 +307,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                 <div className="col-span-1 flex justify-end">
                                                      <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={(e) => e.stopPropagation()}>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); }}>
                                                                 <MoreVertical size={16} />
                                                             </Button>
                                                         </DropdownMenuTrigger>
@@ -331,7 +331,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                                         </AlertDialogDescription>
                                                                     </AlertDialogHeader>
                                                                     <AlertDialogFooter>
-                                                                        <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'}>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'} onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
                                                                         <AlertDialogAction onClick={(e) => { e.stopPropagation(); deleteFile(file.id); }} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                                                     </AlertDialogFooter>
                                                                 </AlertDialogContent>
