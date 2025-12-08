@@ -1,15 +1,13 @@
-
 rules_version = '2';
 
 service firebase.storage {
   match /b/{bucket}/o {
 
     // Allow authenticated users to upload files up to 5MB.
-    // Security for who can see which files is handled by Firestore rules,
-    // as the download URL will be stored in a protected Firestore document.
-    match /projects/{projectId}/resources/{userId}/{fileId}/{allPaths=**} {
-        allow read: if true; // Anyone with the URL can read.
-        allow write: if request.auth != null && request.auth.uid == userId && request.resource.size < 5 * 1024 * 1024;
+    // Access control is managed through Firestore, which stores the download URLs.
+    match /projects/{projectId}/resources/{allPaths=**} {
+        allow read; // Allows public read access to files via URL
+        allow write: if request.auth != null && request.resource.size < 5 * 1024 * 1024;
     }
 
     // Legacy rules for DMs, can be kept or updated.
