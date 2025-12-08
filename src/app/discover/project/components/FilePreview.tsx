@@ -8,7 +8,7 @@ import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText,
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { ResourcePickerModal } from './DocumentModal/ResourcePickerModal';
-import { useStore } from '../store/useStore';
+import { useStore } from '../store/useStore.tsx';
 
 const Editor = dynamic(() => import('@/app/news/components/Editor'), { 
     ssr: false,
@@ -38,6 +38,7 @@ interface FilePreviewProps {
     onSelectAttachment?: (file: FileItem) => void;
     onUpdateAttachments?: (newAttachment: Attachment) => void;
     onDetachResource?: (resourceId: string) => void;
+    onUpdate?: (id: string, updates: Partial<FileItem>) => void;
 }
 
 
@@ -49,8 +50,10 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     attachments = [], 
     onSelectAttachment,
     onUpdateAttachments,
-    onDetachResource
+    onDetachResource,
+    onUpdate
 }) => {
+    console.log('[FilePreview] Received file object:', file);
     const isLight = theme === 'light';
     const isImage = file.fileType?.startsWith('image/');
     const isVideo = file.fileType?.startsWith('video/');
@@ -74,8 +77,18 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     ) && !isOfficeDoc;
 
     const renderPreview = () => {
+        console.log(`[FilePreview] renderPreview called. isBlockNote: ${isBlockNote}, file.content exists: ${!!file.content}`);
         if (isBlockNote && file.content) {
-            return <Editor initialContent={file.content} editable={false} collaborationId={file.id} />;
+            return <Editor 
+                initialContent={file.content} 
+                editable={true} 
+                collaborationId={file.id} 
+                onChange={(newContent) => {
+                    if (onUpdate) {
+                        onUpdate(file.id, { content: newContent });
+                    }
+                }} 
+            />;
         }
         if (!file.url) {
             return (
@@ -134,7 +147,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                isSideView ? "lg:rounded-none" : "lg:rounded-xl"
+                isSideView ? "lg:rounded-l-none" : "lg:rounded-xl"
             )}
         >
             <div className={`flex flex-row items-center justify-between p-2 pl-3 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>

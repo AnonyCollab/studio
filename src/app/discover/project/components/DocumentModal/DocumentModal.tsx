@@ -250,11 +250,12 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
   const renderResources = () => (
     <div className="space-y-2">
       {(task.attachments || []).map(att => {
-        const file = files.find(f => f.id === att.id || f.name === att.name);
+        const file = files.find(f => f.id === att.id);
         return (
             <button 
                 key={att.id} 
                 onClick={() => {
+                  console.log('[DocumentModal] Attachment clicked:', { attachment: att, fullFile: file });
                   if (selectSideResource && file) {
                       selectSideResource(file);
                   }
@@ -416,7 +417,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
             className={cn(
                 "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
                 containerClass,
-                isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl",
+                isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl lg:rounded-r-none",
                 isSideView ? "lg:rounded-l-none" : ""
               )}
             onClick={e => e.stopPropagation()}
