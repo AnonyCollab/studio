@@ -410,12 +410,12 @@ export const AppContent: React.FC = () => {
         {/* Global Document Modal Container */}
         {isAnyModalOpen && (
           <div
-            className={cn("fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center", !isFullScreen && "bg-black/60 backdrop-blur-sm")}
+            className={cn("fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center", !isMainTaskFullScreen && "bg-black/60 backdrop-blur-sm")}
             onClick={handleCloseAllModals}
           >
              <div className={cn(
                   "relative w-full h-full flex items-center justify-center",
-                  !isFullScreen && "lg:max-w-7xl lg:h-[90vh]",
+                  !isMainTaskFullScreen && "lg:max-w-7xl lg:h-[90vh]",
               )}>
                 
                 {selectedTask && (
