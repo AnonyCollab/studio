@@ -1,17 +1,17 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '../../store/useStore';
-import { Attachment, Theme } from '../../types';
-import { Archive, File, FileText, Folder, Image, Link, Search, CheckCircle2, Video, X } from 'lucide-react';
+import { Attachment, Theme, FileItem } from '../../types';
+import { Archive, File, FileText, Folder, Image as ImageIcon, Link, Search, CheckCircle2, Video, X } from 'lucide-react';
 
 
 export const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
     if (type === 'application/json') return <FileText size={size} />;
     if (!type) return <File size={size} />;
-    if (type.startsWith('image/')) return <Image size={size} />;
+    if (type.startsWith('image/')) return <ImageIcon size={size} />;
     if (type.startsWith('video/')) return <Video size={size} />;
     if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
     if (type.includes('pdf')) return <FileText size={size} />;
