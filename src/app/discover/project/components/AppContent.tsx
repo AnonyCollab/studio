@@ -33,9 +33,9 @@ export const AppContent: React.FC = () => {
   
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
-      selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, onUpdateTaskConnections, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
+      selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
-      isStoreLoading, projectData, projectId, sideSelectedResource, selectSideResource, closeSideResource
+      isStoreLoading, projectData, projectId, sideSelectedResource, selectSideResource, closeSideResource, onUpdateTaskConnections
   } = store;
   
   const [viewedProfile, setViewedProfile] = useState<Assignee | null>(null);
@@ -413,12 +413,12 @@ export const AppContent: React.FC = () => {
         {/* Global Document Modal Container */}
         {isAnyModalOpen && (
           <div
-            className={cn("fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center", !isMainTaskFullScreen && "bg-black/60 backdrop-blur-sm")}
+            className={cn("fixed inset-0 z-[100] flex items-center justify-center", !isMainTaskFullScreen && "bg-black/60 backdrop-blur-sm lg:p-4")}
             onClick={handleCloseAllModals}
           >
              <div className={cn(
-                  "relative w-full flex items-center justify-center h-full lg:h-[90vh]",
-                  !isMainTaskFullScreen && "lg:max-w-7xl",
+                  "relative w-full flex items-center justify-center h-full",
+                  !isMainTaskFullScreen && "lg:max-w-7xl lg:h-[90vh]",
               )}>
                 
                 {selectedTask && (

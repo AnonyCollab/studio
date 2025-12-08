@@ -13,6 +13,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AddFromUrlDialog } from './AddFromUrlDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { v4 as uuidv4 } from 'uuid';
+import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { useToast } from '@/hooks/use-toast';
 
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
@@ -40,7 +42,7 @@ interface ResourcesProps {
 }
 
 export const Resources: React.FC<ResourcesProps> = () => {
-    const { files, addFile, deleteFile, resourcePath, setResourcePath, currentUser, theme, resourcesView } = useStore();
+    const { files, addFile, deleteFile, resourcePath, setResourcePath, currentUser, theme, resourcesView, projectId } = useStore();
     useEffect(() => {
         console.log("Current user role in ResourcesPage:", currentUser?.role);
     }, [currentUser]);
@@ -51,6 +53,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
     const [isCreatingFile, setIsCreatingFile] = useState(false);
     const [newFileId, setNewFileId] = useState<string | null>(null);
     const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
+    const { toast } = useToast();
     
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
     const cardClass = isLight ? "bg-white/80 border-black/5 hover:bg-white" : "bg-[#18181b]/80 border-white/5 hover:bg-[#202023]";
@@ -115,15 +118,62 @@ export const Resources: React.FC<ResourcesProps> = () => {
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file) return;
-        addFile({
-            name: file.name,
-            type: 'file',
-            fileType: file.type,
-            size: `${(file.size / 1024).toFixed(2)} KB`,
-            parentId: currentFolderId,
-            url: URL.createObjectURL(file)
+        if (!file || !projectId) return;
+
+        toast({
+            title: "Uploading file...",
+            description: `"${file.name}" is being uploaded.`,
         });
+
+        const storage = getStorage();
+        const fileId = uuidv4();
+        const filePath = `projects/${projectId}/resources/${fileId}/${file.name}`;
+        const fileStorageRef = storageRef(storage, filePath);
+
+        const uploadTask = uploadBytesResumable(fileStorageRef, file);
+
+        uploadTask.on('state_changed',
+          (snapshot) => {
+            // Optional: Can be used to show upload progress
+          },
+          (error) => {
+            console.error("Upload failed:", error);
+            toast({
+                title: "Upload Failed",
+                description: `Could not upload "${file.name}". Please try again.`,
+                variant: "destructive",
+            });
+          },
+          async () => {
+            try {
+              const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+              
+              // Add file metadata to Firestore
+              addFile({
+                id: fileId,
+                name: file.name,
+                type: 'file',
+                fileType: file.type,
+                size: `${(file.size / 1024).toFixed(2)} KB`,
+                parentId: currentFolderId,
+                url: downloadURL
+              });
+
+              toast({
+                title: "Upload Complete",
+                description: `"${file.name}" has been successfully uploaded.`,
+              });
+
+            } catch (error) {
+                console.error("Failed to get download URL or save to Firestore:", error);
+                toast({
+                    title: "Error Finalizing Upload",
+                    description: "The file was uploaded but could not be saved to the project.",
+                    variant: "destructive",
+                });
+            }
+          }
+        );
     }
 
     const handleSaveNewFile = (id: string, name: string, content: string) => {
