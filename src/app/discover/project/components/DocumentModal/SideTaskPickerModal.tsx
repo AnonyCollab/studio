@@ -8,6 +8,7 @@ import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getFileIcon } from './ResourcePickerModal';
+import { Input } from '@/components/ui/input';
 
 interface SideTaskPickerModalProps {
   onClose: () => void;
