@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 interface SideTaskPickerModalProps {
   onClose: () => void;
   onSelectTask: (taskId: string) => void;
-  onSelectResource: (resourceId: string) => void;
+  onSelectResource: (resource: FileItem) => void;
   tasks: TaskNode[];
   currentTaskId: string;
   isLight: boolean;
@@ -100,7 +100,7 @@ export function SideTaskPickerModal({ onClose, onSelectTask, onSelectResource, t
                 {filteredResources.map(file => (
                     <button
                         key={file.id}
-                        onClick={() => onSelectResource(file.id)}
+                        onClick={() => onSelectResource(file)}
                         className={`w-full flex items-center gap-3 px-3 py-2 transition-colors rounded-lg text-left ${itemHover}`}
                     >
                         <div className={`w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center ${isLight ? 'bg-slate-100 text-slate-500' : 'bg-white/5 text-slate-400'}`}>

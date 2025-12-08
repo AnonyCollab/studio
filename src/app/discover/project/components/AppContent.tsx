@@ -34,7 +34,7 @@ export const AppContent: React.FC = () => {
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
-      isStoreLoading, projectData, projectId, onUpdateTaskConnections, sideSelectedResourceId, selectSideResource, closeSideResource
+      isStoreLoading, projectData, projectId, onUpdateTaskConnections, sideSelectedResource, selectSideResource, closeSideResource
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
@@ -153,7 +153,6 @@ export const AppContent: React.FC = () => {
   
   const selectedTask = useMemo(() => tasks.find(t => t.id === selectedTaskId), [tasks, selectedTaskId]);
   const sideSelectedTask = useMemo(() => tasks.find(t => t.id === sideSelectedTaskId), [tasks, sideSelectedTaskId]);
-  const sideSelectedResource = useMemo(() => files.find(f => f.id === sideSelectedResourceId), [files, sideSelectedResourceId]);
 
   // --- Exclusive Toggle Logic ---
   const closeAllMenus = useCallback(() => {
@@ -230,7 +229,7 @@ export const AppContent: React.FC = () => {
     );
   }
 
-  const isSideBySideOpen = sideSelectedTask || sideSelectedResource;
+  const isAnyModalOpen = isModalOpen || sideSelectedTask || sideSelectedResource;
 
   const closeAllModals = () => {
     selectTask(null, false);
@@ -399,7 +398,7 @@ export const AppContent: React.FC = () => {
         />
 
         {/* Global Document Modal Container */}
-        {(isModalOpen || isSideBySideOpen) && (
+        {isAnyModalOpen && (
           <div className="fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center">
             <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
@@ -410,7 +409,7 @@ export const AppContent: React.FC = () => {
                 <div
                   className={`
                     w-full h-full lg:h-auto 
-                    ${isSideBySideOpen ? 'lg:w-1/2' : 'lg:w-full'}
+                    ${sideSelectedTask || sideSelectedResource ? 'lg:w-1/2' : 'lg:w-full'}
                   `}
                 >
                   <DocumentModal

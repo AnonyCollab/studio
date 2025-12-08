@@ -34,8 +34,8 @@ export interface ExtendedAppState extends AppState {
   sideSelectedTaskId: string | null;
   selectSideTask: (id: string | null) => void;
   closeSideTask: () => void;
-  sideSelectedResourceId: string | null;
-  selectSideResource: (id: string | null) => void;
+  sideSelectedResource: FileItem | null;
+  selectSideResource: (file: FileItem | null) => void;
   closeSideResource: () => void;
   setFocusedParentId: (id: string | null) => void;
   setDashboardView: (view: DashboardViewMode) => void;
@@ -78,7 +78,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     files: [],
     selectedTaskId: null,
     sideSelectedTaskId: null,
-    sideSelectedResourceId: null,
+    sideSelectedResource: null,
     selectedTaskIds: [],
     isModalOpen: false,
     viewMode: 'canvas',
@@ -485,19 +485,19 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   }, []);
 
   const selectSideTask = useCallback((id: string | null) => {
-    setState(prev => ({ ...prev, sideSelectedTaskId: id, sideSelectedResourceId: null }));
+    setState(prev => ({ ...prev, sideSelectedTaskId: id, sideSelectedResource: null }));
   }, []);
 
   const closeSideTask = useCallback(() => {
     setState(prev => ({ ...prev, sideSelectedTaskId: null }));
   }, []);
 
-  const selectSideResource = useCallback((id: string | null) => {
-    setState(prev => ({ ...prev, sideSelectedResourceId: id, sideSelectedTaskId: null }));
+  const selectSideResource = useCallback((file: FileItem | null) => {
+    setState(prev => ({ ...prev, sideSelectedResource: file, sideSelectedTaskId: null }));
   }, []);
   
   const closeSideResource = useCallback(() => {
-    setState(prev => ({ ...prev, sideSelectedResourceId: null }));
+    setState(prev => ({ ...prev, sideSelectedResource: null }));
   }, []);
 
   const setTheme = useCallback((theme: Theme) => {
