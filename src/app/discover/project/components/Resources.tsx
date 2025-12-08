@@ -4,7 +4,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { Theme, ResourcesViewMode, FileItem } from '../types';
 import { FileText, Link, Image, Download, Search, Folder, MoreVertical, File as FileIcon, Video, Archive, Plus, ChevronRight, Edit, Upload, Trash2 } from 'lucide-react';
-import { useStore } from '../../store/useStore';
+import { useStore } from '../store/useStore';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { FilePreview } from './FilePreview';
