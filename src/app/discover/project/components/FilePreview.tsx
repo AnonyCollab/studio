@@ -4,10 +4,11 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FileItem, Theme, Attachment } from '../types';
-import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText, Plus } from 'lucide-react';
+import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText, Plus, Folder } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 import { ResourcePickerModal } from './DocumentModal/ResourcePickerModal';
+import { useStore } from '../store/useStore';
 
 const Editor = dynamic(() => import('@/app/news/components/Editor'), { 
     ssr: false,
@@ -35,10 +36,19 @@ interface FilePreviewProps {
     isSideView?: boolean;
     attachments?: Attachment[];
     onSelectAttachment?: (file: FileItem) => void;
+    onUpdateAttachments?: (newAttachment: Attachment) => void;
 }
 
 
-export const FilePreview: React.FC<FilePreviewProps> = ({ file, onClose, theme, isSideView = false, attachments = [], onSelectAttachment }) => {
+export const FilePreview: React.FC<FilePreviewProps> = ({ 
+    file, 
+    onClose, 
+    theme, 
+    isSideView = false, 
+    attachments = [], 
+    onSelectAttachment,
+    onUpdateAttachments
+}) => {
     const isLight = theme === 'light';
     const isImage = file.fileType?.startsWith('image/');
     const isVideo = file.fileType?.startsWith('video/');
@@ -46,6 +56,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onClose, theme, 
     const isBlockNote = file.fileType === 'application/json';
     const isPdf = file.fileType === 'application/pdf';
     const [showResourcePicker, setShowResourcePicker] = useState(false);
+    const { selectedTask, updateTask } = useStore();
 
     const isOfficeDoc = file.fileType && (
         file.fileType.includes('msword') ||
@@ -105,13 +116,24 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onClose, theme, 
             </div>
         );
     };
+
+    const handleSelectResource = (resource: Partial<Attachment>) => {
+        if (!selectedTask || !onUpdateAttachments) return;
+         const newAttachment: Attachment = {
+            id: resource.id || `RES-${Math.random()}`,
+            name: resource.name || 'Unknown File',
+            type: resource.type || 'file'
+        };
+        onUpdateAttachments(newAttachment);
+        setShowResourcePicker(false);
+    };
     
     const content = (
         <div
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                isSideView ? "lg:rounded-l-none lg:rounded-r-xl" : "lg:rounded-xl"
+                 isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "lg:rounded-xl"
             )}
         >
             <div className={`flex flex-row items-center justify-between p-2 pl-3 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
@@ -153,13 +175,9 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onClose, theme, 
                 {renderPreview()}
             </div>
             {showResourcePicker && (
-                <ResourcePickerModal 
+                 <ResourcePickerModal 
                     onClose={() => setShowResourcePicker(false)}
-                    onSelect={(f) => {
-                        // This needs to be wired up to add the attachment to the task
-                        console.log("Selected resource to add:", f);
-                        setShowResourcePicker(false);
-                    }}
+                    onSelect={handleSelectResource}
                     isLight={isLight}
                 />
             )}
@@ -170,7 +188,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onClose, theme, 
         return content;
     }
 
-    // This part is for the modal (non-side-view) implementation, which is now deprecated for this component's use-case but kept for safety.
     return (
         <div
             className="fixed inset-0 z-[200] p-0 lg:p-4 flex items-center justify-center bg-black/60 backdrop-blur-sm"

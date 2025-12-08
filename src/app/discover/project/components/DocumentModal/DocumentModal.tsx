@@ -400,7 +400,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                 "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
                 containerClass,
                 isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl",
-                isSideView ? "lg:rounded-l-none" : "",
+                isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "",
                 !isSideView && isFullScreen === false && "lg:rounded-r-none"
               )}
             onClick={e => e.stopPropagation()}
@@ -577,7 +577,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                     setShowSideTaskPicker(false);
                 }}
                 onSelectResource={(file) => {
-                    selectSideResource(file);
+                    if (selectSideResource) selectSideResource(file);
                     setShowSideTaskPicker(false);
                 }}
                 isLight={isLight}

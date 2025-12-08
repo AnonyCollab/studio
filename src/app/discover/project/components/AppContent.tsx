@@ -469,6 +469,13 @@ export const AppContent: React.FC = () => {
                            isSideView={true}
                            attachments={selectedTask?.attachments || []}
                            onSelectAttachment={selectSideResource}
+                           onUpdateAttachments={(newAttachment) => {
+                             if(selectedTask) {
+                               updateTask(selectedTask.id, {
+                                 attachments: [...(selectedTask.attachments || []), newAttachment]
+                               })
+                             }
+                           }}
                        />
                    </div>
                 )}
