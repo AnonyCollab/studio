@@ -88,16 +88,15 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
   setIsFullScreen: setExternalFullScreen,
   selectSideResource
 }) => {
-  const { members, files, selectSideTask } = useStore();
+  const { members, files, selectSideTask, closeSideResource } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [showParentPicker, setShowParentPicker] = useState(false);
   const [showSideTaskPicker, setShowSideTaskPicker] = useState(false);
   const [activeTab, setActiveTab] = useState('comments');
-  const [isInternalFullScreen, setIsInternalFullScreen] = useState(false);
-
-  const isFullScreen = setExternalFullScreen !== undefined ? isExternalFullScreen : isInternalFullScreen;
-  const setIsFullScreen = setExternalFullScreen !== undefined ? setExternalFullScreen : setIsInternalFullScreen;
+  
+  const isFullScreen = setExternalFullScreen !== undefined ? isExternalFullScreen : false;
+  const setIsFullScreen = setExternalFullScreen !== undefined ? setExternalFullScreen : () => {};
 
   const task = allTasks.find(t => t.id === initialTask.id) || initialTask;
 
@@ -162,6 +161,19 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
       onUpdate(task.id, { attachments: [...(task.attachments || []), newAttachment] });
       setShowResourcePicker(false);
   };
+  
+    const handleDetachResource = (resourceId: string) => {
+        if (!task) return;
+        const updatedAttachments = (task.attachments || []).filter(att => att.id !== resourceId);
+        onUpdate(task.id, { attachments: updatedAttachments });
+
+        // If we close the currently viewed resource, close the side panel too
+        const { sideSelectedResource } = useStore.getState();
+        if (sideSelectedResource?.id === resourceId) {
+            closeSideResource();
+        }
+    };
+
 
   const properties = {
       status: task.status,
@@ -401,7 +413,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                 containerClass,
                 isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl",
                 isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "",
-                !isSideView && isFullScreen === false && "lg:rounded-r-none"
+                !isSideView && "lg:rounded-r-none"
               )}
             onClick={e => e.stopPropagation()}
         >

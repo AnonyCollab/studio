@@ -38,9 +38,9 @@ export const AppContent: React.FC = () => {
       isStoreLoading, projectData, projectId, onUpdateTaskConnections, sideSelectedResource, selectSideResource, closeSideResource
   } = store;
   
-  const [currentPage, setPage] = useState<Page>('roadmap');
   const [viewedProfile, setViewedProfile] = useState<Assignee | null>(null);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [isMainTaskFullScreen, setIsMainTaskFullScreen] = useState(false);
 
 
   // Lifted State for Mobile Overlays & Interactions
@@ -49,10 +49,11 @@ export const AppContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
   const [isCreationSheetOpen, setIsCreationSheetOpen] = useState(false);
-  const [isMainTaskFullScreen, setIsMainTaskFullScreen] = useState(false);
+  
 
 
   // Lifted Page States
+  const [currentPage, setPage] = useState<Page>('roadmap');
   const [dashboardView, setDashboardView] = useState<DashboardViewMode>('Personal');
   const [calendarView, setCalendarView] = useState<CalendarViewMode>('Month');
   const [calendarDate, setCalendarDate] = useState(new Date());
@@ -416,8 +417,8 @@ export const AppContent: React.FC = () => {
             onClick={handleCloseAllModals}
           >
              <div className={cn(
-                  "relative w-full h-full flex items-center justify-center",
-                  !isMainTaskFullScreen && "lg:max-w-7xl lg:h-[90vh]",
+                  "relative w-full flex items-center justify-center h-full lg:h-[90vh]",
+                  !isMainTaskFullScreen && "lg:max-w-7xl",
               )}>
                 
                 {selectedTask && (
@@ -440,7 +441,10 @@ export const AppContent: React.FC = () => {
                       isSideView={!!sideSelectedTask || !!sideSelectedResource}
                       isFullScreen={isMainTaskFullScreen}
                       setIsFullScreen={setIsMainTaskFullScreen}
-                      selectSideResource={selectSideResource}
+                      selectSideResource={(file) => {
+                         const fullFile = files.find(f => f.id === file.id);
+                         if(fullFile) selectSideResource(fullFile);
+                      }}
                     />
                   </div>
                 )}
@@ -471,10 +475,8 @@ export const AppContent: React.FC = () => {
                            isSideView={true}
                            attachments={selectedTask?.attachments || []}
                            onSelectAttachment={(attachment) => {
-                             const fullFile = files.find(f => f.id === attachment.id);
-                             if (fullFile) {
-                               selectSideResource(fullFile);
-                             }
+                                const fullFile = files.find(f => f.id === attachment.id);
+                                if (fullFile) selectSideResource(fullFile);
                            }}
                            onUpdateAttachments={(newAttachment) => {
                              if(selectedTask) {
@@ -482,6 +484,15 @@ export const AppContent: React.FC = () => {
                                  attachments: [...(selectedTask.attachments || []), newAttachment]
                                })
                              }
+                           }}
+                           onDetachResource={(resourceId) => {
+                                if (selectedTask) {
+                                    const updatedAttachments = (selectedTask.attachments || []).filter(att => att.id !== resourceId);
+                                    updateTask(selectedTask.id, { attachments: updatedAttachments });
+                                }
+                                if (sideSelectedResource?.id === resourceId) {
+                                    closeSideResource();
+                                }
                            }}
                        />
                    </div>

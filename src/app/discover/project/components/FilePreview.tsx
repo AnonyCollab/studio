@@ -37,6 +37,7 @@ interface FilePreviewProps {
     attachments?: Attachment[];
     onSelectAttachment?: (file: FileItem) => void;
     onUpdateAttachments?: (newAttachment: Attachment) => void;
+    onDetachResource?: (resourceId: string) => void;
 }
 
 
@@ -47,7 +48,8 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     isSideView = false, 
     attachments = [], 
     onSelectAttachment,
-    onUpdateAttachments
+    onUpdateAttachments,
+    onDetachResource
 }) => {
     const isLight = theme === 'light';
     const isImage = file.fileType?.startsWith('image/');
@@ -56,7 +58,6 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     const isBlockNote = file.fileType === 'application/json';
     const isPdf = file.fileType === 'application/pdf';
     const [showResourcePicker, setShowResourcePicker] = useState(false);
-    const { selectedTask, updateTask } = useStore();
 
     const isOfficeDoc = file.fileType && (
         file.fileType.includes('msword') ||
@@ -74,7 +75,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
 
     const renderPreview = () => {
         if (isBlockNote && file.content) {
-            return <Editor initialContent={file.content} editable={false} />;
+            return <Editor initialContent={file.content} editable={false} collaborationId={file.id} />;
         }
         if (!file.url) {
             return (
@@ -118,7 +119,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     };
 
     const handleSelectResource = (resource: Partial<Attachment>) => {
-        if (!selectedTask || !onUpdateAttachments) return;
+        if (!onUpdateAttachments) return;
          const newAttachment: Attachment = {
             id: resource.id || `RES-${Math.random()}`,
             name: resource.name || 'Unknown File',
@@ -133,7 +134,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                 isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "lg:rounded-xl"
+                isSideView ? "lg:rounded-l-none lg:rounded-r-none" : "lg:rounded-xl"
             )}
         >
             <div className={`flex flex-row items-center justify-between p-2 pl-3 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
@@ -144,12 +145,20 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                                 key={att.id}
                                 onClick={() => onSelectAttachment?.(att as FileItem)}
                                 className={cn(
-                                    "flex items-center gap-2 px-3 py-1.5 rounded-md transition-colors whitespace-nowrap",
+                                    "flex items-center gap-2 pr-1 pl-3 py-1.5 rounded-md transition-colors whitespace-nowrap group",
                                     file.id === att.id ? (isLight ? 'bg-slate-100' : 'bg-white/10') : (isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5')
                                 )}
                             >
                                 {getFileIcon(att.type, 14)}
                                 <span className={cn("text-xs font-medium", isLight ? 'text-slate-700' : 'text-slate-300')}>{att.name}</span>
+                                {onDetachResource && (
+                                    <span 
+                                        onClick={(e) => { e.stopPropagation(); onDetachResource(att.id); }}
+                                        className="p-1 rounded-full text-transparent group-hover:text-slate-400 hover:!text-red-500 hover:bg-red-500/10"
+                                    >
+                                        <X size={12}/>
+                                    </span>
+                                )}
                             </button>
                         ))}
                          <button onClick={() => setShowResourcePicker(true)} className={cn("p-2 rounded-md", isLight ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/10 text-slate-400')}>
