@@ -27,6 +27,8 @@ interface DocumentModalProps {
   theme: Theme;
   projectId: string | null;
   isSideView?: boolean;
+  isFullScreen?: boolean;
+  setIsFullScreen?: (isFullScreen: boolean) => void;
 }
 
 const MobileSection: React.FC<{ title: string, children: React.ReactNode, defaultOpen?: boolean, isLight: boolean }> = ({ title, children, defaultOpen = false, isLight }) => {
@@ -70,7 +72,20 @@ const STATUS_VALUES: Status[] = ['Backlog', 'In Progress', 'Review', 'Done'];
 const PRIORITY_VALUES: Priority[] = ['Low', 'Medium', 'High', 'Critical'];
 
 
-export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onUpdateTaskConnections, onAddSubTask, theme, projectId, isSideView = false }) => {
+export const DocumentModal: React.FC<DocumentModalProps> = ({ 
+  task: initialTask, 
+  tasks: allTasks = [], 
+  currentUser, 
+  onClose, 
+  onUpdate, 
+  onUpdateTaskConnections, 
+  onAddSubTask, 
+  theme, 
+  projectId, 
+  isSideView = false,
+  isFullScreen: isExternalFullScreen = false,
+  setIsFullScreen: setExternalFullScreen
+}) => {
   const { members, files, selectSideTask, selectSideResource } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
@@ -78,8 +93,11 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   const [showSideTaskPicker, setShowSideTaskPicker] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [activeTab, setActiveTab] = useState('comments');
-  const [isFullScreen, setIsFullScreen] = useState(false);
-  
+  const [isInternalFullScreen, setIsInternalFullScreen] = useState(false);
+
+  const isFullScreen = setExternalFullScreen !== undefined ? isExternalFullScreen : isInternalFullScreen;
+  const setIsFullScreen = setExternalFullScreen !== undefined ? setExternalFullScreen : setIsInternalFullScreen;
+
   const task = allTasks.find(t => t.id === initialTask.id) || initialTask;
 
 
@@ -380,7 +398,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
             className={cn(
                 "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
                 containerClass,
-                isSideView ? "lg:rounded-none" : "lg:rounded-2xl"
+                isFullScreen ? "lg:rounded-none" : "lg:rounded-2xl",
+                isSideView && "lg:rounded-l-none",
+                !isSideView && isFullScreen === false && "lg:rounded-r-none"
               )}
             onClick={e => e.stopPropagation()}
         >
@@ -422,9 +442,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                              <button onClick={() => setShowSideTaskPicker(true)} className={`p-2 rounded transition-colors ${iconHover}`} title="Side by Side View">
                                 <Columns size={18} />
                               </button>
-                          <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
-                            {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-                          </button>
+                              <button onClick={() => setIsFullScreen && setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
+                                  {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                              </button>
                           {!isReadOnly && <button className={`p-2 rounded transition-colors ${iconHover}`}><MoreHorizontal size={18}/></button>}
                           <button onClick={onClose} className={`p-2 rounded transition-colors ${iconHover}`}><X size={18}/></button>
                         </div>
@@ -564,8 +584,8 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                     selectSideTask(id);
                     setShowSideTaskPicker(false);
                 }}
-                onSelectResource={(id) => {
-                    selectSideResource(id);
+                onSelectResource={(file) => {
+                    selectSideResource(file);
                     setShowSideTaskPicker(false);
                 }}
                 isLight={isLight}

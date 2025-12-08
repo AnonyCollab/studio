@@ -49,6 +49,8 @@ export const AppContent: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isViewMenuOpen, setIsViewMenuOpen] = useState(false);
   const [isCreationSheetOpen, setIsCreationSheetOpen] = useState(false);
+  const [isMainTaskFullScreen, setIsMainTaskFullScreen] = useState(false);
+
 
   // Lifted Page States
   const [dashboardView, setDashboardView] = useState<DashboardViewMode>('Personal');
@@ -155,6 +157,19 @@ export const AppContent: React.FC = () => {
   const selectedTask = useMemo(() => tasks.find(t => t.id === selectedTaskId), [tasks, selectedTaskId]);
   const sideSelectedTask = useMemo(() => tasks.find(t => t.id === sideSelectedTaskId), [tasks, sideSelectedTaskId]);
 
+  const handleCloseSideResource = () => {
+    closeSideResource();
+    setIsMainTaskFullScreen(true); // Expand main task when side resource closes
+  };
+  
+  const handleCloseAllModals = () => {
+    selectTask(null, false);
+    closeSideTask();
+    closeSideResource();
+    setIsMainTaskFullScreen(false); // Reset fullscreen state
+  };
+
+
   // --- Exclusive Toggle Logic ---
   const closeAllMenus = useCallback(() => {
       setIsSidebarOpen(false);
@@ -231,12 +246,6 @@ export const AppContent: React.FC = () => {
   }
 
   const isAnyModalOpen = isModalOpen || sideSelectedTask || sideSelectedResource;
-
-  const closeAllModals = () => {
-    selectTask(null, false);
-    closeSideTask();
-    closeSideResource();
-  };
 
   return (
     <main className={`w-screen h-screen flex flex-col overflow-hidden transition-colors duration-700 ${themeColor}`}>
@@ -401,61 +410,67 @@ export const AppContent: React.FC = () => {
         {/* Global Document Modal Container */}
         {isAnyModalOpen && (
           <div
-            className="fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-            onClick={closeAllModals}
+            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-0 lg:p-4 flex items-center justify-center"
+            onClick={handleCloseAllModals}
           >
-            <div className={cn(
-              "relative w-full h-full lg:h-[90vh] flex items-center justify-center",
-              !sideSelectedTask && !sideSelectedResource && "lg:max-w-7xl"
-            )}>
-              {selectedTask && (
-                <div
-                  className={cn(
-                    'h-full w-full',
-                    (sideSelectedTask || sideSelectedResource) ? 'lg:w-1/2' : 'lg:w-full'
-                  )}
-                >
-                  <DocumentModal
-                    task={selectedTask}
-                    tasks={tasks}
-                    currentUser={currentUser}
-                    onClose={() => selectTask(null, false)}
-                    onUpdate={(id, updates) => updateTask(id, updates)}
-                    onAddSubTask={(taskData) => addTask(taskData)}
-                    onUpdateTaskConnections={onUpdateTaskConnections}
-                    theme={theme}
-                    projectId={projectId}
-                    isSideView={!!sideSelectedTask || !!sideSelectedResource}
-                  />
-                </div>
-              )}
-              {sideSelectedTask && (
-                <div className="hidden lg:block w-1/2 h-full">
-                  <DocumentModal
-                    task={sideSelectedTask}
-                    tasks={tasks}
-                    currentUser={currentUser}
-                    onClose={closeSideTask}
-                    onUpdate={(id, updates) => updateTask(id, updates)}
-                    onAddSubTask={(taskData) => addTask(taskData)}
-                    onUpdateTaskConnections={onUpdateTaskConnections}
-                    theme={theme}
-                    projectId={projectId}
-                    isSideView={true}
-                  />
-                </div>
-              )}
-              {sideSelectedResource && (
-                 <div className="hidden lg:block w-1/2 h-full">
-                    <FilePreview 
-                        file={sideSelectedResource}
-                        isOpen={!!sideSelectedResource}
-                        onClose={closeSideResource}
-                        theme={theme}
-                        isSideView={true}
+             <div className={cn(
+                  "relative w-full h-full flex items-center justify-center",
+                  !sideSelectedTask && !sideSelectedResource && !isMainTaskFullScreen && "lg:max-w-7xl",
+                  (sideSelectedTask || sideSelectedResource) ? 'lg:h-full' : 'lg:h-[90vh]'
+              )}>
+                
+                {selectedTask && (
+                   <div
+                     className={cn(
+                       'h-full w-full transition-all duration-300',
+                       (sideSelectedTask || sideSelectedResource) ? 'lg:w-1/2' : 'lg:w-full'
+                     )}
+                   >
+                    <DocumentModal
+                      task={selectedTask}
+                      tasks={tasks}
+                      currentUser={currentUser}
+                      onClose={handleCloseAllModals}
+                      onUpdate={(id, updates) => updateTask(id, updates)}
+                      onAddSubTask={(taskData) => addTask(taskData)}
+                      onUpdateTaskConnections={onUpdateTaskConnections}
+                      theme={theme}
+                      projectId={projectId}
+                      isSideView={!!sideSelectedTask || !!sideSelectedResource}
+                      isFullScreen={isMainTaskFullScreen}
+                      setIsFullScreen={setIsMainTaskFullScreen}
                     />
-                 </div>
-              )}
+                  </div>
+                )}
+                
+                {sideSelectedTask && (
+                  <div className="hidden lg:block w-1/2 h-full">
+                    <DocumentModal
+                      task={sideSelectedTask}
+                      tasks={tasks}
+                      currentUser={currentUser}
+                      onClose={closeSideTask}
+                      onUpdate={(id, updates) => updateTask(id, updates)}
+                      onAddSubTask={(taskData) => addTask(taskData)}
+                      onUpdateTaskConnections={onUpdateTaskConnections}
+                      theme={theme}
+                      projectId={projectId}
+                      isSideView={true}
+                    />
+                  </div>
+                )}
+
+                {sideSelectedResource && (
+                   <div className="hidden lg:block w-1/2 h-full">
+                       <FilePreview 
+                           file={sideSelectedResource}
+                           isOpen={!!sideSelectedResource}
+                           onClose={handleCloseSideResource}
+                           theme={theme}
+                           isSideView={true}
+                       />
+                   </div>
+                )}
             </div>
           </div>
         )}

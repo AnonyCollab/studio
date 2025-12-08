@@ -2,7 +2,6 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileItem, Theme } from '../types';
 import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText } from 'lucide-react';
@@ -110,8 +109,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                isSideView ? 'lg:h-full lg:rounded-none' : 'lg:h-[90vh] lg:rounded-2xl',
-                isSideView && !isLight ? 'lg:border-l-0' : ''
+                isSideView ? 'lg:rounded-l-none lg:rounded-r-2xl' : 'lg:rounded-2xl'
             )}
         >
             <div className={`flex flex-row items-center justify-between p-4 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
@@ -147,13 +145,22 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
     if (!isOpen) return null;
 
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent 
-                className="max-w-4xl w-[95vw] h-auto max-h-[90vh] p-0 gap-0"
-                hideCloseButton={true}
+        <div
+            className={cn(
+                "fixed inset-0 z-[200] p-0 lg:p-4 flex items-center justify-center",
+                !isSideView && "bg-black/60 backdrop-blur-sm"
+            )}
+            onClick={onClose}
+        >
+            <div
+                className={cn(
+                    "w-full h-full lg:max-w-4xl lg:h-auto lg:max-h-[90vh]",
+                    isSideView ? "lg:w-1/2" : "lg:w-full"
+                )}
+                onClick={(e) => e.stopPropagation()}
             >
                 {content}
-            </DialogContent>
-        </Dialog>
+            </div>
+        </div>
     );
 };
