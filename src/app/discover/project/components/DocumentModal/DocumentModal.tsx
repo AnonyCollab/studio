@@ -254,7 +254,11 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
         return (
             <button 
                 key={att.id} 
-                onClick={() => file && selectSideResource?.(file)}
+                onClick={() => {
+                  if (selectSideResource && file) {
+                      selectSideResource(file);
+                  }
+                }}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${isLight ? 'bg-slate-50 border-slate-100 hover:bg-slate-100' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
             >
                 <div className={`p-2 bg-brand-500/10 rounded text-brand-500`}>
@@ -413,7 +417,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
                 "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
                 containerClass,
                 isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl",
-                isSideView ? "lg:rounded-none" : "lg:rounded-r-none"
+                isSideView ? "lg:rounded-l-none" : ""
               )}
             onClick={e => e.stopPropagation()}
         >
