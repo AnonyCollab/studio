@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileItem, Theme } from '../types';
 import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText } from 'lucide-react';
@@ -114,11 +114,11 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
                 isSideView && !isLight ? 'lg:border-l-0' : ''
             )}
         >
-            <DialogHeader className={`flex flex-row items-center justify-between p-4 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
-                <DialogTitle className="flex items-center gap-2 min-w-0">
+            <div className={`flex flex-row items-center justify-between p-4 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
+                <div className="flex items-center gap-2 min-w-0">
                     <div className={`shrink-0 ${isLight ? 'text-gray-600' : 'text-gray-400'}`}>{getFileIcon(file.fileType, 20)}</div>
-                    <span className={`truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>{file.name}</span>
-                </DialogTitle>
+                    <span className={`truncate font-semibold ${isLight ? 'text-gray-900' : 'text-white'}`}>{file.name}</span>
+                </div>
                 <div className="flex items-center gap-2">
                     {file.url && (
                             <a href={file.url} download={file.name} onClick={(e) => e.stopPropagation()}>
@@ -132,7 +132,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
                         <X className="h-5 w-5" />
                     </Button>
                 </div>
-            </DialogHeader>
+            </div>
 
             <div className={`flex-1 flex items-center justify-center p-4 overflow-auto ${isBlockNote ? '' : (isLight ? 'bg-gray-50' : 'bg-black/20')}`}>
                 {renderPreview()}
