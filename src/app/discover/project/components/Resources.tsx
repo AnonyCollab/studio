@@ -12,6 +12,7 @@ import { NewFileEditor } from './NewFileEditor';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AddFromUrlDialog } from './AddFromUrlDialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { v4 as uuidv4 } from 'uuid';
 
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
@@ -48,6 +49,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
     const [isCreatingFolder, setIsCreatingFolder] = useState(false);
     const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
     const [isCreatingFile, setIsCreatingFile] = useState(false);
+    const [newFileId, setNewFileId] = useState<string | null>(null);
     const [isUrlDialogOpen, setIsUrlDialogOpen] = useState(false);
     
     const containerClass = isLight ? "bg-white/60 border-black/5" : "bg-black/40 border-white/10";
@@ -105,6 +107,11 @@ export const Resources: React.FC<ResourcesProps> = () => {
         setNewFolderName('');
         setIsCreatingFolder(false);
     };
+    
+    const handleOpenNewFileEditor = () => {
+        setNewFileId(uuidv4()); // Generate ID when opening the editor
+        setIsCreatingFile(true);
+    };
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -119,8 +126,9 @@ export const Resources: React.FC<ResourcesProps> = () => {
         });
     }
 
-    const handleSaveNewFile = (name: string, content: string) => {
+    const handleSaveNewFile = (id: string, name: string, content: string) => {
         addFile({
+          id: id,
           name: name,
           type: 'file',
           fileType: 'application/json', // Blocknote content is saved as JSON
@@ -129,6 +137,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
           content: content,
         });
         setIsCreatingFile(false);
+        setNewFileId(null);
       };
       
     const handleSaveFromUrl = (name: string, url: string) => {
@@ -182,7 +191,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                     className={`pl-10 pr-4 py-2 rounded-lg border outline-none focus:ring-2 focus:ring-brand-500/20 w-full md:w-64 transition-all ${inputClass}`}
                                 />
                             </div>
-                             <Button variant="outline" onClick={() => setIsCreatingFile(true)}>
+                             <Button variant="outline" onClick={handleOpenNewFileEditor}>
                                 <Edit size={16} className="mr-2"/> New File
                             </Button>
                             <Button onClick={() => setIsCreatingFolder(true)} className="flex items-center gap-2">
@@ -362,6 +371,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                 onClose={() => setIsCreatingFile(false)}
                 onSave={handleSaveNewFile}
                 theme={theme}
+                collaborationId={newFileId}
             />
 
             <AddFromUrlDialog 
@@ -374,7 +384,6 @@ export const Resources: React.FC<ResourcesProps> = () => {
             {previewFile && (
                 <FilePreview 
                     file={previewFile}
-                    isOpen={!!previewFile}
                     onClose={() => setPreviewFile(null)}
                     theme={theme}
                 />
