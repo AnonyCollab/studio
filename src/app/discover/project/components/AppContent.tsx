@@ -422,7 +422,8 @@ export const AppContent: React.FC = () => {
                    <div
                      className={cn(
                        'h-full w-full transition-all duration-300',
-                       (sideSelectedTask || sideSelectedResource) ? 'lg:w-1/2' : 'lg:w-full'
+                       (sideSelectedTask || sideSelectedResource) ? 'lg:w-1/2' : 'lg:w-full',
+                       !sideSelectedTask && !sideSelectedResource && isMainTaskFullScreen === false && 'lg:rounded-r-none'
                      )}
                    >
                     <DocumentModal
@@ -444,7 +445,7 @@ export const AppContent: React.FC = () => {
                 )}
                 
                 {sideSelectedTask && (
-                  <div className="hidden lg:block w-1/2 h-full">
+                  <div className="hidden lg:block w-1/2 h-full" onClick={(e) => e.stopPropagation()}>
                     <DocumentModal
                       task={sideSelectedTask}
                       tasks={tasks}
@@ -461,7 +462,7 @@ export const AppContent: React.FC = () => {
                 )}
 
                 {sideSelectedResource && (
-                   <div className="hidden lg:block w-1/2 h-full">
+                   <div className="hidden lg:block w-1/2 h-full" onClick={(e) => e.stopPropagation()}>
                        <FilePreview 
                            file={sideSelectedResource}
                            onClose={handleCloseSideResource}
