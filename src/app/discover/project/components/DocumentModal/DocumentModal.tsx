@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle, Maximize2 } from 'lucide-react';
+import { X, Minimize2, MoreHorizontal, ArrowRight, Sparkles, ChevronDown, FileText, ArrowUpRight, ArrowDownRight, Layers, Plus, Clock, Link as LinkIcon, History, MessageCircle, Maximize2, Columns } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { DocumentHeader } from './DocumentHeader';
 import { PropertiesSection } from './PropertiesSection';
@@ -13,6 +13,7 @@ import type { TaskNode, Theme, Attachment, CurrentUser, TaskType, FileItem, Stat
 import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore.tsx';
 import { FilePreview } from '../FilePreview';
+import { SideTaskPickerModal } from './SideTaskPickerModal';
 
 interface DocumentModalProps {
   task: TaskNode;
@@ -23,6 +24,7 @@ interface DocumentModalProps {
   onAddSubTask: (task: Partial<TaskNode>) => void;
   theme: Theme;
   projectId: string | null;
+  isSideView?: boolean;
 }
 
 const MobileSection: React.FC<{ title: string, children: React.ReactNode, defaultOpen?: boolean, isLight: boolean }> = ({ title, children, defaultOpen = false, isLight }) => {
@@ -66,11 +68,12 @@ const STATUS_VALUES: Status[] = ['Backlog', 'In Progress', 'Review', 'Done'];
 const PRIORITY_VALUES: Priority[] = ['Low', 'Medium', 'High', 'Critical'];
 
 
-export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme, projectId }) => {
-  const { members, files } = useStore();
+export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme, projectId, isSideView = false }) => {
+  const { members, files, selectSideTask } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [showParentPicker, setShowParentPicker] = useState(false);
+  const [showSideTaskPicker, setShowSideTaskPicker] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [activeTab, setActiveTab] = useState('comments');
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -372,9 +375,9 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
 
   return (
     <>
-        <div className={`fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm p-0 lg:p-8 ${overlayClass}`} onClick={onClose}>
+        <div className={`fixed inset-0 z-[100] flex items-center justify-center backdrop-blur-sm p-0 lg:p-8 ${overlayClass} ${isSideView ? 'lg:pl-4' : ''}`} onClick={onClose}>
         <div 
-            className={`w-full h-full flex flex-col lg:flex-row overflow-hidden border transition-all duration-300 ${containerClass} ${isFullScreen ? 'max-w-full h-full rounded-none' : 'max-w-6xl lg:h-[90vh] lg:rounded-2xl'}`}
+            className={`w-full h-full flex flex-col lg:flex-row overflow-hidden border transition-all duration-300 ${containerClass} ${isFullScreen ? 'max-w-full h-full rounded-none' : (isSideView ? 'max-w-full lg:max-w-[calc(50%-1rem)] lg:h-[90vh] lg:rounded-2xl' : 'max-w-6xl lg:h-[90vh] lg:rounded-2xl')}`}
             onClick={e => e.stopPropagation()}
         >
             {/* Main Content */}
@@ -525,6 +528,11 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
             <div className={`hidden lg:flex w-80 border-l p-6 flex-col flex-shrink-0 overflow-y-auto custom-scrollbar h-full ${sidebarClass}`}>
                 <div className="flex items-center justify-end gap-2 mb-8">
                     <div className="flex items-center gap-2">
+                        {!isSideView && (
+                             <button onClick={() => setShowSideTaskPicker(true)} className={`p-2 rounded transition-colors ${iconHover}`} title="Side by Side View">
+                                <Columns size={18} />
+                             </button>
+                        )}
                         <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
                           {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                         </button>
@@ -607,6 +615,19 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                 isOpen={!!previewFile}
                 onClose={() => setPreviewFile(null)}
                 theme={theme}
+            />
+        )}
+
+        {showSideTaskPicker && (
+            <SideTaskPickerModal
+                tasks={allTasks}
+                currentTaskId={task.id}
+                onClose={() => setShowSideTaskPicker(false)}
+                onSelect={(id) => {
+                    selectSideTask(id);
+                    setShowSideTaskPicker(false);
+                }}
+                isLight={isLight}
             />
         )}
     </>

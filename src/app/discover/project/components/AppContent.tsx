@@ -31,7 +31,7 @@ export const AppContent: React.FC = () => {
   
   const { 
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
-      selectedTaskId, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
+      selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
       isStoreLoading, projectData, projectId
   } = store;
@@ -151,6 +151,7 @@ export const AppContent: React.FC = () => {
   const showHeader = !(isModalOpen && currentPage === 'roadmap');
   
   const selectedTask = useMemo(() => tasks.find(t => t.id === selectedTaskId), [tasks, selectedTaskId]);
+  const sideSelectedTask = useMemo(() => tasks.find(t => t.id === sideSelectedTaskId), [tasks, sideSelectedTaskId]);
 
   // --- Exclusive Toggle Logic ---
   const closeAllMenus = useCallback(() => {
@@ -398,6 +399,20 @@ export const AppContent: React.FC = () => {
                 onAddSubTask={(taskData) => addTask(taskData)}
                 theme={theme}
                 projectId={projectId}
+            />
+        )}
+        
+        {sideSelectedTask && (
+            <DocumentModal 
+                task={sideSelectedTask}
+                tasks={tasks}
+                currentUser={currentUser}
+                onClose={() => closeSideTask && closeSideTask()}
+                onUpdate={(id, updates) => updateTask(id, updates)}
+                onAddSubTask={(taskData) => addTask(taskData)}
+                theme={theme}
+                projectId={projectId}
+                isSideView={true}
             />
         )}
     </main>

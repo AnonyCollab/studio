@@ -31,6 +31,9 @@ export interface ExtendedAppState extends AppState {
   leaveProject?: () => Promise<void>;
   setTasks: (tasks: TaskNode[] | ((prev: TaskNode[]) => TaskNode[])) => void;
   selectTasks: (ids: string[]) => void;
+  sideSelectedTaskId: string | null;
+  selectSideTask: (id: string | null) => void;
+  closeSideTask: () => void;
   setFocusedParentId: (id: string | null) => void;
   setDashboardView: (view: DashboardViewMode) => void;
   duplicateTask: (id: string) => void;
@@ -71,6 +74,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     members: [], // Initialize as empty
     files: [],
     selectedTaskId: null,
+    sideSelectedTaskId: null,
     selectedTaskIds: [],
     isModalOpen: false,
     viewMode: 'canvas',
@@ -476,6 +480,14 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     }));
   }, []);
 
+  const selectSideTask = useCallback((id: string | null) => {
+    setState(prev => ({ ...prev, sideSelectedTaskId: id }));
+  }, []);
+
+  const closeSideTask = useCallback(() => {
+    setState(prev => ({ ...prev, sideSelectedTaskId: null }));
+  }, []);
+
   const setTheme = useCallback((theme: Theme) => {
       localStorage.setItem('omnicanvas-theme', theme);
       setState(prev => ({ ...prev, theme }));
@@ -674,6 +686,8 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     moveTask,
     selectTask,
     selectTasks,
+    selectSideTask,
+    closeSideTask,
     setViewMode: (mode: ViewMode) => setState(p => ({...p, viewMode: mode})),
     setDashboardView,
     setScale: (scale: number | ((p: number) => number)) => setState(p => ({...p, scale: typeof scale === 'function' ? scale(p.scale) : scale})),
@@ -694,7 +708,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     isStoreLoading,
   }), [
       state, setCurrentUser, setTasks, addTask, updateTask, onUpdateTaskConnections, deleteTask, duplicateTask, moveTask, 
-      selectTask, selectTasks, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
+      selectTask, selectTasks, selectSideTask, closeSideTask, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
       addPost, addMember, removeMember, addFile, deleteFile, updateMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading
   ]);

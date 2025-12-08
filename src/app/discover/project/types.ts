@@ -197,6 +197,7 @@ export interface AppState {
   files: FileItem[];
   cycles: Cycle[]; 
   selectedTaskId: string | null;
+  sideSelectedTaskId: string | null;
   selectedTaskIds: string[]; 
   isModalOpen: boolean;
   viewMode: ViewMode;
@@ -209,6 +210,7 @@ export interface AppState {
   resourcePath: (string | null)[];
   drillDownStack: string[];
   projectData: Project | null;
+  projectId: string | null;
 }
 
 export interface AIActionResponse {
