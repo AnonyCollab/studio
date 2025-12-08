@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useMemo } from 'react';
 import type { TaskNode, Theme, BackgroundType, Page, MembersViewMode, ResourcesViewMode, CommunityViewMode } from '../types';
-import { ChevronRight, ChevronDown, FileText, Plus, ArrowRightCircle, Search, X, ChevronUp, Calendar as CalendarIcon, ChevronLeft, Eye, Filter, Users, Video, Image, File, MoreHorizontal, Copy, Trash2, Circle, ArrowLeft, CornerDownRight, Flag, Target, CheckSquare, Zap, BookOpen, Maximize2, Folder } from 'lucide-react';
+import { ChevronRight, ChevronDown, FileText, Plus, ArrowRightCircle, Search, X, ChevronUp, Calendar as CalendarIcon, ChevronLeft, Eye, Filter, Users, Video, Image, File as FileIcon, MoreHorizontal, Copy, Trash2, Circle, ArrowLeft, CornerDownRight, Flag, Target, CheckSquare, Zap, BookOpen, Maximize2, Folder } from 'lucide-react';
 import { StatusBadge } from './Plan';
 
 interface SidebarProps {
@@ -593,6 +593,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
     </div>
   );
 
+  const resourceFilters = [
+    { label: 'All', icon: Eye, active: resourcesView === 'All' },
+    { label: 'Files', icon: FileIcon, active: resourcesView === 'Files' },
+    { label: 'Folders', icon: Folder, active: resourcesView === 'Folders' },
+    { label: 'PDF', icon: FileText, active: resourcesView === 'PDF' },
+    { label: 'Image', icon: Image, active: resourcesView === 'Image' },
+    { label: 'Video', icon: Video, active: resourcesView === 'Video' },
+  ];
+
   const renderContent = (isMobile: boolean) => {
     if (currentPage === 'calendar' && calendarDate && setCalendarDate) {
         return (
@@ -660,29 +669,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { label: 'Teams', active: membersView === 'Teams', icon: Eye }, 
         { label: 'Coordinators', active: membersView === 'Coordinators', icon: Filter }
     ], setMembersView);
-    if (currentPage === 'resources' && setResourcePath && resourcePath) {
-      return (
-        <div className="flex flex-col h-full w-full">
-            {isMobile && (
-                <div onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                    <div className="w-full flex items-center justify-center pt-4 pb-2 cursor-pointer" onClick={onClose}>
-                        <div className={`w-12 h-1.5 rounded-full ${isLight ? 'bg-slate-300' : 'bg-white/20'}`} />
-                    </div>
-                </div>
-            )}
-             <div className="flex items-center justify-between px-6 pb-4 pt-4 border-b border-transparent">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-brand-500 rounded-lg flex items-center justify-center text-white font-bold shadow-lg">
-                        <Folder size={18} />
-                    </div>
-                    <span className={`font-bold text-2xl ${textClass}`}>Resources</span>
-                </div>
-                <button onClick={onClose} className={`p-2 rounded-full ${isLight ? 'bg-slate-100 hover:bg-slate-200' : 'bg-white/10 hover:bg-white/20'}`}>
-                    <X size={24} />
-                </button>
-            </div>
-        </div>
-      );
+    if (currentPage === 'resources' && setResourcesView) {
+      return renderContextLayers('Resources Filters', Folder, resourceFilters, setResourcesView);
     }
     if (currentPage === 'community' && setCommunityView) return renderContextLayers('Topics', MoreHorizontal, [
         { label: 'All', active: communityView === 'All' },

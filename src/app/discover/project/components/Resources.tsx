@@ -39,7 +39,7 @@ interface ResourcesProps {
 }
 
 export const Resources: React.FC<ResourcesProps> = () => {
-    const { files, addFile, deleteFile, resourcePath, setResourcePath, currentUser, theme } = useStore();
+    const { files, addFile, deleteFile, resourcePath, setResourcePath, currentUser, theme, resourcesView } = useStore();
     useEffect(() => {
         console.log("Current user role in ResourcesPage:", currentUser?.role);
     }, [currentUser]);
@@ -59,8 +59,22 @@ export const Resources: React.FC<ResourcesProps> = () => {
     const currentFolderId = resourcePath[resourcePath.length - 1];
     
     const currentItems = useMemo(() => {
-        return files.filter(file => file.parentId === currentFolderId);
-    }, [files, currentFolderId]);
+        const items = files.filter(file => file.parentId === currentFolderId);
+        if (resourcesView === 'All') {
+            return items;
+        }
+        if (resourcesView === 'Folders') {
+            return items.filter(item => item.type === 'folder');
+        }
+        if (resourcesView === 'Files') {
+            return items.filter(item => item.type === 'file');
+        }
+         // Filter by specific file types
+        return items.filter(item => 
+            item.type === 'file' && 
+            item.fileType?.toLowerCase().includes(resourcesView.toLowerCase())
+        );
+    }, [files, currentFolderId, resourcesView]);
 
     const folders = useMemo(() => currentItems.filter(item => item.type === 'folder'), [currentItems]);
     const fileItems = useMemo(() => currentItems.filter(item => item.type === 'file'), [currentItems]);
@@ -219,7 +233,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                         <DropdownMenuContent align="end" className={isLight ? 'bg-white' : 'bg-[#1e1e1e] border-white/10'}>
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
-                                                     <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); }} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
                                                         <Trash2 size={14} className="mr-2" /> Delete Folder
                                                     </DropdownMenuItem>
                                                 </AlertDialogTrigger>
@@ -232,7 +246,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                     </AlertDialogHeader>
                                                     <AlertDialogFooter>
                                                         <AlertDialogCancel className={isLight ? '' : 'bg-transparent hover:bg-white/10'}>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => deleteFile(folder.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                                        <AlertDialogAction onClick={(e) => { e.stopPropagation(); deleteFile(folder.id);}} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
                                                     </AlertDialogFooter>
                                                 </AlertDialogContent>
                                             </AlertDialog>
@@ -305,7 +319,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
                                                             )}
                                                             <AlertDialog>
                                                                 <AlertDialogTrigger asChild>
-                                                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
+                                                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); }} onClick={(e) => e.stopPropagation()} className="text-red-500 focus:bg-red-500/10 focus:text-red-500">
                                                                         <Trash2 size={14} className="mr-2" /> Delete
                                                                     </DropdownMenuItem>
                                                                 </AlertDialogTrigger>
