@@ -1,10 +1,11 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useStore } from '../../store/useStore';
 import { Attachment, Theme, FileItem } from '../../types';
 import { Archive, File, FileText, Folder, Image as ImageIcon, Link, Search, CheckCircle2, Video, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 
 
 export const getFileIcon = (type?: string, size = 20) => {
@@ -47,15 +48,20 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
   const filteredFiles = React.useMemo(() => {
       return (allFiles || []).filter(file => {
           if (file.type === 'folder') return false; // Exclude folders
+          const lowerFilter = filter.toLowerCase();
           const matchesFilter = filter === 'All' 
-              || (file.fileType && file.fileType.toLowerCase().includes(filter.toLowerCase()))
+              || (file.fileType && file.fileType.toLowerCase().includes(lowerFilter))
+              || (filter === 'Image' && file.fileType?.startsWith('image'))
+              || (filter === 'Video' && file.fileType?.startsWith('video'))
+              || (filter === 'PDF' && file.fileType === 'application/pdf')
+              || (filter === 'ZIP' && (file.fileType === 'application/zip' || file.fileType === 'application/x-rar-compressed'))
               || (filter === 'Document' && file.fileType === 'application/json');
 
           const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
           return matchesFilter && matchesSearch;
       });
   }, [filter, searchQuery, allFiles]);
-
+  
   const handleAttach = () => {
       const file = allFiles.find(f => f.id === selectedFileId);
       if (file) {
@@ -65,6 +71,7 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
               id: file.id
           });
       }
+      onClose(); // Close the picker itself
   };
 
   // Styles
@@ -75,12 +82,17 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
   const inputClass = isLight ? "bg-slate-50 border-slate-200 text-slate-700" : "bg-white/5 border-white/10 text-slate-200";
   const itemClass = isLight ? "hover:bg-slate-50 border-slate-100" : "hover:bg-white/5 border-white/5";
   const selectedClass = isLight ? "bg-brand-50 border-brand-200 ring-1 ring-brand-500" : "bg-brand-500/10 border-brand-500/50 ring-1 ring-brand-500";
+  const buttonClass = isLight ? 'bg-slate-100 text-slate-600' : 'bg-white/5 text-slate-400';
+  const activeButtonClass = isLight ? 'bg-brand-600 text-white' : 'bg-brand-500 text-white';
 
   return (
     <>
         <div className={`fixed inset-0 z-[200] ${overlayClass}`} onClick={onClose} />
         
-        <div className={`fixed inset-x-0 bottom-0 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 z-[210] w-full lg:w-[600px] h-[85vh] lg:h-[600px] flex flex-col rounded-t-3xl lg:rounded-2xl border overflow-hidden transition-all animate-in slide-in-from-bottom-10 lg:zoom-in-95 duration-300 ${containerClass}`}>
+        <div 
+          className={`fixed inset-x-0 bottom-0 lg:inset-auto lg:top-1/2 lg:left-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 z-[210] w-full lg:w-[600px] h-[85vh] lg:h-[600px] flex flex-col rounded-t-3xl lg:rounded-2xl border overflow-hidden transition-all animate-in slide-in-from-bottom-10 lg:zoom-in-95 duration-300 ${containerClass}`}
+          onClick={e => e.stopPropagation()}
+        >
             
             {/* Header */}
             <div className={`flex items-center justify-between p-6 border-b flex-shrink-0 ${isLight ? 'border-slate-100' : 'border-white/10'}`}>
@@ -94,7 +106,7 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
             <div className="p-4 space-y-4">
                 <div className="relative">
                     <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${textMuted}`} size={16} />
-                    <input 
+                    <Input 
                         type="text" 
                         placeholder="Search files..." 
                         value={searchQuery}
@@ -109,8 +121,8 @@ export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClos
                             onClick={() => setFilter(f)}
                             className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-colors border ${
                                 filter === f 
-                                ? 'bg-brand-500 text-white border-brand-500 shadow-md' 
-                                : `border-transparent ${isLight ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`
+                                ? `${activeButtonClass} border-transparent shadow-md` 
+                                : `${buttonClass} border-transparent hover:bg-slate-200 dark:hover:bg-white/10`
                             }`}
                         >
                             {f}
