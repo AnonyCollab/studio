@@ -119,25 +119,21 @@ service cloud.firestore {
 
       // Rules for the members subcollection
       match /members/{userId} {
-        // Allow project members to list and read other members' info.
-        allow list, get: if request.auth != null && get(/databases/$(database)/documents/projects/$(projectId)).data.members.hasAny([request.auth.uid]);
+        allow read, list: if request.auth != null;
         
-        // Allow a user to join a project (create their own member doc)
-        // or the project owner to add members.
         allow create: if request.auth != null && 
           (request.auth.uid == userId || request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.owner.uid);
 
-        // Allow owner to update roles, or user to update their own info.
         allow update: if request.auth != null && 
           (request.auth.uid == userId || request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.owner.uid);
           
-        // Allow user to leave or owner to remove.
         allow delete: if request.auth != null && 
           (request.auth.uid == userId || request.auth.uid == get(/databases/$(database)/documents/projects/$(projectId)).data.owner.uid);
       }
       
       // Rules for the resources subcollection
       match /resources/{resourceId} {
+        // Allow read/write only to members of the project.
         allow read, write: if request.auth != null && get(/databases/$(database)/documents/projects/$(projectId)).data.members.hasAny([request.auth.uid]);
       }
       

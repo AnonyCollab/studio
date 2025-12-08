@@ -15,6 +15,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { v4 as uuidv4 } from 'uuid';
 import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { useToast } from '@/hooks/use-toast';
+import { useUser } from '@/firebase';
 
 const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
@@ -43,6 +44,7 @@ interface ResourcesProps {
 
 export const Resources: React.FC<ResourcesProps> = () => {
     const { files, addFile, deleteFile, resourcePath, setResourcePath, currentUser, theme, resourcesView, projectId } = useStore();
+    const { user: authUser } = useUser();
     useEffect(() => {
         console.log("Current user role in ResourcesPage:", currentUser?.role);
     }, [currentUser]);
@@ -118,16 +120,16 @@ export const Resources: React.FC<ResourcesProps> = () => {
 
     const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (!file || !projectId) return;
+        if (!file || !projectId || !authUser) return;
 
         toast({
-            title: "Uploading file...",
+            title: "Uploading...",
             description: `"${file.name}" is being uploaded.`,
         });
 
         const storage = getStorage();
-        const fileId = uuidv4();
-        const filePath = `projects/${projectId}/resources/${fileId}/${file.name}`;
+        const uniqueFileId = uuidv4();
+        const filePath = `projects/${projectId}/resources/${authUser.uid}/${uniqueFileId}/${file.name}`;
         const fileStorageRef = storageRef(storage, filePath);
 
         const uploadTask = uploadBytesResumable(fileStorageRef, file);
@@ -135,12 +137,14 @@ export const Resources: React.FC<ResourcesProps> = () => {
         uploadTask.on('state_changed',
           (snapshot) => {
             // Optional: Can be used to show upload progress
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            console.log('Upload is ' + progress + '% done');
           },
           (error) => {
             console.error("Upload failed:", error);
             toast({
                 title: "Upload Failed",
-                description: `Could not upload "${file.name}". Please try again.`,
+                description: error.message || `Could not upload "${file.name}". Please try again.`,
                 variant: "destructive",
             });
           },
@@ -150,7 +154,7 @@ export const Resources: React.FC<ResourcesProps> = () => {
               
               // Add file metadata to Firestore
               addFile({
-                id: fileId,
+                id: uniqueFileId,
                 name: file.name,
                 type: 'file',
                 fileType: file.type,
