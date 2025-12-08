@@ -87,7 +87,9 @@ export function useCollection<T = any>(
         console.log(`useCollection DEBUG: Snapshot received for path: ${path}. Document count: ${snapshot.size}`);
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
-          results.push({ ...(doc.data() as T), id: doc.id });
+           const docData = doc.data();
+          // Explicitly include all fields, including 'content'
+          results.push({ ...docData, id: doc.id } as T & { id: string });
         }
         console.log("useCollection DEBUG: Successfully processed data.", results);
         setData(results);
