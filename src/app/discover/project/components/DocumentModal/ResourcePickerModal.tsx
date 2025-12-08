@@ -1,24 +1,24 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { X, Search, FileText, Image, Video, Archive, Link, Folder, CheckCircle2, File as FileIcon } from 'lucide-react';
-import { Attachment, FileItem, Theme } from '../../types';
+import React from 'react';
 import { useStore } from '../../store/useStore';
+import { Attachment, Theme } from '../../types';
+import { Archive, File, FileText, Folder, Image, Link, Search, CheckCircle2, Video } from 'lucide-react';
 
 
-const getFileIcon = (type?: string, size = 20) => {
+export const getFileIcon = (type?: string, size = 20) => {
     if (type === 'folder') return <Folder size={size} />;
     if (type === 'application/json') return <FileText size={size} />;
-    if (!type) return <FileIcon size={size} />;
+    if (!type) return <File size={size} />;
     if (type.startsWith('image/')) return <Image size={size} />;
     if (type.startsWith('video/')) return <Video size={size} />;
     if (type.includes('zip') || type.includes('archive')) return <Archive size={size} />;
     if (type.includes('pdf')) return <FileText size={size} />;
-    return <FileIcon size={size} />;
+    return <File size={size} />;
 };
 
-const getFileColor = (type?: string) => {
+export const getFileColor = (type?: string) => {
     if (type === 'folder') return 'text-brand-500';
     if (type === 'application/json') return 'text-green-500';
     if (!type) return 'text-gray-400';
@@ -38,13 +38,13 @@ interface ResourcePickerModalProps {
 
 export const ResourcePickerModal: React.FC<ResourcePickerModalProps> = ({ onClose, onSelect, isLight }) => {
   const { files: allFiles } = useStore();
-  const [selectedFileId, setSelectedFileId] = useState<string | null>(null);
-  const [filter, setFilter] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFileId, setSelectedFileId] = React.useState<string | null>(null);
+  const [filter, setFilter] = React.useState('All');
+  const [searchQuery, setSearchQuery] = React.useState('');
 
   const filters = ['All', 'PDF', 'Image', 'Video', 'ZIP', 'Document'];
 
-  const filteredFiles = useMemo(() => {
+  const filteredFiles = React.useMemo(() => {
       return (allFiles || []).filter(file => {
           if (file.type === 'folder') return false; // Exclude folders
           const matchesFilter = filter === 'All' 

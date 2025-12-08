@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { FileItem, Theme } from '../types';
 import { Download, X, File, Image as ImageIcon, Video, Music, Archive, FileText } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import { cn } from '@/lib/utils';
 
 const Editor = dynamic(() => import('@/app/news/components/Editor'), { 
     ssr: false,
@@ -31,10 +32,11 @@ interface FilePreviewProps {
     isOpen: boolean;
     onClose: () => void;
     theme: Theme;
+    isSideView?: boolean;
 }
 
 
-export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose, theme }) => {
+export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose, theme, isSideView = false }) => {
     const isLight = theme === 'light';
     const isImage = file.fileType?.startsWith('image/');
     const isVideo = file.fileType?.startsWith('video/');
@@ -102,11 +104,21 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
             </div>
         );
     };
+    
+    if (!isOpen) return null;
+
+    const containerClass = cn(
+        "max-w-4xl w-[95vw] h-full flex flex-col p-0 gap-0 border overflow-hidden",
+        isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
+        isSideView ? 'lg:h-[90vh] lg:rounded-r-2xl lg:rounded-l-none' : 'lg:h-[90vh] lg:rounded-2xl',
+        isSideView && !isLight ? 'lg:border-l-0' : ''
+    );
+
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent 
-                className={`max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0 border overflow-hidden ${isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10'}`}
+                className={containerClass}
                 hideCloseButton={true}
             >
                 <DialogHeader className={`flex flex-row items-center justify-between p-4 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>

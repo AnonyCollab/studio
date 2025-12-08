@@ -34,6 +34,9 @@ export interface ExtendedAppState extends AppState {
   sideSelectedTaskId: string | null;
   selectSideTask: (id: string | null) => void;
   closeSideTask: () => void;
+  sideSelectedResourceId: string | null;
+  selectSideResource: (id: string | null) => void;
+  closeSideResource: () => void;
   setFocusedParentId: (id: string | null) => void;
   setDashboardView: (view: DashboardViewMode) => void;
   duplicateTask: (id: string) => void;
@@ -75,6 +78,7 @@ const createInitialState = (authUser: User | null): AppState => ({
     files: [],
     selectedTaskId: null,
     sideSelectedTaskId: null,
+    sideSelectedResourceId: null,
     selectedTaskIds: [],
     isModalOpen: false,
     viewMode: 'canvas',
@@ -481,11 +485,19 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
   }, []);
 
   const selectSideTask = useCallback((id: string | null) => {
-    setState(prev => ({ ...prev, sideSelectedTaskId: id }));
+    setState(prev => ({ ...prev, sideSelectedTaskId: id, sideSelectedResourceId: null }));
   }, []);
 
   const closeSideTask = useCallback(() => {
     setState(prev => ({ ...prev, sideSelectedTaskId: null }));
+  }, []);
+
+  const selectSideResource = useCallback((id: string | null) => {
+    setState(prev => ({ ...prev, sideSelectedResourceId: id, sideSelectedTaskId: null }));
+  }, []);
+  
+  const closeSideResource = useCallback(() => {
+    setState(prev => ({ ...prev, sideSelectedResourceId: null }));
   }, []);
 
   const setTheme = useCallback((theme: Theme) => {
@@ -688,6 +700,8 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     selectTasks,
     selectSideTask,
     closeSideTask,
+    selectSideResource,
+    closeSideResource,
     setViewMode: (mode: ViewMode) => setState(p => ({...p, viewMode: mode})),
     setDashboardView,
     setScale: (scale: number | ((p: number) => number)) => setState(p => ({...p, scale: typeof scale === 'function' ? scale(p.scale) : scale})),
@@ -708,7 +722,7 @@ export const ProjectStoreProvider: React.FC<{children: ReactNode}> = ({ children
     isStoreLoading,
   }), [
       state, setCurrentUser, setTasks, addTask, updateTask, onUpdateTaskConnections, deleteTask, duplicateTask, moveTask, 
-      selectTask, selectTasks, selectSideTask, closeSideTask, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
+      selectTask, selectTasks, selectSideTask, closeSideTask, selectSideResource, closeSideResource, setFocusedParentId, setTheme, setBackground, setFilter, setDashboardView,
       addPost, addMember, removeMember, addFile, deleteFile, updateMember, setResourcePath, setDrillDownStack, 
       leaveProject, updateProject, isStoreLoading
   ]);

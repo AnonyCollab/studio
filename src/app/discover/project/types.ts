@@ -198,6 +198,7 @@ export interface AppState {
   cycles: Cycle[]; 
   selectedTaskId: string | null;
   sideSelectedTaskId: string | null;
+  sideSelectedResourceId: string | null;
   selectedTaskIds: string[]; 
   isModalOpen: boolean;
   viewMode: ViewMode;

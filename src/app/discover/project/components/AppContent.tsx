@@ -11,11 +11,12 @@ import { About } from './About';
 import { ProfilePage } from './ProfilePage';
 import { MobileDock } from './MobileDock';
 import { DocumentModal } from './DocumentModal/DocumentModal';
+import { FilePreview } from './FilePreview';
 import { Sidebar } from './Sidebar';
 import { MobileViewSheet } from './MobileViewSheet';
 import { CreationSheet } from './CreationSheet';
 import { useStore } from '../store/useStore.tsx';
-import type { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee } from '../types';
+import type { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee, FileItem } from '../types';
 import { SettingsPage } from './SettingsPage';
 import { useUser } from '@/firebase';
 import { useParams, useRouter } from 'next/navigation';
@@ -33,7 +34,7 @@ export const AppContent: React.FC = () => {
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
-      isStoreLoading, projectData, projectId, onUpdateTaskConnections
+      isStoreLoading, projectData, projectId, onUpdateTaskConnections, sideSelectedResourceId, selectSideResource, closeSideResource
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
@@ -152,6 +153,7 @@ export const AppContent: React.FC = () => {
   
   const selectedTask = useMemo(() => tasks.find(t => t.id === selectedTaskId), [tasks, selectedTaskId]);
   const sideSelectedTask = useMemo(() => tasks.find(t => t.id === sideSelectedTaskId), [tasks, sideSelectedTaskId]);
+  const sideSelectedResource = useMemo(() => files.find(f => f.id === sideSelectedResourceId), [files, sideSelectedResourceId]);
 
   // --- Exclusive Toggle Logic ---
   const closeAllMenus = useCallback(() => {
@@ -227,6 +229,14 @@ export const AppContent: React.FC = () => {
         </div>
     );
   }
+
+  const isSideBySideOpen = sideSelectedTask || sideSelectedResource;
+
+  const closeAllModals = () => {
+    selectTask(null, false);
+    closeSideTask();
+    closeSideResource();
+  };
 
   return (
     <main className={`w-screen h-screen flex flex-col overflow-hidden transition-colors duration-700 ${themeColor}`}>
@@ -389,21 +399,18 @@ export const AppContent: React.FC = () => {
         />
 
         {/* Global Document Modal Container */}
-        {(isModalOpen && selectedTask) || sideSelectedTask ? (
+        {(isModalOpen || isSideBySideOpen) && (
           <div className="fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center">
             <div
               className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => {
-                selectTask(null, false);
-                closeSideTask();
-              }}
+              onClick={closeAllModals}
             />
             <div className="relative w-full h-full flex items-center justify-center">
               {isModalOpen && selectedTask && (
                 <div
                   className={`
                     w-full h-full lg:h-auto 
-                    ${sideSelectedTask ? 'lg:w-1/2' : 'lg:w-full'}
+                    ${isSideBySideOpen ? 'lg:w-1/2' : 'lg:w-full'}
                   `}
                 >
                   <DocumentModal
@@ -416,7 +423,6 @@ export const AppContent: React.FC = () => {
                     onUpdateTaskConnections={onUpdateTaskConnections}
                     theme={theme}
                     projectId={projectId}
-                    isSideView={!!sideSelectedTask}
                   />
                 </div>
               )}
@@ -426,7 +432,7 @@ export const AppContent: React.FC = () => {
                     task={sideSelectedTask}
                     tasks={tasks}
                     currentUser={currentUser}
-                    onClose={() => closeSideTask()}
+                    onClose={closeSideTask}
                     onUpdate={(id, updates) => updateTask(id, updates)}
                     onAddSubTask={(taskData) => addTask(taskData)}
                     onUpdateTaskConnections={onUpdateTaskConnections}
@@ -436,9 +442,20 @@ export const AppContent: React.FC = () => {
                   />
                 </div>
               )}
+              {sideSelectedResource && (
+                 <div className="w-full h-full lg:h-auto lg:w-1/2">
+                    <FilePreview 
+                        file={sideSelectedResource}
+                        isOpen={!!sideSelectedResource}
+                        onClose={closeSideResource}
+                        theme={theme}
+                        isSideView={true}
+                    />
+                 </div>
+              )}
             </div>
           </div>
-        ) : null}
+        )}
     </main>
   );
 };
