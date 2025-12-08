@@ -61,6 +61,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     const isBlockNote = file.fileType === 'application/json';
     const isPdf = file.fileType === 'application/pdf';
     const [showResourcePicker, setShowResourcePicker] = useState(false);
+    const { files } = useStore();
 
     const isOfficeDoc = file.fileType && (
         file.fileType.includes('msword') ||
@@ -79,7 +80,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
     const renderPreview = () => {
         console.log(`[FilePreview] renderPreview called. isBlockNote: ${isBlockNote}, file.content exists: ${!!file.content}`);
         if (isBlockNote && file.content) {
-            return <Editor 
+            return <div className="w-full max-w-4xl mx-auto"><Editor 
                 initialContent={file.content} 
                 editable={true} 
                 collaborationId={file.id} 
@@ -88,7 +89,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
                         onUpdate(file.id, { content: newContent });
                     }
                 }} 
-            />;
+            /></div>;
         }
         if (!file.url) {
             return (
@@ -152,32 +153,41 @@ export const FilePreview: React.FC<FilePreviewProps> = ({
         >
             <div className={`flex flex-row items-center justify-between p-2 pl-3 border-b shrink-0 ${isLight ? 'border-gray-100' : 'border-white/5'}`}>
                 <div className="flex items-center gap-1 min-w-0">
-                    <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
-                        {attachments.map(att => (
-                            <button
-                                key={att.id}
-                                onClick={() => onSelectAttachment?.(att as FileItem)}
-                                className={cn(
-                                    "flex items-center gap-2 pr-1 pl-3 py-1.5 rounded-md transition-colors whitespace-nowrap group",
-                                    file.id === att.id ? (isLight ? 'bg-slate-100' : 'bg-white/10') : (isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5')
-                                )}
-                            >
-                                {getFileIcon(att.type, 14)}
-                                <span className={cn("text-xs font-medium", isLight ? 'text-slate-700' : 'text-slate-300')}>{att.name}</span>
-                                {onDetachResource && (
-                                    <span 
-                                        onClick={(e) => { e.stopPropagation(); onDetachResource(att.id); }}
-                                        className="p-1 rounded-full text-transparent group-hover:text-slate-400 hover:!text-red-500 hover:bg-red-500/10"
-                                    >
-                                        <X size={12}/>
-                                    </span>
-                                )}
+                    <ScrollArea className="max-w-[450px] whitespace-nowrap">
+                        <div className="flex items-center gap-1">
+                            {attachments.map(att => (
+                                <button
+                                    key={att.id}
+                                    onClick={() => {
+                                        if (onSelectAttachment) {
+                                            const fullFile = files.find(f => f.id === att.id);
+                                            if (fullFile) {
+                                                onSelectAttachment(fullFile);
+                                            }
+                                        }
+                                    }}
+                                    className={cn(
+                                        "flex items-center gap-2 pr-1 pl-3 py-1.5 rounded-md transition-colors whitespace-nowrap group",
+                                        file.id === att.id ? (isLight ? 'bg-slate-100' : 'bg-white/10') : (isLight ? 'hover:bg-slate-50' : 'hover:bg-white/5')
+                                    )}
+                                >
+                                    {getFileIcon(att.type, 14)}
+                                    <span className={cn("text-xs font-medium", isLight ? 'text-slate-700' : 'text-slate-300')}>{att.name}</span>
+                                    {onDetachResource && (
+                                        <span 
+                                            onClick={(e) => { e.stopPropagation(); onDetachResource(att.id); }}
+                                            className="p-1 rounded-full text-transparent group-hover:text-slate-400 hover:!text-red-500 hover:bg-red-500/10"
+                                        >
+                                            <X size={12}/>
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                             <button onClick={() => setShowResourcePicker(true)} className={cn("p-2 rounded-md", isLight ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/10 text-slate-400')}>
+                                <Plus size={14} />
                             </button>
-                        ))}
-                         <button onClick={() => setShowResourcePicker(true)} className={cn("p-2 rounded-md", isLight ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-white/10 text-slate-400')}>
-                            <Plus size={14} />
-                        </button>
-                    </div>
+                        </div>
+                    </ScrollArea>
                 </div>
                 <div className="flex items-center gap-2 pl-2">
                     {file.url && (
