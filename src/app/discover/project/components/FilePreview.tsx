@@ -110,7 +110,7 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, isOpen, onClose,
             className={cn(
                 "w-full h-full flex flex-col p-0 gap-0 border overflow-hidden",
                 isLight ? 'bg-white border-gray-200' : 'bg-[#18181b] border-white/10',
-                isSideView ? 'lg:h-full lg:rounded-l-none lg:rounded-r-2xl' : 'lg:h-[90vh] lg:rounded-2xl',
+                isSideView ? 'lg:h-full lg:rounded-none' : 'lg:h-[90vh] lg:rounded-2xl',
                 isSideView && !isLight ? 'lg:border-l-0' : ''
             )}
         >

@@ -22,6 +22,7 @@ import { useUser } from '@/firebase';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export const AppContent: React.FC = () => {
   const { user: authUser, isUserLoading: isAuthLoading } = useUser();
@@ -399,19 +400,20 @@ export const AppContent: React.FC = () => {
 
         {/* Global Document Modal Container */}
         {isAnyModalOpen && (
-          <div className="fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center">
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={closeAllModals}
-            />
-            <div className="relative w-full h-full lg:h-[90vh] flex items-center justify-center">
-              {isModalOpen && selectedTask && (
+          <div
+            className="fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={closeAllModals}
+          >
+            <div className={cn(
+              "relative w-full h-full lg:h-[90vh] flex items-center justify-center",
+              !sideSelectedTask && !sideSelectedResource && "lg:max-w-7xl"
+            )}>
+              {selectedTask && (
                 <div
-                  className={`
-                    h-full
-                    w-full
-                    ${sideSelectedTask || sideSelectedResource ? 'lg:w-1/2' : 'lg:w-full'}
-                  `}
+                  className={cn(
+                    'h-full w-full',
+                    (sideSelectedTask || sideSelectedResource) ? 'lg:w-1/2' : 'lg:w-full'
+                  )}
                 >
                   <DocumentModal
                     task={selectedTask}
@@ -428,7 +430,7 @@ export const AppContent: React.FC = () => {
                 </div>
               )}
               {sideSelectedTask && (
-                <div className="hidden lg:block w-1/2 h-full lg:h-full">
+                <div className="hidden lg:block w-1/2 h-full">
                   <DocumentModal
                     task={sideSelectedTask}
                     tasks={tasks}
@@ -444,7 +446,7 @@ export const AppContent: React.FC = () => {
                 </div>
               )}
               {sideSelectedResource && (
-                 <div className="hidden lg:block w-1/2 h-full lg:h-full">
+                 <div className="hidden lg:block w-1/2 h-full">
                     <FilePreview 
                         file={sideSelectedResource}
                         isOpen={!!sideSelectedResource}

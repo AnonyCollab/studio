@@ -14,6 +14,7 @@ import { StatusBadge } from '../Plan';
 import { useStore } from '../../store/useStore.tsx';
 import { FilePreview } from '../FilePreview';
 import { SideTaskPickerModal } from './SideTaskPickerModal';
+import { cn } from '@/lib/utils';
 
 interface DocumentModalProps {
   task: TaskNode;
@@ -376,12 +377,11 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   return (
     <>
         <div 
-            className={`
-              w-full h-full flex flex-col overflow-hidden border transition-all duration-300
-              lg:rounded-2xl
-              ${isSideView ? 'lg:border-l-0 lg:rounded-l-none' : ''}
-              ${isSideView ? '' : 'lg:border-r-0 lg:rounded-r-none'}
-            `}
+            className={cn(
+                "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
+                containerClass,
+                isSideView ? "lg:rounded-none" : "lg:rounded-2xl"
+              )}
             onClick={e => e.stopPropagation()}
         >
             {/* Main Content */}
