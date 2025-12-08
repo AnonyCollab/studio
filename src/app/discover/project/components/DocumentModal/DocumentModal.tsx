@@ -21,6 +21,7 @@ interface DocumentModalProps {
   currentUser?: CurrentUser;
   onClose: () => void;
   onUpdate: (id: string, updates: Partial<TaskNode>) => void;
+  onUpdateTaskConnections: (startId: string, endId: string) => void;
   onAddSubTask: (task: Partial<TaskNode>) => void;
   theme: Theme;
   projectId: string | null;
@@ -68,7 +69,7 @@ const STATUS_VALUES: Status[] = ['Backlog', 'In Progress', 'Review', 'Done'];
 const PRIORITY_VALUES: Priority[] = ['Low', 'Medium', 'High', 'Critical'];
 
 
-export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onAddSubTask, theme, projectId, isSideView = false }) => {
+export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask, tasks: allTasks = [], currentUser, onClose, onUpdate, onUpdateTaskConnections, onAddSubTask, theme, projectId, isSideView = false }) => {
   const { members, files, selectSideTask } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
@@ -205,7 +206,6 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
       return true;
   });
 
-  const overlayClass = isLight ? "bg-black/40" : "bg-black/70";
   const containerClass = isLight ? "bg-white border-slate-200 shadow-2xl" : "bg-[#18181b] border-white/10 shadow-2xl";
   const sidebarClass = isLight ? "bg-slate-50/50 border-slate-200" : "bg-[#09090b] border-white/10";
   const textMuted = isLight ? "text-slate-400" : "text-slate-500";
@@ -376,19 +376,10 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
   return (
     <>
         <div 
-          className={`
-            fixed inset-0 lg:inset-auto z-[100] backdrop-blur-sm
-            ${isSideView ? 'lg:w-1/2 lg:right-4' : 'lg:w-full'}
-            ${overlayClass}
-          `}
-          onClick={onClose}
-        />
-        <div 
             className={`
               w-full h-full lg:h-[90vh] flex flex-col lg:flex-row overflow-hidden border transition-all duration-300
-              fixed inset-0 lg:inset-auto z-[100]
+              lg:rounded-2xl
               ${containerClass}
-              ${isFullScreen ? 'max-w-full h-full rounded-none top-0 left-0' : (isSideView ? 'max-w-full lg:max-w-[calc(50%-1rem)] lg:h-[90vh] lg:rounded-2xl top-0 right-0 lg:top-auto lg:left-1/2' : 'max-w-6xl lg:h-[90vh] lg:rounded-2xl lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2')}
             `}
             onClick={e => e.stopPropagation()}
         >
@@ -427,6 +418,14 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                                     {aiLoading ? 'Generating...' : 'AI Breakdown'}
                                 </button>
                             )}
+                             <button onClick={() => setShowSideTaskPicker(true)} className={`p-2 rounded transition-colors ${iconHover}`} title="Side by Side View">
+                                <Columns size={18} />
+                              </button>
+                          <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
+                            {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+                          </button>
+                          {!isReadOnly && <button className={`p-2 rounded transition-colors ${iconHover}`}><MoreHorizontal size={18}/></button>}
+                          <button onClick={onClose} className={`p-2 rounded transition-colors ${iconHover}`}><X size={18}/></button>
                         </div>
                     </div>
 
@@ -537,20 +536,11 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
             </div>
 
             {/* Desktop Right Sidebar - Conditionally Rendered */}
-            {!isSideView && (
+            {/*!isSideView && (
               <div className={`hidden lg:flex w-80 border-l p-6 flex-col flex-shrink-0 overflow-y-auto custom-scrollbar h-full ${sidebarClass}`}>
                   <div className="flex items-center justify-end gap-2 mb-8">
                       <div className="flex items-center gap-2">
-                          {!isSideView && (
-                              <button onClick={() => setShowSideTaskPicker(true)} className={`p-2 rounded transition-colors ${iconHover}`} title="Side by Side View">
-                                <Columns size={18} />
-                              </button>
-                          )}
-                          <button onClick={() => setIsFullScreen(!isFullScreen)} className={`p-2 rounded transition-colors ${iconHover}`}>
-                            {isFullScreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-                          </button>
-                          {!isReadOnly && <button className={`p-2 rounded transition-colors ${iconHover}`}><MoreHorizontal size={18}/></button>}
-                          <button onClick={onClose} className={`p-2 rounded transition-colors ${iconHover}`}><X size={18}/></button>
+                          
                       </div>
                   </div>
                   
@@ -567,7 +557,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                       />
                   </div>
 
-                  {/* Subtasks Section */}
+                  
                   <div className="mt-8">
                       <h3 className={`mb-4 uppercase text-xs font-bold tracking-wider flex items-center gap-2 ${textMuted}`}>
                           <Layers size={14} />
@@ -610,7 +600,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({ task: initialTask,
                       </div>
                   </div>
               </div>
-            )}
+            )*/}
         </div>
 
         {/* Resource Picker Integration */}

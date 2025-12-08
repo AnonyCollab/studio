@@ -33,7 +33,7 @@ export const AppContent: React.FC = () => {
       theme, background, setTheme, setBackground, tasks, filter, setFilter, selectTask, focusedParentId, isModalOpen,
       selectedTaskId, sideSelectedTaskId, selectSideTask, closeSideTask, updateTask, addTask, deleteTask, duplicateTask, moveTask, viewMode, setViewMode, setFocusedParentId,
       posts, members, files, addPost, addMember, addFile, currentUser, setCurrentUser, resourcePath, setResourcePath, leaveProject,
-      isStoreLoading, projectData, projectId
+      isStoreLoading, projectData, projectId, onUpdateTaskConnections
   } = store;
   
   const [currentPage, setPage] = useState<Page>('roadmap');
@@ -389,37 +389,56 @@ export const AppContent: React.FC = () => {
         />
 
         {/* Global Document Modal Container */}
-        {(selectedTask || sideSelectedTask) && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-0 lg:p-4">
-                {selectedTask && isModalOpen && (
-                    <DocumentModal 
-                        task={selectedTask}
-                        tasks={tasks}
-                        currentUser={currentUser}
-                        onClose={() => selectTask(null, false)}
-                        onUpdate={(id, updates) => updateTask(id, updates)}
-                        onAddSubTask={(taskData) => addTask(taskData)}
-                        theme={theme}
-                        projectId={projectId}
-                        isSideView={!!sideSelectedTask}
-                    />
-                )}
-                
-                {sideSelectedTask && (
-                    <DocumentModal 
-                        task={sideSelectedTask}
-                        tasks={tasks}
-                        currentUser={currentUser}
-                        onClose={() => closeSideTask && closeSideTask()}
-                        onUpdate={(id, updates) => updateTask(id, updates)}
-                        onAddSubTask={(taskData) => addTask(taskData)}
-                        theme={theme}
-                        projectId={projectId}
-                        isSideView={true}
-                    />
-                )}
+        {(isModalOpen && selectedTask) || sideSelectedTask ? (
+          <div className="fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => {
+                selectTask(null, false);
+                closeSideTask();
+              }}
+            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              {isModalOpen && selectedTask && (
+                <div
+                  className={`
+                    w-full h-full lg:h-auto 
+                    ${sideSelectedTask ? 'lg:w-1/2' : 'lg:w-full'}
+                  `}
+                >
+                  <DocumentModal
+                    task={selectedTask}
+                    tasks={tasks}
+                    currentUser={currentUser}
+                    onClose={() => selectTask(null, false)}
+                    onUpdate={(id, updates) => updateTask(id, updates)}
+                    onAddSubTask={(taskData) => addTask(taskData)}
+                    onUpdateTaskConnections={onUpdateTaskConnections}
+                    theme={theme}
+                    projectId={projectId}
+                    isSideView={!!sideSelectedTask}
+                  />
+                </div>
+              )}
+              {sideSelectedTask && (
+                <div className="w-full h-full lg:h-auto lg:w-1/2">
+                  <DocumentModal
+                    task={sideSelectedTask}
+                    tasks={tasks}
+                    currentUser={currentUser}
+                    onClose={() => closeSideTask()}
+                    onUpdate={(id, updates) => updateTask(id, updates)}
+                    onAddSubTask={(taskData) => addTask(taskData)}
+                    onUpdateTaskConnections={onUpdateTaskConnections}
+                    theme={theme}
+                    projectId={projectId}
+                    isSideView={true}
+                  />
+                </div>
+              )}
             </div>
-        )}
+          </div>
+        ) : null}
     </main>
   );
 };
