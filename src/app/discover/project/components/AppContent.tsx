@@ -16,7 +16,7 @@ import { Sidebar } from './Sidebar';
 import { MobileViewSheet } from './MobileViewSheet';
 import { CreationSheet } from './CreationSheet';
 import { useStore } from '../store/useStore.tsx';
-import type { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, DashboardViewMode, UserRole, Assignee, FileItem } from '../types';
+import type { Page, TaskNode, FilterOption, CalendarViewMode, MembersViewMode, ResourcesViewMode, CommunityViewMode, UserRole, Assignee, FileItem } from '../types';
 import { SettingsPage } from './SettingsPage';
 import { useUser } from '@/firebase';
 import { useParams, useRouter } from 'next/navigation';
@@ -159,7 +159,9 @@ export const AppContent: React.FC = () => {
 
   const handleCloseSideResource = () => {
     closeSideResource();
-    setIsMainTaskFullScreen(true); // Expand main task when side resource closes
+    if(selectedTask) {
+        setIsMainTaskFullScreen(true); 
+    }
   };
   
   const handleCloseAllModals = () => {
@@ -423,7 +425,6 @@ export const AppContent: React.FC = () => {
                      className={cn(
                        'h-full w-full transition-all duration-300',
                        (sideSelectedTask || sideSelectedResource) ? 'lg:w-1/2' : 'lg:w-full',
-                       !sideSelectedTask && !sideSelectedResource && isMainTaskFullScreen === false && 'lg:rounded-r-none'
                      )}
                    >
                     <DocumentModal
@@ -469,7 +470,12 @@ export const AppContent: React.FC = () => {
                            theme={theme}
                            isSideView={true}
                            attachments={selectedTask?.attachments || []}
-                           onSelectAttachment={selectSideResource}
+                           onSelectAttachment={(attachment) => {
+                             const fullFile = files.find(f => f.id === attachment.id);
+                             if (fullFile) {
+                               selectSideResource(fullFile);
+                             }
+                           }}
                            onUpdateAttachments={(newAttachment) => {
                              if(selectedTask) {
                                updateTask(selectedTask.id, {
