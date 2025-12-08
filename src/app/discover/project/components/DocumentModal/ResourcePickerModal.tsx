@@ -4,7 +4,7 @@
 import React from 'react';
 import { useStore } from '../../store/useStore';
 import { Attachment, Theme } from '../../types';
-import { Archive, File, FileText, Folder, Image, Link, Search, CheckCircle2, Video } from 'lucide-react';
+import { Archive, File, FileText, Folder, Image, Link, Search, CheckCircle2, Video, X } from 'lucide-react';
 
 
 export const getFileIcon = (type?: string, size = 20) => {
