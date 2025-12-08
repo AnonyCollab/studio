@@ -29,6 +29,7 @@ interface DocumentModalProps {
   isSideView?: boolean;
   isFullScreen?: boolean;
   setIsFullScreen?: (isFullScreen: boolean) => void;
+  selectSideResource?: (file: FileItem) => void;
 }
 
 const MobileSection: React.FC<{ title: string, children: React.ReactNode, defaultOpen?: boolean, isLight: boolean }> = ({ title, children, defaultOpen = false, isLight }) => {
@@ -84,14 +85,14 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
   projectId, 
   isSideView = false,
   isFullScreen: isExternalFullScreen = false,
-  setIsFullScreen: setExternalFullScreen
+  setIsFullScreen: setExternalFullScreen,
+  selectSideResource
 }) => {
-  const { members, files, selectSideTask, selectSideResource } = useStore();
+  const { members, files, selectSideTask } = useStore();
   const [aiLoading, setAiLoading] = useState(false);
   const [showResourcePicker, setShowResourcePicker] = useState(false);
   const [showParentPicker, setShowParentPicker] = useState(false);
   const [showSideTaskPicker, setShowSideTaskPicker] = useState(false);
-  const [previewFile, setPreviewFile] = useState<FileItem | null>(null);
   const [activeTab, setActiveTab] = useState('comments');
   const [isInternalFullScreen, setIsInternalFullScreen] = useState(false);
 
@@ -225,7 +226,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
       return true;
   });
 
-  const containerClass = isLight ? "bg-white border-slate-200 shadow-2xl" : "bg-[#18181b] border-white/10 shadow-2xl";
+  const containerClass = isLight ? "bg-white" : "bg-[#18181b]";
   const sidebarClass = isLight ? "bg-slate-50/50 border-slate-200" : "bg-[#09090b] border-white/10";
   const textMuted = isLight ? "text-slate-400" : "text-slate-500";
   const textMain = isLight ? "text-slate-900" : "text-slate-200";
@@ -240,7 +241,7 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
         return (
             <button 
                 key={att.id} 
-                onClick={() => file && setPreviewFile(file)}
+                onClick={() => file && selectSideResource?.(file)}
                 className={`w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${isLight ? 'bg-slate-50 border-slate-100 hover:bg-slate-100' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
             >
                 <div className={`p-2 bg-brand-500/10 rounded text-brand-500`}>
@@ -398,8 +399,8 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
             className={cn(
                 "w-full h-full flex flex-col overflow-hidden border transition-all duration-300",
                 containerClass,
-                isFullScreen ? "lg:rounded-none" : "lg:rounded-2xl",
-                isSideView && "lg:rounded-l-none",
+                isFullScreen && !isSideView ? "lg:rounded-none" : "lg:rounded-xl",
+                isSideView ? "lg:rounded-l-none" : "",
                 !isSideView && isFullScreen === false && "lg:rounded-r-none"
               )}
             onClick={e => e.stopPropagation()}
@@ -566,15 +567,6 @@ export const DocumentModal: React.FC<DocumentModalProps> = ({
             />
         )}
         
-        {previewFile && (
-            <FilePreview 
-                file={previewFile}
-                isOpen={!!previewFile}
-                onClose={() => setPreviewFile(null)}
-                theme={theme}
-            />
-        )}
-
         {showSideTaskPicker && (
             <SideTaskPickerModal
                 tasks={allTasks}

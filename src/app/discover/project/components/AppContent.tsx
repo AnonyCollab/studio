@@ -410,13 +410,12 @@ export const AppContent: React.FC = () => {
         {/* Global Document Modal Container */}
         {isAnyModalOpen && (
           <div
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-0 lg:p-4 flex items-center justify-center"
+            className={cn("fixed inset-0 z-[100] p-0 lg:p-4 flex items-center justify-center", !isFullScreen && "bg-black/60 backdrop-blur-sm")}
             onClick={handleCloseAllModals}
           >
              <div className={cn(
                   "relative w-full h-full flex items-center justify-center",
-                  !sideSelectedTask && !sideSelectedResource && !isMainTaskFullScreen && "lg:max-w-7xl",
-                  (sideSelectedTask || sideSelectedResource) ? 'lg:h-full' : 'lg:h-[90vh]'
+                  !isFullScreen && "lg:max-w-7xl lg:h-[90vh]",
               )}>
                 
                 {selectedTask && (
@@ -439,6 +438,7 @@ export const AppContent: React.FC = () => {
                       isSideView={!!sideSelectedTask || !!sideSelectedResource}
                       isFullScreen={isMainTaskFullScreen}
                       setIsFullScreen={setIsMainTaskFullScreen}
+                      selectSideResource={selectSideResource}
                     />
                   </div>
                 )}
@@ -464,10 +464,11 @@ export const AppContent: React.FC = () => {
                    <div className="hidden lg:block w-1/2 h-full">
                        <FilePreview 
                            file={sideSelectedResource}
-                           isOpen={!!sideSelectedResource}
                            onClose={handleCloseSideResource}
                            theme={theme}
                            isSideView={true}
+                           attachments={selectedTask?.attachments || []}
+                           onSelectAttachment={selectSideResource}
                        />
                    </div>
                 )}
